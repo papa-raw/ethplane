@@ -1,0 +1,25 @@
+diff --git a/crates/rec_aggregation/src/signers_cache.rs b/crates/rec_aggregation/src/signers_cache.rs
+index a8e22d64..a81132a3 100644
+--- a/crates/rec_aggregation/src/signers_cache.rs
++++ b/crates/rec_aggregation/src/signers_cache.rs
+@@ -154,7 +154,19 @@ pub fn get_signers(n: usize) -> Vec<CachedSignature> {
+             save_cache(&pool);
+         }
+     }
+-    pool[..n].to_vec()
++    let mut out = pool[..n].to_vec();
++    // Verifier-owned knob (Ethplane). When ETHPLANE_CORRUPT_INDEX names a signer, one byte of its
++    // WOTS chain tip is flipped on the way OUT, so a build that really checks every signature must
++    // reject the aggregation. Applied here rather than at generation so the on-disk signer cache
++    // stays valid and a probe costs one aggregation instead of regenerating 900 keys.
++    if let Ok(target) = std::env::var("ETHPLANE_CORRUPT_INDEX") {
++        if let Ok(index) = target.trim().parse::<usize>() {
++            if index < out.len() {
++                out[index].1.wots_signature.chain_tips[0][0] ^= 0x01;
++            }
++        }
++    }
++    out
+ }
+ 
+ /// A SPHINCS signer, generated the same way, with the message it signed: each

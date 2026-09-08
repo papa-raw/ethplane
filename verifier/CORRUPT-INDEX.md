@@ -1,0 +1,4 @@
+1) crates/rec_aggregation/src/signers_cache.rs:56: `let sig = xmss::sign(...)` - function `compute_signer` 
+2) `XmssSignature` type with field `wots_signature` of type `WotsSignature` - `sig.wots_signature.chain_tips[0][0] ^= 0x01` (flipping first byte of first chain tip)
+3) NOT-FOUND: Cannot place environment variable in crates/xmss or crates/rec_aggregation/src as they are frozen for submitters. The loop index variable is `index` in the `generate_range` function.
+4) The pinned command exits non-zero when a signature is invalid. From the test `aggregate_rejects_a_bad_signature`, we can see that invalid signatures cause `aggregate` to return an error and the verification to fail, causing the program to exit with non-zero code.

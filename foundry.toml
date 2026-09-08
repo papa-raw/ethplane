@@ -8,3 +8,7 @@ solc = "0.8.24"
 optimizer = true
 optimizer_runs = 200
 via_ir = true
+# Deploy.s.sol and DeployEns.s.sol both read contracts/deployments/strawmap-ids.json and write
+# their own sepolia*.json there; without this the default profile denies both and the deploy fails
+# at the last line, after the broadcast (orchestrator, Day 1).
+fs_permissions = [{ access = "read-write", path = "./contracts/deployments" }]

@@ -96,6 +96,21 @@ def run_pinned_command(worktree_path: str, num_runs: int = 3) -> list:
                     raise RuntimeError(f"Command failed with return code {result.returncode}: {result.stderr}")
                 
                 parsed_result = parse_output(result.stdout)
+                
+                # Fail closed on a bad parse - if any of the four values is None, emit reason: "parse"
+                if any(parsed_result.get(key) is None for key in ['cycles', 'provingMicros', 'proofSizeBytes', 'verifyMicros']):
+                    verdict = {
+                        "cycles": None,
+                        "provingMicros": None,
+                        "proofSizeBytes": None,
+                        "verifyMicros": None,
+                        "verifierAccepted": False,
+                        "reason": "parse",
+                        "binarySha256": binary_hash
+                    }
+                    print(json.dumps(verdict, indent=2))
+                    return
+                
                 results.append(parsed_result)
                 
             except subprocess.TimeoutExpired:

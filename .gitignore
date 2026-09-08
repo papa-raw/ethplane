@@ -5,3 +5,12 @@ broadcast/
 __pycache__/
 *.pyc
 .pytest_cache/
+# dependencies and build output — never committed (swarm-a was deleted for exactly this)
+node_modules/
+dist/
+.next/
+coverage/
+# local data and secrets
+*.db
+data/
+.env.*

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+out/
+cache/
+contracts/lib/
+lib/
+__pycache__/
+.pytest_cache/
+*.db
+data/
+.env

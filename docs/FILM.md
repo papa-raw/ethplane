@@ -23,3 +23,7 @@
 | 3:15 | Conclusion | Final screen with protocol summary | "The ethplane protocol enables collaborative development." |
 | 3:25 | Credits | Credits screen | "Thank you for watching." |
 | 3:35 | End | Black screen | "End of demonstration." |
+## Rehearsed facts (2026-09-08 evening, Sepolia)
+- **EAC refusal shot:** a freshly generated lineage key calling `setText(node, "ethplane.head", …)` on the node resolver `0xA11a923dA99Bb3aaE3643758DA8D408173199Bec` reverts (custom error selector `0x73e36525`); the same call estimated from the verifier key `0x0A6Ad2a627F8736E0f34849a0B5B80a109F81759` succeeds (54,439 gas). The verifier holds `setWriter` grants for `ethplane.head` and `ethplane.status` only.
+- **Policy refusal shot:** from the treasury wallet, `approve` and `fundNode` (10,000 PLANE) were signed and sent under policy `c8io5x5g08igo85ljedozu2k`; a `transfer` of 1 PLANE from the same wallet was refused at signing: `RPC request denied due to policy violation`.
+- **Node state for the opening shot:** `cl-pq-leanxmss-attestations.ethplane.eth` resolves `ethplane.status = open`, `ethplane.criterion` set; the contract holds 10,000 PLANE in escrow for the node; baseline 1,542,812 cycles recorded by the verifier.

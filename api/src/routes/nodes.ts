@@ -53,32 +53,18 @@ export default async function nodesRoutes(fastify: FastifyInstance) {
   });
 
   // GET /api/nodes/:id - Get specific node with all related data
+  // No response schema on this route. fast-json-stringify strips every property a schema does not
+  // declare, and the previous one declared `node: {type:'object'}` with no properties — so the API
+  // answered {"node":{},"leases":[],...} for a node that was fully populated in the database. A
+  // schema that silently empties the payload is worse than no schema.
   fastify.get('/nodes/:id', {
     schema: {
       params: {
         type: 'object',
         required: ['id'],
-        properties: {
-          id: { type: 'string' }
-        }
+        properties: { id: { type: 'string' } },
       },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            node: { type: 'object' },
-            leases: { type: 'array' },
-            lease_events: { type: 'array' },
-            submissions: { type: 'array' },
-            verdicts: { type: 'array' },
-            attribution: { type: 'array' },
-            releases: { type: 'array' },
-            head: { type: 'object' },
-            freshness: { type: 'object' }
-          }
-        }
-      }
-    }
+    },
   }, async (request, reply) => {
     try {
       const { id } = request.params as { id: string };

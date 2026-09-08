@@ -24,6 +24,9 @@ const ETHPLANE_ADDRESS = (process.env.ETHPLANE_ADDRESS ?? '') as `0x${string}`;
 const CHUNK = BigInt(process.env.CHUNK ?? 9000);
 /** Where to start when the cursor is empty: the deploy block, or a short look-back. */
 const START_BLOCK = process.env.START_BLOCK ? BigInt(process.env.START_BLOCK) : null;
+/** Re-read a range the cursor has already passed. The cursor is a performance device, not a record:
+ *  if a pass ever skipped events, deleting the database is not the only way back. */
+const RESCAN_FROM = process.env.RESCAN_FROM ? BigInt(process.env.RESCAN_FROM) : null;
 const LOOKBACK = BigInt(process.env.LOOKBACK ?? 5000);
 
 export const client = createPublicClient({ chain: sepolia, transport: http(RPC_URL) });
@@ -219,11 +222,12 @@ export async function seedNodesFromChain(): Promise<number> {
 export async function runIndexer(): Promise<number> {
   if (!ETHPLANE_ADDRESS) throw new Error('ETHPLANE_ADDRESS not set');
   const latest = await client.getBlockNumber();
-  let from = getCursor();
+  let from = RESCAN_FROM ?? getCursor();
   if (from === null) from = START_BLOCK ?? (latest > LOOKBACK ? latest - LOOKBACK : 0n);
   if (from > latest) return 0;
 
   let rows = 0;
+  let failures = 0;
   let sawSeed = false;
   for (let start = from; start <= latest; start += CHUNK + 1n) {
     const end = start + CHUNK > latest ? latest : start + CHUNK;
@@ -231,12 +235,22 @@ export async function runIndexer(): Promise<number> {
     for (const log of logs) {
       // blockTimestamp rides on the log itself (P7), so no second call per row.
       const ts = Number((log as unknown as { blockTimestamp?: string }).blockTimestamp ?? 0) || Math.floor(Date.now() / 1000);
-      if (parseAndStoreEvent(log, ts)) rows++;
-      if (isStrawmapSeeded(log)) sawSeed = true;
+      try {
+        if (parseAndStoreEvent(log, ts)) rows++;
+        if (isStrawmapSeeded(log)) sawSeed = true;
+      } catch (err) {
+        // One bad log must not cost the batch. It is logged with the coordinates needed to find it
+        // again, and the pass carries on: the alternative is a silent hole in the history.
+        failures++;
+        console.error(
+          `indexer: log ${log.transactionHash}#${log.logIndex} at block ${log.blockNumber} failed: ${String(err)}`
+        );
+      }
     }
     setCursor(end);
   }
   if (sawSeed) rows += await seedNodesFromChain();
+  if (failures > 0) console.error(`indexer: ${failures} log(s) failed in this pass`);
   return rows;
 }
 

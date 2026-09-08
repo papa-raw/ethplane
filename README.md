@@ -17,7 +17,7 @@ Status: planning. Nothing is built yet. The design is in `docs/SPEC.md`; the res
 ## Repository layout
 - `docs/SPEC.md` — the technical specification (public part of the plan).
 - `research/strawmap-nodes.json` — every node of the EF strawmap (2026-08-04 image), with layer, track, fork, tag and EF Hegotá tier where one exists.
-- `research/coverage.json`, `research/coverage-table-v2.md` — one row per node: what a group produces, how it is judged, whether the judgement data exists, compute class, routing mode, priority.
+- `research/coverage.json`, `research/coverage-table-v2.md` — one row per node: what a group produces, how it is judged, whether the judgement data exists (confirmed by opening the test repositories, not by search: FOCIL, ePBS and BALs vectors and the leanVM verifier were checked directly), compute class, routing mode, priority.
 - `research/eth-governance.md` — EIP-1, fork inclusion, All Core Devs, the strawmap's ownership, with quotes and URLs.
 - `research/identity-checks.md` — ERC-8004 status, ENSv2 Enhanced Access Control, Protocol Guild's formula, Optimism Retro Funding, attestation schemas.
 - `research/eth-roadmap-*.md` — the six roadmap tracks from Vitalik's "Possible futures" series, node lists quoted.

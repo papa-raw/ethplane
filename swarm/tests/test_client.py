@@ -75,19 +75,19 @@ class TestClient(unittest.TestCase):
             # Should print cast command
     
     @patch('subprocess.run')
-    @patch('tempfile.TemporaryDirectory')
+    @patch('tempfile.mkdtemp')
     @patch('subprocess.check_output')
-    def test_submit_subcommand_dry_run(self, mock_check_output, mock_temp_dir, mock_run):
+    def test_submit_subcommand_dry_run(self, mock_check_output, mock_mkdtemp, mock_run):
         """Test submit subcommand in dry-run mode."""
         # Mock the temporary directory
-        mock_temp_dir.return_value.__enter__.return_value = '/tmp/mock'
+        mock_mkdtemp.return_value = '/tmp/mock'
         
         # Mock git operations
         mock_run.return_value = MagicMock(returncode=0, stdout='diff output', stderr='')
         mock_check_output.return_value = 'abc123def456\n'
         
-        # Mock file creation
-        with patch('builtins.open', new_callable=MagicMock) as mock_open:
+        # Mock file creation and tar operations
+        with patch('builtins.open') as mock_open:
             with patch('sys.stdout') as mock_stdout:
                 submit_subcommand(['parent1', 'parent2'], dry_run=True)
                 # Should print POST request information

@@ -10,7 +10,7 @@ attempts=$(cat ~/overnight/*.jsonl 2>/dev/null | grep -c '"attempt"')
 gpu=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1)
 rule() { printf "${C}%s${R}\n" "$(printf '─%.0s' $(seq 1 "$W"))"; }
 masthead() {
-  local left=" ETHPLANE · cl-pq-leanxmss-attestations.ethplane.eth" right="${ROLE_LABEL:+$ROLE_LABEL · }qwen-a "
+  local left=" ETHPLANE · cl-pq-leanxmss-attestations.ethplane.eth" right="${ROLE_LABEL:+$ROLE_LABEL · }$SWARM_PREFIX-a "
   local pad=$(( W - 1 - ${#left} - ${#right} )); [ $pad -lt 1 ] && pad=1
   printf "${C}${INV}%s%*s%s${R}\n" "$left" "$pad" "" "$right"
   if [ "$W" -ge 78 ]; then printf " ${D}cycles < ${R}${A}1,542,812${R}${D} @ a210ef1b  ·  best ${R}${B}%s${R}${D}  ·  %s attempts  ·  gpu %s%%${R}\n" "$best" "$attempts" "${gpu:-?}"

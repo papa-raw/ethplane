@@ -2,7 +2,7 @@
 import subprocess, datetime, pathlib
 from mcp.server.mcpserver import MCPServer
 BOARD = pathlib.Path("$SWARM_DIR/board.md")
-mcp = MCPServer("ethplane-orchestrator")
+mcp = MCPServer("$SWARM_PREFIX-orchestrator")
 def _stamp(): return datetime.datetime.now().strftime("%H:%M")
 def _append(line: str):
     with BOARD.open("a") as f: f.write(f"{_stamp()} {line}\n")
@@ -18,7 +18,7 @@ def handoff(role: str, task: str, files: str, done_when: str) -> str:
     """Hand a piece of work to 'builder' or 'critic': it lands on the board and in that role's pane."""
     if role not in ("builder", "critic"): return "role must be builder or critic"
     msg = f"HANDOFF orchestrator -> {role}: {task} | files: {files} | done when: {done_when}"
-    _append(msg); _send(f"qwen-{role}", msg); return f"sent to {role}"
+    _append(msg); _send(f"$SWARM_PREFIX-{role}", msg); return f"sent to {role}"
 @mcp.tool()
 def report(text: str) -> str:
     """Tell the human the consolidated result (three lines max); also written to the board."""

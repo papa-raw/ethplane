@@ -134,10 +134,11 @@ def submit_subcommand(parents=None, dry_run=False):
         
         # Create diff.patch
         diff_path = os.path.join(temp_dir, 'diff.patch')
-        editable_paths = env['EDITABLE'].split(',')
+        # Split EDITABLE on whitespace (not just commas) and add -- separator
+        editable_paths = env['EDITABLE'].split()
         
-        # Create the diff command
-        diff_cmd = ['git', '-C', env['WORKTREE'], 'diff', 'a210ef1b'] + editable_paths
+        # Create the diff command with -- separator
+        diff_cmd = ['git', '-C', env['WORKTREE'], 'diff', 'a210ef1b', '--'] + editable_paths
         diff_result = subprocess.run(diff_cmd, capture_output=True, text=True)
         
         if diff_result.returncode != 0:
@@ -162,8 +163,8 @@ def submit_subcommand(parents=None, dry_run=False):
         # Print the POST request that would be made (in dry-run mode)
         if dry_run:
             print(f"POST {env['API_BASE']}/api/artifacts")
-            print(f"Content-Type: multipart/form-data")
-            print(f"artifactHash: {artifact_hash_hex}")
+            print(f"Content-Type: application/x-tar")
+            print(f"X-Artifact-Hash: {artifact_hash_hex}")
             # Would upload tarball here in real implementation
             
         # Submit to chain

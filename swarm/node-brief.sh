@@ -20,5 +20,5 @@ attempts=$(cat ~/overnight/*.jsonl 2>/dev/null | grep -c '"attempt"')
   echo "- Repo on this host: $SWARM_DIR/leanVM at commit $(git -C $SWARM_DIR/leanVM rev-parse --short HEAD) (pinned a210ef1b). Baseline 1,542,812 cycles."
   echo "- Best so far on this host: $best"
   echo "- Attempts by the autoresearch arms so far: $attempts (most fail at the edit step: search text not found in the file; read the file before editing)."
-  echo "- Board: $SWARM_DIR/board.md. Roles: qwen-orchestrator (the human types here), qwen-builder, qwen-critic."
+  echo "- Board: $SWARM_DIR/board.md. Roles: $SWARM_PREFIX-orchestrator (the human types here), $SWARM_PREFIX-builder, $SWARM_PREFIX-critic."
 } > node.md

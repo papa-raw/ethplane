@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Ethplane node menu v2: the entry point of the orchestrator quadrant. Fits an 84-column pane; boxed header; two-line presets.
 export PATH=$HOME/.local/bin:$HOME/.cargo/bin:$PATH
-NODE=cl-pq-leanxmss-attestations; HOST=qwen-a; LEAN=$SWARM_DIR/leanVM
+NODE=cl-pq-leanxmss-attestations; HOST=$SWARM_PREFIX-a; LEAN=$SWARM_DIR/leanVM
 B=$'\e[1m'; D=$'\e[2m'; C=$'\e[38;5;80m'; Y=$'\e[38;5;221m'; G=$'\e[38;5;114m'; M=$'\e[38;5;141m'; R=$'\e[0m'
 cd $SWARM_DIR
 state() {
@@ -10,7 +10,7 @@ v=[json.loads(l).get("best_cycles") for l in sys.stdin if "best_cycles" in l]
 print(f"{min(v):,}" if v else "none")' 2>/dev/null)
   attempts=$(cat ~/overnight/*.jsonl 2>/dev/null | grep -c '"attempt"')
   loops=""; pgrep -f "overnight.py solo" >/dev/null && loops="solo"; pgrep -f "overnight.py routed" >/dev/null && loops="${loops:+$loops+}routed"
-  peers=0; for r in builder critic; do tmux has-session -t qwen-$r 2>/dev/null && peers=$((peers+1)); done
+  peers=0; for r in builder critic; do tmux has-session -t $SWARM_PREFIX-$r 2>/dev/null && peers=$((peers+1)); done
   gpu=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits 2>/dev/null | head -1)
   tok=$(tail -n 80 ~/logs/vllm-8000.log 2>/dev/null | grep -o "generation throughput: [0-9.]*" | tail -1 | awk '{printf "%.0f", $3}')
 }
@@ -29,21 +29,21 @@ header() {
   echo "  ${D}q  shell${R}"
   echo
 }
-ensure_peers() { for r in builder critic; do tmux has-session -t qwen-$r 2>/dev/null || tmux new-session -d -s qwen-$r -x 200 -y 50 "bash $SWARM_DIR/start.sh $r"; done; }
+ensure_peers() { for r in builder critic; do tmux has-session -t $SWARM_PREFIX-$r 2>/dev/null || tmux new-session -d -s $SWARM_PREFIX-$r -x 200 -y 50 "bash $SWARM_DIR/start.sh $r"; done; }
 task_orchestrator() { # the human's own task becomes the init prompt
   read -rp "  task › " task; [ -z "$task" ] && return
   cd $SWARM_DIR/orchestrator; $SWARM_DIR/node-brief.sh
   printf '%s' "Node cl-pq-leanxmss-attestations.ethplane.eth. TASK FROM THE HUMAN: $task  Do now, one tool per turn: (1) board_plan with three short lines; (2) handoff to builder with task, files and done_when; (3) handoff to critic with what to verify and how; (4) write: waiting for reports." > task-init.txt
   export OPENAI_HOST=http://127.0.0.1:8000 OPENAI_BASE_PATH=v1/chat/completions OPENAI_API_KEY=local
   ensure_peers
-  ( for i in $(seq 1 60); do sleep 2; if tmux capture-pane -t qwen-orchestrator -p 2>/dev/null | grep -q "Enter to send"; then sleep 2; tmux send-keys -t qwen-orchestrator -l "$(tr '\n' ' ' < task-init.txt)"; sleep 1; tmux send-keys -t qwen-orchestrator Enter; break; fi; done ) &
+  ( for i in $(seq 1 60); do sleep 2; if tmux capture-pane -t $SWARM_PREFIX-orchestrator -p 2>/dev/null | grep -q "Enter to send"; then sleep 2; tmux send-keys -t $SWARM_PREFIX-orchestrator -l "$(tr '\n' ' ' < task-init.txt)"; sleep 1; tmux send-keys -t $SWARM_PREFIX-orchestrator Enter; break; fi; done ) &
   GOOSE_TELEMETRY_ENABLED=false XDG_CONFIG_HOME=$SWARM_DIR/orch-config goose session --provider openai --model Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8 --with-extension "$SWARM_DIR/venv/bin/python $SWARM_DIR/orch_mcp.py" -n "swarm-task-$(date +%m%d-%H%M)" --max-turns 40 --system "$(cat system.txt)"
   cd $SWARM_DIR
 }
 run_orchestrator() {
   cd $SWARM_DIR/orchestrator; $SWARM_DIR/node-brief.sh
   export OPENAI_HOST=http://127.0.0.1:8000 OPENAI_BASE_PATH=v1/chat/completions OPENAI_API_KEY=local
-  ( for i in $(seq 1 60); do sleep 2; if tmux capture-pane -t qwen-orchestrator -p 2>/dev/null | grep -q "Enter to send"; then sleep 2; tmux send-keys -t qwen-orchestrator -l "$(tr '\n' ' ' < init.txt)"; sleep 1; tmux send-keys -t qwen-orchestrator Enter; break; fi; done ) &
+  ( for i in $(seq 1 60); do sleep 2; if tmux capture-pane -t $SWARM_PREFIX-orchestrator -p 2>/dev/null | grep -q "Enter to send"; then sleep 2; tmux send-keys -t $SWARM_PREFIX-orchestrator -l "$(tr '\n' ' ' < init.txt)"; sleep 1; tmux send-keys -t $SWARM_PREFIX-orchestrator Enter; break; fi; done ) &
   GOOSE_TELEMETRY_ENABLED=false XDG_CONFIG_HOME=$SWARM_DIR/orch-config goose session --provider openai --model Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8 --with-extension "$SWARM_DIR/venv/bin/python $SWARM_DIR/orch_mcp.py" -n "swarm-orchestrator-$(date +%m%d-%H%M)" --max-turns 60 --system "$(cat system.txt)"
   cd $SWARM_DIR
 }

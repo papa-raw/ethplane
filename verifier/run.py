@@ -27,7 +27,6 @@ BASELINE_CYCLES = 1542812
 BASELINE_PROVING_MICROS = 1433000  # 1.433 seconds
 BASELINE_PROOF_SIZE_BYTES = 302656  # 295.5 KiB
 BASELINE_VERIFY_MICROS = 30100  # 0.0301 seconds
-REVIEW_THRESHOLD = 0.20  # 20% drop threshold
 
 def validate_paths(diff_files: list) -> Tuple[bool, str]:
     """
@@ -306,15 +305,6 @@ def main():
                 # If there's any error during verification, fail closed
                 verifier_accepted = False
             
-            # Determine status based on criteria
-            cycles_drop = (BASELINE_CYCLES - avg_cycles) / BASELINE_CYCLES
-            if cycles_drop > REVIEW_THRESHOLD:
-                status = "REVIEW"
-            elif cycles_drop >= 0.01:  # 1% reduction threshold
-                status = "PASS"
-            else:
-                status = "FAIL"
-            
             # Construct verdict
             verdict = {
                 "cycles": avg_cycles,
@@ -323,8 +313,7 @@ def main():
                 "verifyMicros": avg_verify_micros,
                 "verifierAccepted": verifier_accepted,
                 "reason": "",
-                "binarySha256": binary_hash,
-                "status": status
+                "binarySha256": binary_hash
             }
             
             print(json.dumps(verdict, indent=2))

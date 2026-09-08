@@ -19,12 +19,12 @@ check_content() {
         return 1
     fi
     
-    if grep -r "workplane-private" . --exclude-dir=node_modules --exclude-dir=.git --exclude="scripts/check-submission.sh" >/dev/null 2>&1; then
+    if grep -r "workplane-private" . --exclude-dir=node_modules --exclude-dir=.git --exclude="check-submission.sh" >/dev/null 2>&1; then
         echo "FAIL: 'workplane-private' found in repository"
         return 1
     fi
     
-    if grep -r "PRIVATE_KEY=" . --exclude-dir=node_modules --exclude-dir=.git --exclude="scripts/check-submission.sh" >/dev/null 2>&1; then
+    if grep -r "PRIVATE_KEY=" . --exclude-dir=node_modules --exclude-dir=.git --exclude="check-submission.sh" >/dev/null 2>&1; then
         echo "FAIL: 'PRIVATE_KEY=' found in repository"
         return 1
     fi

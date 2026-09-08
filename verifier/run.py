@@ -21,7 +21,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from parse import parse_output
 
 # Constants from spec
-REFERENCE_LEANVM_PATH = "/home/ubuntu/swarm-b/leanVM"
+REFERENCE_LEANVM_PATH = os.environ.get("LEANVM_REF", "/home/ubuntu/swarm-b/leanVM")
 REFERENCE_COMMIT = "a210ef1b"
 BASELINE_CYCLES = 1542812
 BASELINE_PROVING_MICROS = 1433000  # 1.433 seconds

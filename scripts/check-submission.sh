@@ -14,7 +14,7 @@ check_file() {
 
 # Check for IP address patterns or private key references
 check_content() {
-    if grep -r -E -I '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b' . --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=lib --exclude-dir=out --exclude-dir=.next --exclude-dir=cache --exclude='check-submission.sh' 2>/dev/null | grep -vE '0\.0\.0\.0|127\.0\.0\.1|[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+[a-zA-Z-]' | grep -q .
+    if grep -r -E -I '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b' . --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=lib --exclude-dir=out --exclude-dir=.next --exclude-dir=cache --exclude='check-submission.sh' 2>/dev/null | grep -vE '0\.0\.0\.0|127\.0\.0\.1|[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+[a-zA-Z-]' | grep -q .; then
         echo "FAIL: IP address pattern found in repository"
         return 1
     fi

@@ -44,8 +44,10 @@ def validate_paths(diff_files: list) -> Tuple[bool, str]:
     }
     
     for file_path in diff_files:
-        # Check if file path starts with any editable path
-        is_editable = any(file_path.startswith(editable_path) for editable_path in editable_paths)
+        # Normalize the path to handle .. and . components
+        normalized_path = os.path.normpath(file_path)
+        # Check if normalized path starts with any editable path
+        is_editable = any(normalized_path.startswith(editable_path) for editable_path in editable_paths)
         if not is_editable:
             return False, "frozen-path"
     

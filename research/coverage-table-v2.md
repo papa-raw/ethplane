@@ -1,6 +1,6 @@
-# Coverage table v2.2 (2026-09-08) — 65 rows from coverage.json, with routing and EF tier columns
+# Coverage table v2.3 (2026-09-08) — 65 rows from coverage.json
 
-Counts: reviewed checklist 29, proof check 10, spec conformance 10, test suite 8, metric 8. Judgement data exists: unknown 33, no 29, yes 3. EF Hegotá tier present on 9 rows.
+Counts: reviewed checklist 29, proof check 10, spec conformance 10, test suite 8, metric 8. Judgement data exists: unknown 32, no 29, yes 4. EF Hegotá tier present on 9 rows.
 
 
 ## CL
@@ -10,7 +10,7 @@ Counts: reviewed checklist 29, proof check 10, spec conformance 10, test suite 8
 
 | id | label | tag | EF tier | state | criterion type | criterion | judgement exists | compute | routing | priority | open questions |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| cl-epbs | ePBS | SFI | SFI | open | test suite | the submission passes the relevant test suite for 'ePBS' with no regressions | yes | CPU-hours | sequential (C2) | 1 | [] |
+| cl-epbs | ePBS | SFI | SFI | open | test suite | the submission passes the relevant test suite for 'ePBS' with no regressions | yes (ethereum/consensus-spec-tests tests/mainnet/gloas/) | CPU-hours | sequential (C2) | 1 | [] |
 | cl-fast-confirmation | fast confirmation | none |  | specification only | reviewed checklist | a majority of the assigned reviewer panel scores the submission as meeting the node's checklist for 'fast confirmation' | no | reviewer time | orchestrated (C4) | 4 | ["name and recruit the reviewer panel for 'fast confirmation' (two reviewers if headliner, per SS13.1) before this node opens for claims"] |
 
 ### fork H
@@ -18,7 +18,7 @@ Counts: reviewed checklist 29, proof check 10, spec conformance 10, test suite 8
 | id | label | tag | EF tier | state | criterion type | criterion | judgement exists | compute | routing | priority | open questions |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | cl-crypto-specs-lean4 | cryptography specs in Lean 4 | none |  | open | proof check | the submitted artefact passes the proof/type checker or known-answer test vectors for 'cryptography specs in Lean 4' | unknown | proof-checker time | single agent (C1) per proof attempt; verifier is the checker; several lineages may attempt in parallel | 4 | ["identify or build the checker/KAT-vector source for 'cryptography specs in Lean 4' -- named candidate repos noted in judgement_data, none independently confirmed this pass"] |
-| cl-focil | FOCIL | SFI | S | open | test suite | the submission passes the relevant test suite for 'FOCIL' with no regressions | unknown | CPU-hours | sequential (C2) | 1 | ['confirm multi-client devnet test status directly (search-summarized only this pass, not independently fetched)'] |
+| cl-focil | FOCIL | SFI | S | open | test suite | the submission passes the relevant test suite for 'FOCIL' with no regressions | yes (ethereum/consensus-spec-tests tests/mainnet/eip7805/) | CPU-hours | sequential (C2) | 1 | ['confirm multi-client devnet test status directly (search-summarized only this pass, not independently fetched)'] |
 | cl-post-quantum-pubkey-registry | post quantum pubkey registry | none |  | open | proof check | the submitted artefact passes the proof/type checker or known-answer test vectors for 'post quantum pubkey registry' | unknown | proof-checker time | single agent (C1) per proof attempt; verifier is the checker; several lineages may attempt in parallel | 4 | ["identify or build the checker/KAT-vector source for 'post quantum pubkey registry' -- named candidate repos noted in judgement_data, none independently confirmed this pass"] |
 
 ### fork I
@@ -125,7 +125,7 @@ Counts: reviewed checklist 29, proof check 10, spec conformance 10, test suite 8
 
 | id | label | tag | EF tier | state | criterion type | criterion | judgement exists | compute | routing | priority | open questions |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| el-bals | BALs | SFI | SFI | open | test suite | the submission passes the relevant test suite for 'BALs' with no regressions | yes | CPU-hours | sequential (C2) | 1 | [] |
+| el-bals | BALs | SFI | SFI | open | test suite | the submission passes the relevant test suite for 'BALs' with no regressions | yes (ethereum/execution-spec-tests tests/amsterdam/eip7928_block_level_access_lists/) | CPU-hours | sequential (C2) | 1 | [] |
 | el-evm-asm-canonical-guest | evm-asm canonical guest | none |  | specification only | reviewed checklist | a majority of the assigned reviewer panel scores the submission as meeting the node's checklist for 'evm-asm canonical guest' | no | reviewer time | orchestrated (C4) | 4 | ["name and recruit the reviewer panel for 'evm-asm canonical guest' (two reviewers if headliner, per SS13.1) before this node opens for claims"] |
 | el-frame-transactions | frame transactions | CFI | S | open | test suite | the submission passes the relevant test suite for 'frame transactions' with no regressions | unknown | CPU-hours | sequential (C2) | 1 | ["resolve the EIP number behind 'frame transactions' (not individually looked up in eth-governance.md -- 14 of 20 EIP/SFI/CFI-tagged nodes are still unresolved) and check execution-spec-tests / consensus-spec-tests for existing vectors"] |
 | el-glamsterdam-repricing | Glamsterdam repricing | CFI |  | open | test suite | the submission passes the relevant test suite for 'Glamsterdam repricing' with no regressions | unknown | CPU-hours | sequential (C2) | 2 | ["resolve the EIP number behind 'Glamsterdam repricing' (not individually looked up in eth-governance.md -- 14 of 20 EIP/SFI/CFI-tagged nodes are still unresolved) and check execution-spec-tests / consensus-spec-tests for existing vectors"] |

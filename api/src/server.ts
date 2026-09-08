@@ -3,6 +3,7 @@ import { db, initializeDatabase, seedStrawmapMetadata } from './db';
 import nodesRoutes from './routes/nodes';
 import boardRoutes from './routes/board';
 import joinRoutes from './routes/join';
+import artifactRoutes from './routes/artifacts';
 import { runIndexer } from './indexer';
 
 // Initialize database
@@ -19,6 +20,7 @@ const server = fastify({
 server.register(nodesRoutes, { prefix: '/api' });
 server.register(boardRoutes, { prefix: '/api' });
 server.register(joinRoutes, { prefix: '/api' });
+server.register(artifactRoutes, { prefix: '/api' });
 
 // Health check endpoint
 server.get('/health', async () => {

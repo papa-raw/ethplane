@@ -44,6 +44,9 @@ contract Ethplane is ReentrancyGuard, EIP712 {
         uint16 paidGainBps;
         uint256 originalMetric;
         uint256 bestMetric;
+        /// @dev Never ratchets to a later measurement: non-regression is judged against the ORIGINAL
+        /// baseline on purpose, so a cycle win is not rejected because an earlier run's proving time
+        /// happened to land low in the noise.
         uint256 baseProvingMicros;
         uint256 baseProofBytes;
         uint256 baseVerifyMicros;
@@ -105,6 +108,8 @@ contract Ethplane is ReentrancyGuard, EIP712 {
     bytes32[] public strawmapIds;
     mapping(bytes32 => bool) public isStrawmapId;
     bool public strawmapSeeded;
+    /// @dev Nodes whose registrant is not the maintainer. Locks setSubregistry once non-zero.
+    uint256 public outsideRegistrants;
 
     /// @notice The ENSv2 subregistry whose token owner may define a node. Zero until the subregistry
     /// exists on chain; while it is zero only the maintainer may define, which is the same rule
@@ -187,6 +192,7 @@ contract Ethplane is ReentrancyGuard, EIP712 {
     error Expired();
     error BadNonce();
     error BadSignature();
+    error SubregistryLocked();
 
     bytes32 private constant CLAIM_TYPEHASH =
         keccak256("Claim(bytes32 nodeId,address guest,bytes32 fromHash,uint256 nonce,uint256 deadline)");
@@ -219,7 +225,13 @@ contract Ethplane is ReentrancyGuard, EIP712 {
         emit RelaySet(relay, allowed);
     }
 
+    /// @notice Point node ownership at the ENS subregistry. Re-settable ONLY while every node was
+    /// defined by the maintainer: the moment an outside registrant holds a node, moving the
+    /// subregistry could redefine who owns it, and the permissionless-registration claim would rest
+    /// on the maintainer's restraint rather than on the contract. Chose this over strict once-only
+    /// so Day 1 can point at a redeployed subregistry before anyone else has registered.
     function setSubregistry(address subregistry_) external onlyMaintainer {
+        if (outsideRegistrants != 0) revert SubregistryLocked();
         subregistry = subregistry_;
         emit SubregistrySet(subregistry_);
     }
@@ -310,6 +322,7 @@ contract Ethplane is ReentrancyGuard, EIP712 {
             revert NotRegistrant();
         }
         n.registrant = msg.sender;
+        if (msg.sender != maintainer) outsideRegistrants += 1;
         n.reviewer = maintainer;
         n.criterionHash = criterionHash;
         n.lane = lane;

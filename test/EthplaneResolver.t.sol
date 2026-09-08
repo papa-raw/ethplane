@@ -14,7 +14,7 @@ contract EthplaneResolverTest is Test {
     bytes32 constant OTHER = keccak256("other.ethplane.eth");
 
     function setUp() public {
-        r = new EthplaneResolver(owner);
+        r = new EthplaneResolver(owner, NODE);
         vm.prank(owner);
         r.setWriter("ethplane.verdict", writerA, true);
     }
@@ -38,16 +38,29 @@ contract EthplaneResolverTest is Test {
         vm.startPrank(owner);
         r.setText(NODE, "ethplane.verdict", "pass");
         r.setText(NODE, "ethplane.head", "0xbeef");
-        r.setText(OTHER, "agent-context", "an Ethplane node");
+        r.setText(NODE, "agent-context", "an Ethplane node");
         r.setAddr(NODE, address(0xA11CE));
         vm.stopPrank();
         assertEq(r.text(NODE, "ethplane.head"), "0xbeef");
-        assertEq(r.text(OTHER, "agent-context"), "an Ethplane node");
+        assertEq(r.text(NODE, "agent-context"), "an Ethplane node");
         assertEq(r.addr(NODE), address(0xA11CE));
 
         vm.prank(stranger);
         vm.expectRevert(EthplaneResolver.NotOwner.selector);
         r.setAddr(NODE, stranger);
+    }
+
+    function test_resolverServesExactlyOneNode() public {
+        vm.prank(owner);
+        vm.expectRevert(abi.encodeWithSelector(EthplaneResolver.WrongNode.selector, OTHER, NODE));
+        r.setText(OTHER, "ethplane.verdict", "pass");
+        vm.prank(owner);
+        vm.expectRevert(abi.encodeWithSelector(EthplaneResolver.WrongNode.selector, OTHER, NODE));
+        r.setAddr(OTHER, address(1));
+        // reads for another node answer "no record" rather than reverting: the Universal Resolver's
+        // walk expects an empty answer, not a revert
+        assertEq(r.text(OTHER, "ethplane.verdict"), "");
+        assertEq(r.addr(OTHER), address(0));
     }
 
     function test_resolverSupportsEnsipInterfaces() public view {

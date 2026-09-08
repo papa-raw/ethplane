@@ -111,6 +111,20 @@ contract EthplaneTest is Test {
         vm.stopPrank();
     }
 
+    function test_setSubregistryLocksOnceAnOutsiderRegisters() public {
+        MockRegistry reg = new MockRegistry();
+        reg.setOwner(uint256(NODE), linA);
+        vm.prank(maintainer); ep.setSubregistry(address(reg));
+        // still only maintainer-defined nodes: the pointer may still move
+        vm.prank(maintainer); ep.setSubregistry(address(reg));
+        vm.prank(linA);
+        ep.defineNode(NODE, bytes32(0), 0, address(0), LEASE, BEAT, _split(), 1000, 0);
+        assertEq(ep.outsideRegistrants(), 1);
+        vm.prank(maintainer);
+        vm.expectRevert(Ethplane.SubregistryLocked.selector);
+        ep.setSubregistry(address(1));
+    }
+
     function test_registrantDefinesOwnNode() public {
         MockRegistry reg = new MockRegistry();
         reg.setOwner(uint256(NODE), linA);

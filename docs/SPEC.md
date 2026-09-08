@@ -198,7 +198,7 @@ The strawmap's own grid is the layout: three layer bands (consensus, data, execu
 - **Record page:** the raw event stream, filterable, with links to chain explorers.
 
 ### 12.5 Live-data rule
-The dashboard reads live chain data through a Graph provider (Subgraph Studio) when on Sepolia. Mocked or static datasets disqualify the Graph prize and would misrepresent the record; the static seed is only the strawmap description, never the state.
+The dashboard reads live chain data through Ethplane's own indexer (a viem `getLogs` poller over the contract, SQLite, REST at `/api`). Mocked or static datasets disqualify the Graph prize and would misrepresent the record; the static seed is only the strawmap description, never the state.
 
 ### 12.6 Process
 UI work goes to the designer role first: brief, three variants as snapshots, comparative pick, tokens, visual QA. The builder receives the brief, the chosen variant and the tokens. Brief: `DESIGN-BRIEF-dashboard.md` in the run dir. Stack default per the winner study: Next.js, Tailwind, shadcn, static export where possible.

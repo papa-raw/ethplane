@@ -185,8 +185,22 @@ def main():
         ], check=True, cwd=REFERENCE_LEANVM_PATH)
         
         try:
-            # Apply diff (this is a simplified version - in reality we'd apply the actual diff)
-            # For now, we'll assume the diff is already applied in the worktree
+            # Apply diff by copying extracted files to worktree
+            for root, dirs, files in os.walk(temp_dir):
+                for file in files:
+                    # Skip the temp directory itself
+                    if root == temp_dir:
+                        continue
+                        
+                    # Get relative path from temp directory
+                    rel_path = os.path.relpath(os.path.join(root, file), temp_dir)
+                    
+                    # Only process files that are in the editable area
+                    if rel_path.startswith("crates/"):
+                        # Copy file to worktree at relative path
+                        dest_path = os.path.join(worktree_path, rel_path)
+                        os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+                        shutil.copy2(os.path.join(root, file), dest_path)
             
             # Build with cargo build --release
             build_result = subprocess.run([

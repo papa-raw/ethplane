@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# board - append to the shared board, timestamped
+echo "$(date '+%H:%M') $*" >> $SWARM_DIR/board.md

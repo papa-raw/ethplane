@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# handoff - hand a piece of work to builder or critic
+# usage: handoff <role> <task> <files> <done_when>
+role="$1"; task="$2"; files="$3"; done_when="$4"
+echo "HANDOFF orchestrator -> $role: $task | files: $files | done when: $done_when" >> $SWARM_DIR/board.md
+echo "sent to $role"

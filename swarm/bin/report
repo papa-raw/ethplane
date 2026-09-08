@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# report - tell the human the consolidated result
+# usage: report <text>
+echo "orchestrator REPORT: $*" >> $SWARM_DIR/board.md
+echo "reported"

@@ -215,6 +215,16 @@ def main():
                         os.makedirs(os.path.dirname(dest_path), exist_ok=True)
                         shutil.copy2(os.path.join(root, file), dest_path)
             
+            # Get list of changed files to determine if diff is non-empty
+            changed_files = []
+            for root, dirs, files in os.walk(temp_dir):
+                for file in files:
+                    if root == temp_dir:
+                        continue
+                    rel_path = os.path.relpath(os.path.join(root, file), temp_dir)
+                    if rel_path.startswith("crates/"):
+                        changed_files.append(rel_path)
+            
             # Build with cargo build --release
             build_result = subprocess.run([
                 "cargo", "build", "--release"
@@ -238,9 +248,28 @@ def main():
             binary_hash = get_binary_hash(worktree_path)
             
             # Check for stale binary (spec requirement)
-            # In a real implementation, we'd compare with reference binary hash
-            # For now, we'll skip this check as we don't have reference binary
-            # But we'd normally check if diff is non-empty but hash equals reference
+            # Compare with reference binary hash if diff is non-empty
+            if changed_files and len(changed_files) > 0:
+                # Get reference binary hash for comparison
+                reference_binary_path = os.path.join(REFERENCE_LEANVM_PATH, "target", "release", "aggregate")
+                if os.path.exists(reference_binary_path):
+                    with open(reference_binary_path, 'rb') as f:
+                        reference_hash = hashlib.sha256(f.read()).hexdigest()
+                    
+                    # If the new hash equals the reference hash, it's a stale binary
+                    if binary_hash == reference_hash:
+                        verdict = {
+                            "cycles": None,
+                            "provingMicros": None,
+                            "proofSizeBytes": None,
+                            "verifyMicros": None,
+                            "verifierAccepted": False,
+                            "reason": "stale-binary",
+                            "binarySha256": binary_hash,
+                            "status": "FAIL"
+                        }
+                        print(json.dumps(verdict, indent=2))
+                        return
             
             # Run pinned command
             results = run_pinned_command(worktree_path, 3)

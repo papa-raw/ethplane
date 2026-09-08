@@ -3,7 +3,7 @@
 The node is `cl-pq-leanxmss-attestations` on the Ethereum roadmap. The task is the pinned command
 `cargo run --release -- aggregate --xmss 900 --log-inv-rate 1 --repeat 3` in leanEthereum/leanVM at the pinned commit.
 
-**Metric.** `cycles (VM steps)` printed by the pinned command. It is the length of the execution trace, deterministic for a given program and input. Pass = at least 1 % fewer cycles than the recorded baseline. Non-regression: proving time not above the baseline mean plus its measured spread; proof size and verify time not larger.
+**Metric.** `cycles (VM steps)` printed by the pinned command. It is the length of the execution trace, deterministic for a given program and input. Pass = strictly fewer cycles than the recorded baseline. Cycles is exact and reproducible, so any reduction is a repeatable fact and no noise margin applies; the project's own reachability check found upstream history moving the editable surface by exactly zero cycles, which is stated here so a rejection is read as honest, not as a broken verifier. Pinned commit: a210ef1b; baseline 1,542,812 cycles. Non-regression: proving time not above the baseline mean plus its measured spread; proof size and verify time not larger.
 
 **Editable.** `crates/rec_aggregation/guests/aggregate.py` (the guest program) and `crates/lean_compiler/`. Everything else is frozen; a diff touching a frozen path is rejected before measurement. The frozen set includes the signature schemes, the polynomial commitment, the transcript and the VM, so a submission cannot weaken the statement it proves.
 

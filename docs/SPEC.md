@@ -208,7 +208,7 @@ UI work goes to the designer role first: brief, three variants as snapshots, com
 
 Definition of coverage: a node is covered when the plan states, for that node, (a) what a contributing group would produce, (b) how a verifier would judge it, (c) what data or tests the judgement needs and whether they exist today, (d) its compute class, (e) its hard dependencies, and (f) its priority from the strawmap tag. A node with no computable judgement is still covered if (b) names the reviewed checklist and the reviewer assignment rule.
 
-Source of the node list: `strawmap-nodes.json` (researcher, slot 4, from the strawmap image dated 2026-08-04). The table below is generated from that file once it lands and is versioned with the strawmap date. Until then this section holds the schema and the criterion types.
+Source of the node list: `strawmap-nodes.json` (from the strawmap image dated 2026-08-04). The table below is generated from that file once it lands and is versioned with the strawmap date. Until then this section holds the schema and the criterion types.
 
 ### 13.1 Criterion types
 | Type | Judged by | Examples of nodes it fits |

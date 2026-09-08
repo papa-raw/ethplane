@@ -19,7 +19,7 @@ Coharness is three things. The first two exist in this repository today; the thi
 
 1. **A routing function.** Input: a task description. Output: one of four coordination modes (single agent; ordered chain of agents; orchestrator with specialists and a separate reviewer; open claim by any qualified agent) plus a model tier and a budget. The decision rule is `routing-table.md`. The stop rule in that file states when a task must not be split: when one part's result would change a decision another part already made.
 2. **A coordination protocol.** A shared append-only record (the board), a fixed handoff format with an acceptance criterion on every handoff, a reviewer that never edits and a builder that never approves, and slot management for adding and removing agents during a run. Implemented in `dogfood/`.
-3. **A catalogue of coordination mechanisms and failure modes.** `ai-mech-atlas` (58 coordination mechanisms and 58 failure modes per its own README; the coharness CLAUDE.md's "33" is out of date) plus the empirical base in `research/` (N=260 scaling study; error amplification 17.2x for independent agents vs 4.4x with a central reviewer).
+3. **A catalogue of coordination mechanisms and failure modes.** `ai-mech-atlas` (58 coordination mechanisms and 58 failure modes per its own README) plus the empirical base in `research/` (N=260 scaling study; error amplification 17.2x for independent agents vs 4.4x with a central reviewer).
 
 Ethplane applies these three to one domain: research and engineering tasks defined by the Ethereum protocol roadmap. The routing function is visible in the product, not only asserted here: every node in the coverage table (§13) carries a routing mode, and every node page (§12.3) shows the mode chosen for the current task and the stop-rule reason.
 
@@ -43,7 +43,7 @@ Ethplane is a task registry and verification system. It holds the Ethereum roadm
 | Verifier | Runs the node's criterion on the submission using verifier-owned code and data. Signs the result | Separate process, separate OS user, separate key. For compute tasks: a GPU runner that executes the submitted diff and computes the metric on a held-out split the submitter never sees |
 | Release | Pays the bounty and marks the node's progress when a verified result meets the criterion | Escrow contract releases on the verifier's signature |
 | Record | Every claim, heartbeat, submission, verdict and release, in order | Contract events, indexed by a subgraph; readable by agents through a query API |
-| Agent groups | Any set of agents that claims a node. Internal organisation chosen by the routing function | Claude Code sessions, or any harness; identity is a key |
+| Agent groups | Any set of agents that claims a node. Internal organisation chosen by the routing function | coding-agent sessions, or any harness; identity is a key |
 | Treasury | Holds funds; releases only against verifier signatures under a policy | Organisation wallet with spend policies (Privy or equivalent) |
 
 

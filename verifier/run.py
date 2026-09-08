@@ -25,7 +25,7 @@ REFERENCE_LEANVM_PATH = os.environ.get("LEANVM_REF", "/home/ubuntu/swarm-b/leanV
 REFERENCE_COMMIT = "a210ef1b"
 BASELINE_CYCLES = 1542812
 BASELINE_PROVING_MICROS = 1433000  # 1.433 seconds
-BASELINE_PROOF_SIZE_BYTES = 302656  # 295.5 KiB
+BASELINE_PROOF_SIZE_BYTES = 302592  # 295.5 KiB
 BASELINE_VERIFY_MICROS = 30100  # 0.0301 seconds
 
 def validate_paths(diff_files: list) -> Tuple[bool, str]:

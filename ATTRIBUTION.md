@@ -10,3 +10,4 @@ ETHGlobal requires that submissions document which code, files or assets were ge
 | research/eth-governance.md, identity-checks.md | AI-assisted research; every quote carries its URL. |
 | research/eth-roadmap-*.md, ethereum-org-roadmap-2026-09-07.md | AI-assisted summaries of public posts; node lists quoted from the sources. |
 | LICENSE | MIT template. |
+| contracts/*.sol, test/*.sol, script/Deploy.s.sol | AI-written (Claude Opus) against the internal spec; every function and test traced to a spec clause; compiled, tested and reviewed by a human before merge. |

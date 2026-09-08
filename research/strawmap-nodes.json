@@ -346,8 +346,8 @@
    "uncertain": false,
    "throughlines_to": [],
    "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Underlined."
+   "has_public_tests_or_benchmark": "yes (leanEthereum/leanVM aggregate benchmark + python-verifier)",
+   "notes": "Underlined. | 2026-09-08: PoC node; harness leanEthereum/leanVM (CPU-only), see leanvm-facts.md"
   },
   {
    "id": "cl-vdf-randomness",

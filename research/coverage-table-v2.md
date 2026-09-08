@@ -1,6 +1,6 @@
-# Coverage table v2.1 (2026-09-08) — 65 rows from coverage.json, with routing and EF tier columns
+# Coverage table v2.2 (2026-09-08) — 65 rows from coverage.json, with routing and EF tier columns
 
-Counts: reviewed checklist 29, proof check 11, spec conformance 10, test suite 8, metric 7. Judgement data exists: unknown 34, no 29, yes 2. EF Hegotá tier present on 9 rows.
+Counts: reviewed checklist 29, proof check 10, spec conformance 10, test suite 8, metric 8. Judgement data exists: unknown 33, no 29, yes 3. EF Hegotá tier present on 9 rows.
 
 
 ## CL
@@ -37,7 +37,7 @@ Counts: reviewed checklist 29, proof check 11, spec conformance 10, test suite 8
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | cl-1-round-finality | 1-round finality | none |  | headliner, checklist pending EIP | reviewed checklist | a majority of the assigned reviewer panel scores the submission as meeting the node's checklist for '1-round finality' | no | reviewer time | orchestrated (C4) | 3 | ["name and recruit the reviewer panel for '1-round finality' (two reviewers if headliner, per SS13.1) before this node opens for claims"] |
 | cl-attester-proposer-separation | attester-proposer separation | none |  | specification only | reviewed checklist | a majority of the assigned reviewer panel scores the submission as meeting the node's checklist for 'attester-proposer separation' | no | reviewer time | orchestrated (C4) | 4 | ["name and recruit the reviewer panel for 'attester-proposer separation' (two reviewers if headliner, per SS13.1) before this node opens for claims"] |
-| cl-pq-leanxmss-attestations | PQ leanXMSS attestations | none |  | open | proof check | the submitted artefact passes the proof/type checker or known-answer test vectors for 'PQ leanXMSS attestations' | unknown | proof-checker time | single agent (C1) per proof attempt; verifier is the checker; several lineages may attempt in parallel | 3 | ["identify or build the checker/KAT-vector source for 'PQ leanXMSS attestations' -- named candidate repos noted in judgement_data, none independently confirmed this pass"] |
+| cl-pq-leanxmss-attestations | PQ leanXMSS attestations | none |  | open (PoC node) | metric | python-verifier/verifier.py accepts the proof on the verifier's fresh inputs; wall time beats the current best by more than the published noise-floor threshold; proof size and verify time do not regress | yes (https://github.com/leanEthereum/leanVM, python-verifier/verifier.py) | CPU-hours | sequential (C2) | 3 | Linux/server timing unknown until P10 (all published numbers are M4 Max); CLI parser file not yet located; hot-path crate confirmed by profiling on Day 1 |
 | cl-real-time-cl-proofs | real-time CL proofs | none |  | specification only | reviewed checklist | a majority of the assigned reviewer panel scores the submission as meeting the node's checklist for 'real-time CL proofs' | no | reviewer time | orchestrated (C4) | 4 | ["name and recruit the reviewer panel for 'real-time CL proofs' (two reviewers if headliner, per SS13.1) before this node opens for claims"] |
 | cl-tech-debt-reset | tech debt reset | none |  | specification only | reviewed checklist | a majority of the assigned reviewer panel scores the submission as meeting the node's checklist for 'tech debt reset' | no | reviewer time | orchestrated (C4) | 4 | ["name and recruit the reviewer panel for 'tech debt reset' (two reviewers if headliner, per SS13.1) before this node opens for claims"] |
 

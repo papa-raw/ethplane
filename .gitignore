@@ -1,7 +1,14 @@
+node_modules/
+dist/
+.next/
 out/
 cache/
-broadcast/
-.env
+coverage/
 __pycache__/
 *.pyc
 .pytest_cache/
+*.db
+data/
+.env
+.env.*
+broadcast/

@@ -2,6 +2,7 @@ import fastify from 'fastify';
 import { db, initializeDatabase } from './db';
 import nodesRoutes from './routes/nodes';
 import boardRoutes from './routes/board';
+import artifactRoutes from './routes/artifacts';
 import { runIndexer } from './indexer';
 
 // Initialize database
@@ -15,6 +16,7 @@ const server = fastify({
 // Register routes
 server.register(nodesRoutes, { prefix: '/api' });
 server.register(boardRoutes, { prefix: '/api' });
+server.register(artifactRoutes, { prefix: '/api' });
 
 // Health check endpoint
 server.get('/health', async () => {

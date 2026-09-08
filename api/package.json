@@ -1,0 +1,34 @@
+{
+  "name": "ethplane-api",
+  "version": "1.0.0",
+  "description": "Ethplane API server",
+  "main": "dist/src/server.js",
+  "scripts": {
+    "build": "tsc && mkdir -p dist/src/abi && cp src/abi/*.json dist/src/abi/",
+    "start": "node dist/src/server.js",
+    "dev": "ts-node src/server.ts",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@types/node": "^20.14.2",
+    "better-sqlite3": "^11.10.0",
+    "fastify": "^4.28.1",
+    "typescript": "^5.4.5",
+    "viem": "^2.56.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/supertest": "^6.0.2",
+    "supertest": "^7.0.0",
+    "ts-node": "^10.9.2",
+    "vitest": "^1.6.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3"
+    ]
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

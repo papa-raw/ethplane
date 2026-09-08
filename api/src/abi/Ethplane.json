@@ -1,0 +1,2323 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "maintainer_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "plane_",
+        "type": "address",
+        "internalType": "contract IERC20"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "acceptLineage",
+    "inputs": [
+      {
+        "name": "lineage",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "claim",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "fromHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "claimFor",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "guest",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "fromHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "nonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "deadline",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "sig",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "closeNode",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "confirmReview",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "artifactHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "pass",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "confirmReviewFor",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "guest",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "artifactHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "pass",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "nonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "deadline",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "sig",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "cooldownUntil",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "defineNode",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "criterionHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "lane",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "assignee",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "leaseDuration",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "heartbeatEvery",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "split",
+        "type": "tuple",
+        "internalType": "struct Ethplane.Split",
+        "components": [
+          {
+            "name": "winnerBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "parentBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "verifierBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "computeBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "registrantBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          }
+        ]
+      },
+      {
+        "name": "targetGainBps",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "thresholdBps",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "domainSeparator",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "eip712Domain",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "fields",
+        "type": "bytes1",
+        "internalType": "bytes1"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "version",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "chainId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifyingContract",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "salt",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "extensions",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "forfeit",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "lineage",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "fundNode",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "funded",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "heartbeat",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "isStrawmapId",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "leaseKey",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "lineage",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "leases",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "lineage",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "operator",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "start",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "expiry",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "lastHeartbeat",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "fromHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "seq",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "active",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "lineageGroup",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "lineageOperator",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "maintainer",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "nodeMetrics",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "originalMetric",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "bestMetric",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "head",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "paidGainBps",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "nodeMoney",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "bounty",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "released",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "open",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "closed",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "nodeParties",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "registrant",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "verifier",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "reviewer",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "nodeSplit",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct Ethplane.Split",
+        "components": [
+          {
+            "name": "winnerBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "parentBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "verifierBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "computeBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "registrantBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "nodes",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "registrant",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "verifier",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "reviewer",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "criterionHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "lane",
+        "type": "uint8",
+        "internalType": "uint8"
+      },
+      {
+        "name": "assignee",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "leaseDuration",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "heartbeatEvery",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "split",
+        "type": "tuple",
+        "internalType": "struct Ethplane.Split",
+        "components": [
+          {
+            "name": "winnerBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "parentBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "verifierBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "computeBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "registrantBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          }
+        ]
+      },
+      {
+        "name": "targetGainBps",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "thresholdBps",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "paidGainBps",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "originalMetric",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "bestMetric",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "baseProvingMicros",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "baseProofBytes",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "baseVerifyMicros",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "spreadBps",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "bounty",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "released",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "head",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "leaseSeq",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "open",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "closed",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "nonces",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "outsideRegistrants",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "owed",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "parentsOf",
+    "inputs": [
+      {
+        "name": "artifactHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pendingOperator",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "plane",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IERC20"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "recordBaseline",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "cycles",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "provingMicros",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "proofBytes",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifyMicros",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "spreadBps",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "recordMeasurement",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "artifactHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "cycles",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "provingMicros",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "proofBytes",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifyMicros",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifierAccepted",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "evidenceHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "registerLineage",
+    "inputs": [
+      {
+        "name": "operator",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupName",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "registerLineageFor",
+    "inputs": [
+      {
+        "name": "guest",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "groupName",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "nonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "deadline",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "sig",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "relays",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "seedStrawmap",
+    "inputs": [
+      {
+        "name": "ids",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setNodeVerifier",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "verifier",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setRelay",
+    "inputs": [
+      {
+        "name": "relay",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "allowed",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setReviewer",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "reviewer",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setSubregistry",
+    "inputs": [
+      {
+        "name": "subregistry_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "strawmapCount",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "strawmapIds",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "strawmapSeeded",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "submissions",
+    "inputs": [
+      {
+        "name": "artifactHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "lineage",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "operator",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "seq",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "status",
+        "type": "uint8",
+        "internalType": "enum Ethplane.Status"
+      },
+      {
+        "name": "cycles",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "submit",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "artifactHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "parents",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "submitFor",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "guest",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "artifactHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "parents",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      },
+      {
+        "name": "nonce",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "deadline",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "sig",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "subregistry",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "unusedWithdrawn",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "withdraw",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "withdrawUnused",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "BaselineRecorded",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "cycles",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "provingMicros",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "proofBytes",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifyMicros",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "spreadBps",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "EIP712DomainChanged",
+    "inputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "HeadAdvanced",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "artifactHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "cycles",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Heartbeat",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "lineage",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "seq",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "at",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "LeaseClaimed",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "lineage",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "operator",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "fromHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "expiry",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "seq",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "LeaseForfeited",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "lineage",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "operator",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "seq",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "reason",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "LineageProposed",
+    "inputs": [
+      {
+        "name": "lineage",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "operator",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "groupName",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "LineageRegistered",
+    "inputs": [
+      {
+        "name": "lineage",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "operator",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "groupName",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "MeasurementRecorded",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "artifactHash",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "seq",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "cycles",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "provingMicros",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "proofBytes",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifyMicros",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "verifierAccepted",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      },
+      {
+        "name": "status",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "enum Ethplane.Status"
+      },
+      {
+        "name": "evidenceHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "signer",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "NodeClosed",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "NodeDefined",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "registrant",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "criterionHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "lane",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      },
+      {
+        "name": "leaseDuration",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "heartbeatEvery",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
+      },
+      {
+        "name": "split",
+        "type": "tuple",
+        "indexed": false,
+        "internalType": "struct Ethplane.Split",
+        "components": [
+          {
+            "name": "winnerBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "parentBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "verifierBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "computeBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "registrantBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          }
+        ]
+      },
+      {
+        "name": "targetGainBps",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
+      },
+      {
+        "name": "thresholdBps",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "NodeFunded",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "funder",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "bounty",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Payout",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "artifactHash",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "to",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "kind",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "enum Ethplane.Kind"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RelaySet",
+    "inputs": [
+      {
+        "name": "relay",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "allowed",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ReviewConfirmed",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "artifactHash",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "reviewer",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "pass",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ReviewerSet",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "reviewer",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "StrawmapSeeded",
+    "inputs": [
+      {
+        "name": "count",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SubmissionMade",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "lineage",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "operator",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "artifactHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "seq",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "parents",
+        "type": "bytes32[]",
+        "indexed": false,
+        "internalType": "bytes32[]"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SubregistrySet",
+    "inputs": [
+      {
+        "name": "subregistry",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "UnusedWithdrawn",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "funder",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "share",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "VerifierSet",
+    "inputs": [
+      {
+        "name": "nodeId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "verifier",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Withdrawn",
+    "inputs": [
+      {
+        "name": "to",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AlreadyDefined",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AlreadySeeded",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AlreadyWithdrawn",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "BadNonce",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "BadSignature",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "BadSplit",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "BaselineAlreadySet",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DuplicateArtifact",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ECDSAInvalidSignature",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ECDSAInvalidSignatureLength",
+    "inputs": [
+      {
+        "name": "length",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "ECDSAInvalidSignatureS",
+    "inputs": [
+      {
+        "name": "s",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "Expired",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InCooldown",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidShortString",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LeaseActive",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LeaseHealthy",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LineageAlreadyRegistered",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LineageNotRegistered",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoActiveLease",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoBaseline",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoVerifier",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NodeIsClosed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NodeNotOpen",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotAssignee",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotFunder",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotInReview",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotLeaseHolder",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotMaintainer",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotPending",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotProposedOperator",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotRegistrant",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotRelay",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotReviewer",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotStrawmapId",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotVerifier",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NothingOwed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ReentrancyGuardReentrantCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ReviewerConflict",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SafeERC20FailedOperation",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "StringTooLong",
+    "inputs": [
+      {
+        "name": "str",
+        "type": "string",
+        "internalType": "string"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "SubregistryLocked",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TooManyParents",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnknownParent",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "UnknownSubmission",
+    "inputs": []
+  }
+]

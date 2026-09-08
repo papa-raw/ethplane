@@ -90,3 +90,54 @@ describe('detail route', () => {
     await app.close();
   });
 });
+
+describe('join flow', () => {
+  it('refuses every request when Privy is not configured, rather than trusting the caller', async () => {
+    delete process.env.PRIVY_APP_ID;
+    delete process.env.PRIVY_APP_SECRET;
+    const { initializeDatabase } = await import('../src/db');
+    initializeDatabase();
+    const Fastify = (await import('fastify')).default;
+    const app = Fastify();
+    await app.register((await import('../src/routes/join')).default, { prefix: '/api' });
+    const res = await app.inject({ method: 'POST', url: '/api/join', headers: { authorization: 'Bearer x' } });
+    expect(res.statusCode).toBe(503);
+    expect(JSON.parse(res.body).error).toContain('not configured');
+    await app.close();
+  });
+
+  it('rejects a request with no bearer token once configured', async () => {
+    process.env.PRIVY_APP_ID = 'app';
+    process.env.PRIVY_APP_SECRET = 'secret';
+    const { initializeDatabase } = await import('../src/db');
+    initializeDatabase();
+    const Fastify = (await import('fastify')).default;
+    const app = Fastify();
+    await app.register((await import('../src/routes/join')).default, { prefix: '/api' });
+    const res = await app.inject({ method: 'POST', url: '/api/join' });
+    expect(res.statusCode).toBe(401);
+    await app.close();
+    delete process.env.PRIVY_APP_ID;
+    delete process.env.PRIVY_APP_SECRET;
+  });
+
+  it('gives a returning wallet the same guest name and reports registration state', async () => {
+    const { db, initializeDatabase } = await import('../src/db');
+    initializeDatabase();
+    const now = Math.floor(Date.now() / 1000);
+    db.prepare(`INSERT INTO guests(privy_user_id, wallet, guest_name, created_at) VALUES(?,?,?,?)`)
+      .run('did:privy:1', '0xAbC', 'judge-1', now);
+    db.prepare(`INSERT INTO pending_names(label, owner, resolver, expiry, registered, created_at) VALUES(?,?,?,?,0,?)`)
+      .run('judge-1', '0xAbC', '0xres', now + 100, now);
+
+    const Fastify = (await import('fastify')).default;
+    const app = Fastify();
+    await app.register((await import('../src/routes/join')).default, { prefix: '/api' });
+    // case-insensitive: a wallet is the same wallet however it is cased
+    const res = await app.inject({ method: 'GET', url: '/api/guests/0xabc' });
+    expect(JSON.parse(res.body)).toEqual({ guestName: 'judge-1', registered: false });
+    const missing = await app.inject({ method: 'GET', url: '/api/guests/0xnobody' });
+    expect(missing.statusCode).toBe(404);
+    await app.close();
+  });
+});

@@ -181,6 +181,27 @@ export function initializeDatabase() {
     )
   `);
 
+  // Guests: one row per Privy user, so a returning judge gets the same name (PRD 3.25).
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS guests(
+      privy_user_id TEXT PRIMARY KEY,
+      wallet TEXT,
+      guest_name TEXT UNIQUE,
+      created_at INTEGER
+    )
+  `);
+  // Names waiting for the maintainer key to register them on chain. The request never signs.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS pending_names(
+      label TEXT PRIMARY KEY,
+      owner TEXT,
+      resolver TEXT,
+      expiry INTEGER,
+      registered INTEGER DEFAULT 0,
+      created_at INTEGER
+    )
+  `);
+
   // Create indexes
   db.exec(`CREATE INDEX IF NOT EXISTS idx_events_node ON lease_events(node_id, block)`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_attr_op ON attribution(operator)`);

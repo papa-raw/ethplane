@@ -7,6 +7,7 @@ export default function Home() {
         <div className="flex items-baseline gap-4">
           <h1 className="text-2xl font-semibold">Ethplane</h1>
           <nav className="flex gap-3 text-sm text-muted-foreground">
+            <a className="hover:underline hover:text-foreground" href="/join">join</a>
             <a className="hover:underline hover:text-foreground" href="/deck">deck</a>
             <a className="hover:underline hover:text-foreground" href="/docs">docs</a>
             <a className="hover:underline hover:text-foreground" href="https://github.com/papa-raw/ethplane">source</a>

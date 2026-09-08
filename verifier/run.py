@@ -154,7 +154,18 @@ def main():
     # Extract artifact
     with tempfile.TemporaryDirectory() as temp_dir:
         with tarfile.open(args.artifact_tarball, "r:gz") as tar:
-            tar.extractall(path=temp_dir)
+            # Safely extract tarball by rejecting dangerous members
+            for member in tar.getmembers():
+                # Reject absolute paths
+                if member.name.startswith('/'):
+                    print("reason: \"unsafe-archive\"", file=sys.stderr)
+                    sys.exit(1)
+                # Reject paths with .. components
+                if '..' in member.name:
+                    print("reason: \"unsafe-archive\"", file=sys.stderr)
+                    sys.exit(1)
+                # Extract the member
+                tar.extract(member, path=temp_dir)
         
         # Get list of extracted files
         extracted_files = []

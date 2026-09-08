@@ -1,11 +1,13 @@
 import fastify from 'fastify';
-import { db, initializeDatabase } from './db';
+import { db, initializeDatabase, seedStrawmapMetadata } from './db';
 import nodesRoutes from './routes/nodes';
 import boardRoutes from './routes/board';
 import { runIndexer } from './indexer';
 
 // Initialize database
 initializeDatabase();
+const seeded = seedStrawmapMetadata();
+if (seeded === 0) console.warn('strawmap metadata not found: nodes will have no labels (set STRAWMAP_JSON)');
 
 // Create Fastify instance
 const server = fastify({

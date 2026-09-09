@@ -65,7 +65,7 @@ export function Strawmap({ nodes }: { nodes: StrawNode[] }) {
           ) : null
         )}
         {poll.error && !poll.data ? (
-          <span className="text-muted-foreground">(live state unavailable — the shape is still the roadmap)</span>
+          <span className="text-muted-foreground">(live state unavailable; node states are not shown)</span>
         ) : null}
       </figcaption>
 

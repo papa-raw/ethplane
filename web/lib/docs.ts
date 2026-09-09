@@ -23,11 +23,17 @@ export function renderMarkdown(md: string): string {
 
 export type Slide = { title: string; html: string };
 
-/** DECK.md is a list of level-2 sections; each one is a slide, in file order. */
+/**
+ * DECK.md is a list of level-2 sections; each one is a slide, in file order. The file also opens
+ * with an H1 and a line saying what it is, and splitting on `## ` alone turned that preamble into
+ * slide one, titled `# Ethplane, the deck` — so everything before the first `## ` is dropped.
+ */
 export function deckSlides(): Slide[] {
   const md = readDoc('DECK.md');
   if (!md) return [];
-  const parts = md.split(/^## /m).filter((s) => s.trim().length > 0);
+  const first = md.search(/^## /m);
+  if (first === -1) return [];
+  const parts = md.slice(first).split(/^## /m).filter((s) => s.trim().length > 0);
   return parts.map((part) => {
     const nl = part.indexOf('\n');
     const title = (nl === -1 ? part : part.slice(0, nl)).trim();

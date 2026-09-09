@@ -125,12 +125,12 @@ function FundingCard({ node }: { node: NodeRow }) {
       <CardContent className="space-y-3 text-sm">
         <p className="text-lg font-medium">{plane}</p>
         <div className="space-y-1 text-xs text-muted-foreground">
-          <p>Held by the contract, released only on a verified improvement, paid by cumulative progress.</p>
+          <p>The contract holds the escrow. It pays on a verified improvement, in proportion to cumulative progress.</p>
           <p>Treasury wallet policy <span className="font-mono">{PRIVY_POLICY}</span> allows exactly three things:</p>
           <ul className="list-disc pl-4">
             <li>defineNode on the Ethplane contract, and nothing else on it</li>
             <li>fundNode, capped at 100,000e18 per call</li>
-            <li>the same two for signing as well as sending — rules are per RPC method</li>
+            <li>the same two for signing as well as sending, because policy rules are per RPC method</li>
           </ul>
           <p>Anything else is refused by Privy before it is signed: <span className="font-mono">RPC request denied due to policy violation</span>.</p>
         </div>
@@ -162,7 +162,7 @@ function EnsCard({ slug }: { slug: string | null }) {
         <p className="font-mono">{name ?? '—'}</p>
         {state.loading ? <p className="text-muted-foreground">reading through the Universal Resolver…</p> : null}
         {state.error ? (
-          <p className="text-muted-foreground" title={state.detail}>no record yet — {state.error}</p>
+          <p className="text-muted-foreground" title={state.detail}>no record yet: {state.error}</p>
         ) : null}
         {state.value ? (
           <>
@@ -200,7 +200,7 @@ function Sessions({ events, leases }: { events: NodeDetail['lease_events']; leas
         )}
         {leases.some((l) => l.active) ? (
           <p className="mt-3 text-xs text-muted-foreground">
-            {leases.filter((l) => l.active).length} active session(s) — in principle anybody can
+            {leases.filter((l) => l.active).length} active session(s). In principle anybody can
             contribute to any node, and many sessions run on one node at once.
           </p>
         ) : null}

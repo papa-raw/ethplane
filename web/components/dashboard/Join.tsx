@@ -68,7 +68,7 @@ export function Join() {
           <div data-testid="join-result" className="space-y-1">
             <p className="text-lg font-medium">{result.guestName}.ethplane.eth</p>
             <p className="text-muted-foreground">
-              {result.returning ? 'Welcome back — the same name as last time.' : 'Your name is reserved.'}{' '}
+              {result.returning ? 'This name was already reserved for this wallet.' : 'Your name is reserved.'}{' '}
               It is registered on chain by the maintainer shortly; the dashboard shows it as soon as it is.
             </p>
           </div>

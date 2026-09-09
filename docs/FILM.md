@@ -28,7 +28,7 @@ Two to four minutes, real time, my voice, shot on the live product. No slides. E
 
 > *If PASS:* Pass. The contract releases the split: 68 percent to the lineage that won, 15 to the parent it built on, 10 to the verifier, 2 to whoever registered the node. The 5 percent host share stays in escrow in this version. Nobody clicked.
 >
-> *If FAIL:* Fail. The verifier's own run did not clear the bar, and it wrote the reason onchain. [Read the recorded reason here, as written: cycles, or the proving-time bound, and why.] No payout. An honest rejection, recorded with the numbers, is the product working.
+> *If FAIL:* Fail. Three submissions on this node today. All three cut cycles to 1,541,462, below the baseline. All three grew the proof past 302,182 bytes, and the criterion holds proof size to the baseline with no allowance. The verifier said no three times and wrote why onchain. No payout. That is the product working: the swarm tried, the judge held the line, and the record shows both.
 
 **2:40, the names.** Screen: cast resolving dl-leanvm.ethplane.eth through the hackathon Universal Resolver: addr, ethplane.status, ethplane.head; then the same setText from a fresh key reverting.
 
@@ -54,7 +54,7 @@ The verdict beat is filmed after the verifier records it, never before. FILM.md 
 | 10,000 PLANE escrow, node 2 | fundNode tx 0x18830649…, approve 0x42923f98… |
 | Privy policy: three allowed shapes | policy c8io5x5g08igo85ljedozu2k; refused transfer: "RPC request denied due to policy violation" (docs/DEPLOYMENTS.md) |
 | Baseline 1,542,812 cycles | recordBaseline tx 0x0d24ace3… (verifier, run.py --baseline) |
-| 1,541,462 cycles, four-line change | swarm B board, 2026-09-09 13:59 host time; artifact hash once submitted |
+| 1,541,462 cycles, four-line change | verifier's own measurement on artifacts 0x7d958feb…, 0x1336adaf…, 0x471b8911… (verdict txs 0x46a9e099…, 0x55a14b41…, and the third in DEPLOYMENTS); proof 302,489 B against the 302,182 B bound |
 | Verifier as its own user, build as lean-build | verifier/host-setup-build-user.sh, run.py run_prefix |
 | Three probes, full sweep on a paying pass | docs/CRITERION-pq-leanxmss.md |
 | Split 6800/1500/1000/500/200 bps | Ethplane.sol Split struct, test_cumulativePayoutEqualsOneShot |
@@ -89,5 +89,6 @@ The verdict beat is filmed after the verifier records it, never before. FILM.md 
 
 Both verdicts are FAIL with reason `worktree`: the watcher was run as root against the verifier user's checkout and git refused the worktree, so the verifier recorded a host failure rather than a measurement. Re-run as the `verifier` user, the same artifact builds and measures (the reason becomes `regression-provingMicros` on a loaded host). Lesson kept for the film: the verifier runs as its own user, on a quiet host, and a FAIL is final per artifact, so a fresh submission is needed for a fresh verdict.
 ## Changelog
+- 2026-09-09 17:0x: FAIL ending written from the record: three node-2 submissions, cycles below, proof over the bound.
 - 2026-09-09 16:4x: critic's film pass applied: probes stated as three-then-nine-hundred, host share stays in escrow, measurement attributed to the builder's instrument, FAIL ending reads the recorded reason, key sentence made true, two proof rows added.
 - 2026-09-09 16:2x: script rewritten in place (the day-2 shot table replaced): eight beats, two verdict endings, proof table; rehearsal tables kept below.

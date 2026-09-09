@@ -24,7 +24,7 @@ What happened today: two swarms of Qwen3-Coder 30B on one rented GPU box worked 
 
 Contracts, Foundry, Sepolia: Ethplane (nodes, sessions, submissions with parents, measurement, pull-based cumulative release, EIP-712 relay), PlaneToken, EthplaneSubregistry and one EthplaneResolver per node. 56 tests, one of them a fork test through the hackathon Universal Resolver.
 
-ENS, on the hackathon ENSv2 deployment: ethplane.eth is registered on the v2 registry. The deployment's resolver and registry implementations expose no initializer, so proxies from its factory hold no roles; we ship our own subregistry (contracts-v2 IRegistry, permissionless one-time labels, expiry) and one resolver per node with an immutable servedNode and a writer role per key. Only the verifier writes ethplane.head and ethplane.status. docs/ENS-PROBES.md has every probe with its output.
+ENS, on the hackathon ENSv2 deployment: ethplane.eth is registered on the v2 registry. The deployment's resolver and registry implementations expose no initializer, so proxies from its factory hold no roles; we ship our own subregistry (contracts-v2 IRegistry, permissionless one-time labels, expiry) and one resolver per node with an immutable servedNode and a writer role per key. The verifier holds the writer role for ethplane.head and ethplane.status; the resolver's owner can write them too. docs/ENS-PROBES.md has every probe with its output.
 
 Privy: the treasury is a server wallet under a policy that allows three transaction shapes, approve, fundNode under a cap, and defineNode whose split gives the verifier at least ten percent. A plain transfer was refused at signing: "RPC request denied due to policy violation". Guests log in with email, get an embedded wallet and a name under guests.ethplane.eth.
 
@@ -61,4 +61,4 @@ The policy engine did exactly what we needed: an allowlist on the treasury walle
 
 # Honest limitations (≤ 100 words)
 
-No payout has happened: every verdict so far is a FAIL, recorded with its reason. Node 1 admits only the guest program, which never moved cycles in sixteen measurements. Node 2's baseline was measured under load, so its time bound is lenient and its proof-size bound is strict. The compute share is held, not paid, in this version. The swarm runs on one box we operate; guests bring their own compute. Sepolia only.
+No payout has happened: every verdict so far is a FAIL, recorded with its reason. Node 1 admits only the guest program, which never moved cycles in sixteen measurements. Node 2's baseline was measured under load, so its time bound is lenient and its proof-size bound is strict. The compute share is held, not paid, in this version. The swarm runs on one box we operate; guests bring their own compute. The contract records the lineage key and does not check that the key owns the name it registers. Sepolia only.

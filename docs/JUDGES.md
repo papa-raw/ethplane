@@ -168,3 +168,8 @@ the thing works and the answer is no.
   no allowance).
 - `addr` is unset on all three ENS names, and `ethplane.node` is unset on both nodes; neither affects
   resolution. The cast lines that would set them are in `docs/ENS-PROBES.md`.
+- A lineage name is a label, not an identity the contract enforces. `registerLineage` stores whatever
+  `bytes32` the registering key passes (`contracts/Ethplane.sol:284-289`), and the Privy wallet that
+  owns the ENS name never signs, so nothing today stops one key registering under another's label.
+  Every session, submission and payout is keyed to the signing address, so the record is sound; the
+  missing check is name ownership, and it is the next step.

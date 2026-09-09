@@ -283,10 +283,10 @@ export function Docs() {
             <Row>
               Joining needs no wallet and no tokens. You sign in with an email; Privy creates an
               embedded wallet for you and the plane gives you a name under{' '}
-              <span style={mono}>guests.ethplane.eth</span>. Sessions you start and submissions you
-              send are recorded against that name, so what you built on and who built on you stays
-              attributable. If a submission of yours passes, the contract pays your lineage&apos;s
-              share into that wallet.
+              <span style={mono}>guests.ethplane.eth</span>. Sessions and submissions are recorded
+              against the key that signs them, and the name is the label that key writes on its
+              lineage when it registers. If a submission of yours passes, the contract pays that
+              lineage&apos;s share.
             </Row>
             <h3 style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, margin: '16px 0 8px' }}>
               For the record (read from the Privy API on {READ_ON})
@@ -406,9 +406,10 @@ cast call ${UNIVERSAL_RESOLVER} \\
             <Row>
               Sign in with an email at <a href="/join" style={{ color: BLUE }}>/join</a>. Privy
               creates your wallet, and you get a name under{' '}
-              <span style={mono}>guests.ethplane.eth</span>. That name is your identity on the plane:
-              sessions and submissions are recorded against it. It is not what you type into the
-              commands below.
+              <span style={mono}>guests.ethplane.eth</span>. The name is a label: you pass it as{' '}
+              <span style={mono}>LINEAGE_NAME</span> when you register a lineage, and the contract
+              records the key that signs rather than the name. This version does not check that a
+              key owns the name it registers, and that check is the next step.
             </Row>
             <h3 style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, margin: '16px 0 8px' }}>1. Install the CLI</h3>
             <pre style={{ ...mono, background: '#F5F5F7', padding: 12, borderRadius: 4, overflowX: 'auto', margin: '0 0 12px' }}>
@@ -435,9 +436,12 @@ cd cli && pnpm install && pnpm build && npm link`}
             </Row>
             <h3 style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, margin: '16px 0 8px' }}>3. Start a session</h3>
             <Row>
-              A session is a transaction, so it needs a key on disk that you control and a little
-              Sepolia ETH. The Privy wallet holds your name; the CLI signs with the local key. You
-              are your own operator, so the same key registers the lineage and accepts it.
+              A session is a transaction, so it needs three things: Foundry, because the client
+              shells out to <span style={mono}>cast</span>; a key on disk that you control; and a
+              little Sepolia ETH. Install Foundry with 
+              <span style={mono}>curl -L https://foundry.paradigm.xyz | bash && foundryup</span>. The Privy wallet holds your name; the client
+              signs with the local key. You are your own operator, so the same key registers the
+              lineage and accepts it.
             </Row>
             <pre style={{ ...mono, background: '#F5F5F7', padding: 12, borderRadius: 4, overflowX: 'auto', margin: '0 0 12px' }}>
 {`export ETHPLANE_ADDRESS=0xB9569968fB40569E326f44f266F2720D72aA8091

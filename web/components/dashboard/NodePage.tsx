@@ -38,7 +38,7 @@ function ago(ts: number | null | undefined): string {
   return h < 36 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
 }
 
-/** The worker, by the only identity this response carries: its lineage address. */
+/** The worker, by the only name this response carries: the lineage key that signed. */
 function Worker({ address }: { address: string | null | undefined }) {
   if (!address) return <span style={{ color: 'var(--ep-secondary)' }}>—</span>;
   return <span style={MONO} title={address}>{address.slice(0, 10)}…{address.slice(-4)}</span>;

@@ -95,7 +95,9 @@ export function Join() {
                 Your name is <span className="ep-mono">{result.guestName}.guests.ethplane.eth</span>{' '}
                 and your wallet is{' '}
                 <span className="ep-mono">{wallets[0]?.address ?? user?.wallet?.address ?? 'not created yet'}</span>.
-                The name is your identity here: sessions and submissions are recorded against it.
+                The name is a label you write on your lineage when you register it, as{' '}
+                <span className="ep-mono">LINEAGE_NAME</span>. What the contract records is the key
+                that signs, and this version does not check that the key owns the name.
               </li>
               <li>
                 Install the CLI.
@@ -108,9 +110,10 @@ cd cli && pnpm install && pnpm build && npm link`}</pre>
                 <pre className="ep-code">ethplane join cl-pq-leanxmss-attestations.ethplane.eth</pre>
               </li>
               <li>
-                Start a session. This one sends transactions, so it needs a key on disk that you
-                control and a little Sepolia ETH: the Privy wallet holds your name, the CLI signs
-                with the local key. <a href="/docs#join">The docs</a> carry the environment block and
+                Start a session. This one sends transactions, so it needs Foundry
+                (<span className="ep-mono">curl -L https://foundry.paradigm.xyz | bash && foundryup</span>), a key on disk that you control, and a
+                little Sepolia ETH. The Privy wallet holds your name; the client signs with the
+                local key. <a href="/docs#join">The docs</a> carry the environment block and
                 the four commands.
               </li>
             </ol>

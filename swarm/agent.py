@@ -129,8 +129,12 @@ def send_to(role, text):
     time.sleep(0.4); subprocess.run(["tmux", "send-keys", "-t", f"{PREFIX}{role}", "Enter"], check=False)
 def run_shell(cmd, timeout=900):
     env = dict(os.environ, PATH=f"{os.path.expanduser('~/.cargo/bin')}:/usr/local/bin:{os.environ.get('PATH', '')}")
+    # A swarm can exist before its clone does — the View seat opens on a fresh host with no ethplane
+    # checkout, and a missing cwd used to raise FileNotFoundError out of subprocess and kill the pane
+    # before it drew anything.
+    cwd = WORKDIR if os.path.isdir(WORKDIR) else str(SWARM)
     try:
-        p = subprocess.run(["bash", "-lc", cmd], cwd=WORKDIR, capture_output=True, text=True, timeout=timeout, env=env)
+        p = subprocess.run(["bash", "-lc", cmd], cwd=cwd, capture_output=True, text=True, timeout=timeout, env=env)
         out = (p.stdout + p.stderr).strip(); return (out[-6000:] if out else f"(exit {p.returncode}, no output)"), p.returncode == 0
     except subprocess.TimeoutExpired: return f"timed out after {timeout}s", False
 
@@ -258,14 +262,21 @@ def t_handoff(role: str, task: str, files: str, done_when: str):
     OWED.add(role); board_append(msg); send_to(role, msg); return f"sent to {role}", True
 # The same skills this project's Claude sessions use, synced to the host by deploy.sh and allowed
 # per role from dogfood/roles/toolkits — the model can ask what applies and then follow one.
+# One list per role, in the shape dogfood/roles/toolkits uses on the Claude side: what this role
+# reaches for, and nothing that belongs to another lane. A name that is not synced to this host is
+# said so plainly rather than silently missing — the model needs to know the difference between "not
+# yours" and "not here".
 SKILL_ALLOW = {
-    "builder": ["debug-protocol", "test", "zero-tech-debt", "refactor-verify", "handoff", "pre-mortem",
-                "write-for-ai", "perf-profile", "whatnow"],
-    "critic": ["adversarial-review", "attack", "audit", "quick-audit", "factcheck", "sanitycheck",
-               "semantic-review", "visual-qa", "debug-protocol", "zero-tech-debt", "handoff"],
-    "orchestrator": ["handoff", "diverge", "pre-mortem", "checkpoint", "savecommitpush", "whatnow",
-                     "self-harness", "skill-finder", "write-for-ai"],
-    "guest": ["whatnow", "handoff"],
+    "builder": ["design", "design-research", "design-tokens", "frontend-design", "interface-design",
+                "interaction-design", "baseline-ui", "patterns", "write", "humanizer", "pptx",
+                "debug-protocol", "test", "zero-tech-debt", "refactor-verify", "skillsearch"],
+    "critic": ["visual-qa", "design", "design-research", "baseline-ui", "interface-design", "patterns",
+               "write", "skillsearch", "adversarial-review", "attack", "audit", "quick-audit",
+               "factcheck", "sanitycheck", "semantic-review", "debug-protocol", "zero-tech-debt"],
+    "orchestrator": ["skillsearch", "design", "design-research", "write", "distribution", "patterns",
+                     "recursive-improvement", "handoff", "diverge", "pre-mortem", "whatnow"],
+    # The seat reads and asks; it does not carry the working skills.
+    "guest": ["skillsearch", "design", "write", "whatnow"],
 }
 def _skill_index():
     """name → (trigger line, path). The trigger line is the SKILL.md description, which is what the

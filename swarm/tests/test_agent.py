@@ -146,7 +146,7 @@ class TestSkills(AgentTestCase):
     def setUp(self):
         super().setUp()
         skills = pathlib.Path(SWARM_TMP) / "skills"
-        for name, desc in (("debug-protocol", "reproduce before fixing"), ("adversarial-review", "attack the work")):
+        for name, desc in (("debug-protocol", "reproduce before fixing"), ("visual-qa", "look at the built page")):
             d = skills / name; d.mkdir(parents=True, exist_ok=True)
             (d / "SKILL.md").write_text(f"---\nname: {name}\ndescription: {desc}\n---\n\nbody of {name}\n")
 
@@ -154,7 +154,7 @@ class TestSkills(AgentTestCase):
         out, ok = self.agent.t_skill()
         self.assertTrue(ok)
         self.assertIn("debug-protocol: reproduce before fixing", out)
-        self.assertNotIn("adversarial-review", out, "that one belongs to the critic")
+        self.assertNotIn("visual-qa", out, "that one belongs to the critic")
 
     def test_loading_one_returns_the_skill_itself(self):
         out, ok = self.agent.t_skill("debug-protocol")
@@ -162,7 +162,7 @@ class TestSkills(AgentTestCase):
         self.assertIn("body of debug-protocol", out)
 
     def test_a_skill_outside_the_role_s_set_is_refused_with_the_set(self):
-        out, ok = self.agent.t_skill("adversarial-review")
+        out, ok = self.agent.t_skill("visual-qa")
         self.assertFalse(ok)
         self.assertIn("debug-protocol", out)
 

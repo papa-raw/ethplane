@@ -179,6 +179,8 @@ WORK = {"n": 0}
 def t_board(kind: str, text: str):
     board_append(f"{ROLE} {kind}: {text}"); return "written to the board", True
 def t_report(text: str):
+    if os.environ.get("DESIGN") and ROLE == "builder" and not LAST.get("build"): return "refused: call build first; a page report needs a passing build since the last report", False
+    LAST["build"] = False
     board_append(f"REPORT {ROLE}: {text}")
     if ROLE != "orchestrator": send_to("orchestrator", f"REPORT {ROLE}: {text}")
     return "reported", True
@@ -213,6 +215,19 @@ def t_resources(query: str = ""):
         if f.is_file() and (not query or query.lower() in f.name.lower() or query.lower() in str(f.relative_to(RESOURCES)).lower()):
             hits.append(str(f))
     return "\n".join(hits[:60]) or "no match; try a shorter word", True
+ACCENT = os.environ.get("ACCENT", "#2E5BFF")
+def t_build():
+    """Build the site (cd web && pnpm build) and post the result; the only way a page counts as built."""
+    out, ok = run_shell("cd web && pnpm build 2>&1 | tail -60", 900)
+    errs = [l for l in out.splitlines() if re.search(r"error TS|CssSyntaxError|Build error|Failed to compile|Unclosed|Unknown word", l)]
+    pages, _ = run_shell("find web/out -name '*.html' 2>/dev/null | wc -l")
+    accent, _ = run_shell(f"grep -rli '{ACCENT}' web/out/*.html web/out/_next/static/css 2>/dev/null | wc -l")
+    pages = pages.strip() or "0"; accent = accent.strip() or "0"
+    status = "ok" if ok and not errs and int(pages) > 0 else "FAILED"
+    kind = "BUILD" if ROLE == "builder" else "REVIEW"
+    board_append(f"{ROLE} {kind}: {status} · {pages} pages · accent {ACCENT} in {accent} built files" + (" · " + errs[0][:120] if errs else ""))
+    LAST["build"] = status == "ok"
+    return (f"build {status} · {pages} html pages in web/out · accent {ACCENT} found in {accent} built files\n" + ("\n".join(errs[:6]) if errs else out[-800:])), status == "ok"
 def t_wait(seconds: int = 300):
     """Wait for peers; returns early when a message arrives in this pane."""
     for _ in range(min(int(seconds), 900)):
@@ -236,6 +251,7 @@ TOOLS = {
     "handoff": (t_handoff, spec("handoff", "Hand work to builder or critic: lands on the board and in that pane.", {"role": S("builder | critic"), "task": S("one sentence"), "files": S("paths"), "done_when": S("verifiable criterion")}, ["role", "task", "files", "done_when"])),
     "skill": (t_skill, spec("skill", "List the skills available to this role (no name) or load one by name: design, design-research, design-tokens, frontend-design, interface-design, visual-qa, baseline-ui, write, humanizer, pptx and more. Load the relevant skill before starting a page or a document and follow it.", {"name": S("skill name, or empty to list")}, [])),
     "resources": (t_resources, spec("resources", "Search the estate's synced design and writing references (component kits, briefs, style guides) by a word in the path; then read_file the hit.", {"query": S("a word from the file or folder name")}, [])),
+    "build": (t_build, spec("build", "Run the site build (cd web && pnpm build) and post BUILD ok/FAILED with the page count, the accent check and the first error to the board. Call it after every page edit; a page is built only when this says ok.", {}, [])),
     "wait": (t_wait, spec("wait", "Wait up to N seconds for a peer's report to arrive in this pane.", {"seconds": I("default 300, max 900")}, [])),
     "measure": (t_measure, spec("measure", "Build and run the node's benchmark in the leanVM checkout; posts MEASURED/REVIEW cycles=<n> to the board and says whether it is strictly below the baseline. Refuses while files outside the editable surface are modified.", {}, [])),
     "submit": (t_submit, spec("submit", "Flag the current tree for submission. Only works when the last measure was strictly below the baseline.", {}, [])),
@@ -247,7 +263,7 @@ ROLE_TOOLS = {"orchestrator": ["board_plan", "handoff", "report", "read_board", 
 LABELS = {"bash": lambda a: f"Bash({a.get('command', '')[:90]})", "read_file": lambda a: f"Read({a.get('path')})",
           "write_file": lambda a: f"Write({a.get('path')})", "edit_file": lambda a: f"Update({a.get('path')})",
           "board": lambda a: f"Board({a.get('kind')} {a.get('text', '')[:70]})", "report": lambda a: f"Report({a.get('text', '')[:80]})",
-          "read_board": lambda a: "ReadBoard()", "skill": lambda a: f"Skill({a.get('name') or 'list'})", "resources": lambda a: f"Resources({a.get('query', '')})", "measure": lambda a: "Measure(cargo run --release -- aggregate)", "submit": lambda a: "Submit()", "revert": lambda a: "Revert(leanVM)", "board_plan": lambda a: f"Plan({a.get('builder', '')[:70]})",
+          "read_board": lambda a: "ReadBoard()", "skill": lambda a: f"Skill({a.get('name') or 'list'})", "build": lambda a: "Build(cd web && pnpm build)", "resources": lambda a: f"Resources({a.get('query', '')})", "measure": lambda a: "Measure(cargo run --release -- aggregate)", "submit": lambda a: "Submit()", "revert": lambda a: "Revert(leanVM)", "board_plan": lambda a: f"Plan({a.get('builder', '')[:70]})",
           "handoff": lambda a: f"Handoff({a.get('role')}: {a.get('task', '')[:70]})", "wait": lambda a: f"Wait({a.get('seconds', 60)}s)"}
 
 # ── prompts ─────────────────────────────────────────────────────────────────────────────────────
@@ -351,13 +367,14 @@ def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--init", help="first message"); ap.add_argument("--init-file"); ap.add_argument("--once", action="store_true", help="run the init message then exit")
     a = ap.parse_args()
     names = ROLE_TOOLS[ROLE]
-    if os.environ.get("DESIGN"): names = [n for n in names if n not in ("measure", "submit", "revert")]
+    if os.environ.get("DESIGN"): names = [n for n in names if n not in ("measure", "submit", "revert")] + ["build"]
+    else: names = [n for n in names if n != "build"]
     tools = [TOOLS[n][1] for n in names]
     system = COMMON.format(role=ROLE, board=BOARD) + " " + ROLE_PROMPT[ROLE]
     brief = SWARM / "node.md"
     if os.environ.get("DESIGN"):
         system += (f"\n\nTHIS SWARM WORKS ON THE ETHPLANE WEBSITE AND DOCS in {WORKDIR}/web (Next.js static export, shadcn, Tailwind), never on leanVM or the node benchmark. "
-                   "The builder edits pages and runs cd web && pnpm build; the critic re-runs the build and reads web/out. Direction and page order come from the human's task. "
+                   "The builder edits with edit_file (never write_file on a file over 80 lines) and calls build after every edit; the critic calls build itself and reads web/out; a report without a passing build is refused. The map is already computed: web/lib/layout.ts (geometry, pure), web/components/dashboard/Strawmap.tsx (renders research/strawmap-nodes.json with live colours from /api/nodes); restyle those, never invent nodes. Direction and page order come from the human's task. "
                    "Before the first page call skill('design-research') and skill('frontend-design') and follow them; before a document call skill('write'); resources('component') finds the estate's component kits; skill('visual-qa') for the critic's review of a built page.")
     elif brief.exists(): system += "\n\nNODE BRIEF:\n" + brief.read_text()[:6000]
     messages = [{"role": "system", "content": system}]

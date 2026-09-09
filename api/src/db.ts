@@ -293,14 +293,22 @@ function enforceEventUniqueness(): void {
  * file has the roadmap's own generic line — so a node that is defined, funded, open and taking
  * submissions still read on the map as a spec-only item with `criterion: null` and `ens_name: null`
  * (both live nodes did, 2026-09-09). Both values here are quoted from each node's own on-chain
- * `ethplane.criterion` text record, resolved through the Universal Resolver, so this file describes
- * the chain rather than competing with it.
+ * `ethplane.criterion` text record VERBATIM, resolved through the Universal Resolver on 2026-09-09, so
+ * this file describes the chain rather than competing with it. The document those records name is the
+ * live criterion; the bytes the on-chain criterionHash covers are frozen beside it.
  *
  * It touches those two columns and the label; state, bounty and head remain the indexer's.
  */
 export function seedLiveNodeMetadata(): number {
+  // A path someone set and got wrong is a misconfiguration, not a reason to quietly read a different
+  // file: the fallback would seed the repo's nodes while the operator believed they had overridden
+  // them. Only the unset case falls through to the repository copy.
+  const configured = process.env.LIVE_NODES_JSON;
+  if (configured && !fs.existsSync(configured)) {
+    throw new Error(`LIVE_NODES_JSON is set to ${configured}, which does not exist`);
+  }
   const candidates = [
-    process.env.LIVE_NODES_JSON,
+    configured,
     path.join(process.cwd(), '..', 'research', 'live-nodes.json'),
     path.join(process.cwd(), 'research', 'live-nodes.json'),
   ].filter(Boolean) as string[];

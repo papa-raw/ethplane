@@ -33,8 +33,7 @@ describe('live node metadata', () => {
   });
 
   it('gives them a criterion sentence, not only a hash', () => {
-    expect(row(NODE2).criterion).toMatch(/cycles < 1,542,812/);
-    expect(row(NODE2).criterion).toMatch(/compiler/);
+    expect(row(NODE2).criterion).toMatch(/cycles < baseline measured by the verifier itself/);
     expect(row(NODE2).criterion_type).toBe('metric');
   });
 
@@ -47,7 +46,7 @@ describe('live node metadata', () => {
   it('runs after the strawmap without being overwritten by it', () => {
     seedStrawmapMetadata();     // a later pass, as the server does on every boot
     seedLiveNodeMetadata();
-    expect(row(NODE2).criterion).toMatch(/cycles/);
+    expect(row(NODE2).criterion).toMatch(/cycles </);
     expect(row(NODE2).ens_name).toBe('dl-leanvm.ethplane.eth');
   });
 
@@ -60,9 +59,22 @@ describe('live node metadata', () => {
     expect(r.bounty).toBe('10000000000000000000000');
   });
 
-  it('is a no-op when the file is not there rather than an error', () => {
+  it('refuses a configured path that is not there rather than reading a different file', () => {
+    // The earlier version of this test asserted "does not throw", which the fallthrough satisfied
+    // while seeding the repository's file — it tested nothing (critic, M4).
     process.env.LIVE_NODES_JSON = '/nowhere/live-nodes.json';
-    expect(() => seedLiveNodeMetadata()).not.toThrow();
-    delete process.env.LIVE_NODES_JSON;
+    try {
+      expect(() => seedLiveNodeMetadata()).toThrow(/does not exist/);
+    } finally {
+      delete process.env.LIVE_NODES_JSON;
+    }
+  });
+
+  it('quotes each node\'s on-chain criterion record verbatim', () => {
+    // docs/ENS-PROBES.md holds the resolve calls these two strings came back from.
+    expect(row(NODE1).criterion).toBe(
+      'cycles < 1,542,812 @ leanVM a210ef1b; proving, size, verify not worse; docs/CRITERION-pq-leanxmss.md 0xa2e71ccb');
+    expect(row(NODE2).criterion).toBe(
+      'cycles < baseline measured by the verifier itself with run.py --baseline at leanVM a210ef1b; docs/CRITERION-pq-leanxmss.md');
   });
 });

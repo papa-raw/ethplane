@@ -55,7 +55,7 @@ material touches an argument list at all.
 
 Beats 9 and 10 swap when both lineages share one operator address, and the script says so when it
 does: `forfeit` sets a cooldown keyed by **operator**, so ending qwen-a's session would lock that
-operator out of the node for a whole lease duration and fast-b's claim would revert with
+operator out of the node for a whole session duration and fast-b's claim would revert with
 `InCooldown`. Two operator addresses give the natural order — die, lapse, recover — and that is what
 `FAST_B_OPERATOR_ADDRESS` is for.
 

@@ -29,7 +29,7 @@ $ cast call $UR 'resolve(bytes,bytes)(bytes,address)' $DNS $(cast calldata 'text
 "open"
    ethplane.criterion  "cycles < 1,542,812 @ leanVM a210ef1b; proving, size, verify not worse; docs/CRITERION-pq-leanxmss.md 0xa2e71ccb"
    ethplane.head       ""     (no verified submission yet)
-   ethplane.node       ""     (not set; see "records still to write")
+   ethplane.node       "0x8e67c816b1f39fa072094b67f4f74937bd1920a7a9d79e4b98e785ae9aa29d58"
    ethplane.verdict    ""     (written by the verifier when it records one)
 
 $ cast namehash dl-leanvm.ethplane.eth
@@ -37,13 +37,13 @@ $ cast namehash dl-leanvm.ethplane.eth
    addr                0x0000…0000  resolver 0xaFE89fc8d99950B7F4c61BAE2602A80BC31De872
    ethplane.status     "open"
    ethplane.criterion  "cycles < baseline measured by the verifier itself with run.py --baseline at leanVM a210ef1b; docs/CRITERION-pq-leanxmss.md"
-   ethplane.head       ""     (a submission is under judgement, artifact 0x1336adaf…)
-   ethplane.node       ""
+   ethplane.head       ""     (three submissions judged, all FAIL: see docs/JUDGES.md)
+   ethplane.node       "0x662b44f5cf418a3e3d4126a187d0154034afbdc8d2536b9076c68f2a4440c37e"
    ethplane.verdict    ""
 
 $ cast namehash ecofrontiers.ethplane.eth
 0x9d10adc74860c69f31702bcb678ca8086a962312eff1d52bfe2d7a0f4cfb626f
-   addr                0x0000…0000  resolver 0x47572265f1795F26A3e657DA154577904aAA57Ed
+   addr                0x3D70eA482c25e203bb650a86d6FDbe291E59b6b8  resolver 0x47572265f1795F26A3e657DA154577904aAA57Ed
    every ethplane.* text  ""
 ```
 
@@ -75,28 +75,20 @@ $ SEPOLIA_RPC_URL=… forge test --match-path test/EnsFork.t.sol -vv
 1 passed; 0 failed; 0 skipped
 ```
 
-## Records still to write
+## Records written
 
-Read from the chain, not assumed. Each is a `cast send` from the maintainer key; none is required for
-resolution, which already works for all three names.
+All three were sent after the first pass of this document and re-resolved through the Universal
+Resolver on 2026-09-09; the values below are what came back, not what was sent.
 
-```
-# an address for the identity name, so `addr` answers with something
-cast send 0x47572265f1795F26A3e657DA154577904aAA57Ed 'setAddr(bytes32,address)' \
-  0x9d10adc74860c69f31702bcb678ca8086a962312eff1d52bfe2d7a0f4cfb626f 0x3D70eA482c25e203bb650a86d6FDbe291E59b6b8 \
-  --private-key "$(cat $MAINTAINER_KEY_FILE)" --rpc-url $SEPOLIA_RPC_URL
+| name | record | value | transaction |
+|---|---|---|---|
+| `cl-pq-leanxmss-attestations.ethplane.eth` | `ethplane.node` | `0x8e67c816b1f39fa072094b67f4f74937bd1920a7a9d79e4b98e785ae9aa29d58` | `0xbeb49886…` |
+| `dl-leanvm.ethplane.eth` | `ethplane.node` | `0x662b44f5cf418a3e3d4126a187d0154034afbdc8d2536b9076c68f2a4440c37e` | `0xdc90385d…` |
+| `ecofrontiers.ethplane.eth` | `addr` | `0x3D70eA482c25e203bb650a86d6FDbe291E59b6b8` | `0x5b28b76e…` |
 
-# the on-chain node id under the name, so a resolver answer leads to the contract record
-cast send 0xA11a923dA99Bb3aaE3643758DA8D408173199Bec 'setText(bytes32,string,string)' \
-  0xc17c010aa3d31fe32aa48f7afe431ee48dcae4f77740697bf87b66b928743041 ethplane.node \
-  0x8e67c816b1f39fa072094b67f4f74937bd1920a7a9d79e4b98e785ae9aa29d58 \
-  --private-key "$(cat $MAINTAINER_KEY_FILE)" --rpc-url $SEPOLIA_RPC_URL
-
-cast send 0xaFE89fc8d99950B7F4c61BAE2602A80BC31De872 'setText(bytes32,string,string)' \
-  0xdfe03fabad128b17be645ee8b1e7e931aa971fa58c634e32eb033065bc107bd4 ethplane.node \
-  0x662b44f5cf418a3e3d4126a187d0154034afbdc8d2536b9076c68f2a4440c37e \
-  --private-key "$(cat $MAINTAINER_KEY_FILE)" --rpc-url $SEPOLIA_RPC_URL
-```
+So a judge who resolves either node name now gets the on-chain node id from ENS and can read the
+contract's own record for it. `addr` on the two node names stays zero: a node is not an account, and
+the resolver answers the question that has an answer.
 
 `ethplane.verdict` stays unwritable by the verifier by design: it holds head and status, and a verdict
 line is the contract's own record. Granting it would be `setWriter("ethplane.verdict", verifier, true)`

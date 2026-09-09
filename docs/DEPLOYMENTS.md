@@ -41,12 +41,23 @@ looks wrong until you know how it was measured.
 
 Decoded from the `BaselineRecorded` logs, not from a note. Node 2's was recorded while both swarms
 were working the host, so its proving time is five times node 1's and its spread is 23.67 % rather
-than 1.9 %: the time bound it produces, 8.85 s against roughly 1.43 s on a quiet host, is lenient.
-That is the safe direction — a lenient time bound cannot wrongly reject a good submission, only fail
-to catch a slow one — and on both nodes the decision is the cycles criterion anyway: strictly below
-1,542,812, thresholdBps 0, measured by the verifier and re-measured by the critic. Node 1 is the
-opposite case and is worth stating plainly: its 1.46 s bound against ~1.5 s measured on the same host
-today is tight enough to fail a correct submission on time alone.
+than 1.9 %.
+
+Time is the only field that gets an allowance. Proof size has none at all — a submission must not
+exceed the recorded bytes by one — and node 2's recorded proof size, **302,182 B, is 410 bytes
+tighter than node 1's 302,592 B**, because the baseline it was measured from was already smaller.
+So node 2 is lenient on time and stricter on size than node 1, and size is what its three
+submissions failed on.
+
+What the chain actually shows, rather than what the parameters suggest: all seven
+`MeasurementRecorded` events on both nodes carry `verifierAccepted = false`, so **not one reached the
+contract's cycles comparison** — `_judge` returns FAIL on that flag before it looks at the number.
+The cycles criterion is what would decide a submission the verifier accepted; no submission has been
+accepted yet. `docs/JUDGES.md` §8 has every row.
+
+Node 1's time bound is worth stating plainly for the opposite reason: 1.46 s against roughly 1.5 s in
+a local run on the same host today (a local measurement, not an on-chain figure) is tight enough to
+fail a correct submission on time alone.
 
 ### Verdicts recorded so far
 
@@ -76,4 +87,53 @@ Why our own subregistry and resolvers: the hackathon deployment's registry and r
 
 ## Treasury (Privy)
 
-The PLANE supply sits in a Privy server wallet bound to a policy that allows only: `approve(PLANE → Ethplane)`, `fundNode` with amount ≤ 100,000 PLANE, and `defineNode` whose split gives the verifier at least 10 %. Every other transaction is refused at signing.
+The PLANE supply sits in a Privy server wallet, `0x41fE93C269277E7fE87FA28489A9eb846d79A168`
+(wallet id `eezbtlnxyfgntb2hvz1cfaqh`), bound to policy `c8io5x5g08igo85ljedozu2k`
+(`ethplane-treasury-full`, chain type ethereum, version 1.0). A Privy policy is an allowlist: what no
+rule allows is refused before anything is signed. Listed from the Privy API on 2026-09-09, six rules —
+the same three permissions once for sending and once for signing, because a policy rule matches one
+RPC method:
+
+| # | rule | method | action | conditions |
+|---|---|---|---|---|
+| 1 | `approve-plane-eth_sendTransaction` | `eth_sendTransaction` | ALLOW | `to` = PLANE `0x814817A2…` AND `approve.spender` = Ethplane `0xB9569968…` |
+| 2 | `fund-cap-eth_sendTransaction` | `eth_sendTransaction` | ALLOW | `to` = Ethplane AND `fundNode.amount` ≤ 100,000e18 |
+| 3 | `define-floor-eth_sendTransaction` | `eth_sendTransaction` | ALLOW | `to` = Ethplane AND `defineNode.split.verifierBps` ≥ 1000 |
+| 4 | `approve-plane-eth_signTransaction` | `eth_signTransaction` | ALLOW | as rule 1 |
+| 5 | `fund-cap-eth_signTransaction` | `eth_signTransaction` | ALLOW | as rule 2 |
+| 6 | `define-floor-eth_signTransaction` | `eth_signTransaction` | ALLOW | as rule 3 |
+
+So the treasury can approve PLANE to the Ethplane contract, fund a node up to 100,000 PLANE, and
+define a node whose split gives the verifier at least 10 % — and nothing else, including sending
+PLANE to a person.
+
+Refused, re-run for this submission at **2026-09-09 14:52:33 UTC**: a `transfer(0x…dEaD, 1)` of PLANE
+from the treasury wallet, which matches none of the six rules.
+
+```
+POST https://api.privy.io/v1/wallets/eezbtlnxyfgntb2hvz1cfaqh/rpc
+  eth_sendTransaction  to PLANE  data transfer(0x…dead, 1)
+→ HTTP 400
+  {"error":"RPC request denied due to policy violation","code":"policy_violation"}
+```
+
+Nothing was signed: the refusal happens before the wallet is asked.
+
+### Join, and the embedded wallet
+
+The join route verifies rather than trusts. `api/src/routes/join.ts:47` calls
+`PrivyClient.verifyAuthToken(token)` and uses the claims' user id; with `PRIVY_APP_ID` or
+`PRIVY_APP_SECRET` unset the route answers 503 rather than falling back to an unverified identity.
+Live, on 2026-09-09:
+
+```
+POST /api/join                                     → 401 {"error":"missing bearer token"}
+POST /api/join  Authorization: Bearer <not a token> → 401 {"error":"token rejected"}
+```
+
+The app's own configuration, as the Privy API exposes it (app `EthPlane`
+`cmtsrijzf005e0dl5jv3yi8yw`): `embedded_wallet_config.create_on_login = "users-without-wallets"` for
+ethereum (solana off), recovery `user-passcode`, `mode: user-controlled-server-wallets-only`,
+`wallet_auth: true`, `external_wallets_for_signup_enabled: true`, and `allowed_domains` exactly
+`https://ethplane.ecofrontiers.xyz` and `http://localhost`. So a guest who signs in with an email and
+has no wallet is given one, and a guest who brings a wallet uses it.

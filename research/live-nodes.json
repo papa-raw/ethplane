@@ -1,5 +1,5 @@
 {
-  "_comment": "Nodes that are live on Sepolia, and the two fields the chain does not carry: the ENS name a judge can resolve, and the criterion as one sentence. Both are quoted from the on-chain ethplane.criterion text record of each node's own resolver, resolved through the Universal Resolver on 2026-09-09 (docs/ENS-PROBES.md). The API fills only these descriptive columns; state, bounty and head stay the chain's.",
+  "_comment": "Nodes that are live on Sepolia, and the two fields the chain does not carry: the ENS name a judge can resolve, and the criterion as one sentence. Each `criterion` below is the node's own `ethplane.criterion` text record, VERBATIM as resolved through the Universal Resolver on 2026-09-09 (docs/ENS-PROBES.md has the calls). The document those records point at is the live docs/CRITERION-pq-leanxmss.md; the bytes the on-chain criterionHash 0xa2e71ccb\u2026 covers are frozen at docs/CRITERION-pq-leanxmss@a2e71ccb.md, and the live document opens with the supersession that explains the difference. The API fills only these descriptive columns; state, bounty and head stay the chain's.",
   "nodes": [
     {
       "id": "cl-pq-leanxmss-attestations",
@@ -8,16 +8,18 @@
       "resolver": "0xA11a923dA99Bb3aaE3643758DA8D408173199Bec",
       "criterion": "cycles < 1,542,812 @ leanVM a210ef1b; proving, size, verify not worse; docs/CRITERION-pq-leanxmss.md 0xa2e71ccb",
       "editable": "crates/rec_aggregation/guests/",
-      "criterion_type": "metric"
+      "criterion_type": "metric",
+      "criterion_hash_bytes": "docs/CRITERION-pq-leanxmss@a2e71ccb.md"
     },
     {
       "id": "dl-leanvm",
       "node_id": "0x662b44f5cf418a3e3d4126a187d0154034afbdc8d2536b9076c68f2a4440c37e",
       "ens_name": "dl-leanvm.ethplane.eth",
       "resolver": "0xaFE89fc8d99950B7F4c61BAE2602A80BC31De872",
-      "criterion": "cycles < 1,542,812 @ leanVM a210ef1b, measured by the verifier itself; the editable surface is the guest program and the compiler; proving, size and verify not worse than the recorded baseline; docs/CRITERION-pq-leanxmss.md",
+      "criterion": "cycles < baseline measured by the verifier itself with run.py --baseline at leanVM a210ef1b; docs/CRITERION-pq-leanxmss.md",
       "editable": "crates/rec_aggregation/guests/, crates/lean_compiler/",
-      "criterion_type": "metric"
+      "criterion_type": "metric",
+      "criterion_hash_bytes": "docs/CRITERION-pq-leanxmss@a2e71ccb.md"
     }
   ]
 }

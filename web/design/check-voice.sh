@@ -49,7 +49,7 @@ grep -rniE '\b(genuinely|honestly|actually|simply|seamless|seamlessly|powerful|e
 report "V2 empty intensifiers" 0 "$TMP/v2"
 
 # V3 — T1 trailing significance clause.
-grep -rniE ', which (means|is why|is where|is how|lets|makes|gives|turns)' \
+grep -rniE ', which (means|is what|is why|is where|is how|is the reason|lets|makes|gives|turns)' \
   "${SRC[@]}" 2>/dev/null | strip_comments > "$TMP/v3"
 report "V3 trailing significance clause (T1)" 0 "$TMP/v3"
 

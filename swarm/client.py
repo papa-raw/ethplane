@@ -221,7 +221,10 @@ def forfeit_subcommand(lineage: str, dry_run: bool = False):
     env = get_env_vars("forfeit")
     if not lineage:
         raise ValueError("forfeit needs the lineage address whose session lapsed")
-    args, printable = wallet_args("OPERATOR")
+    # forfeit is permissionless: the operator wallet when configured, else the lineage wallet the
+    # submitter loop already holds (resume: heartbeat, else forfeit then claim)
+    has_operator = any(os.environ.get(f"OPERATOR_{k}") for k in ("KEYSTORE", "KEY_FILE"))
+    args, printable = wallet_args("OPERATOR" if has_operator else "LINEAGE")
     call = [env["ETHPLANE_ADDRESS"], "forfeit(bytes32,address)", env["NODE_ID"], lineage]
     return cast_send(call + args + rpc_args(env), call + printable + rpc_args(env), dry_run)
 

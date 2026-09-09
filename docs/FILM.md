@@ -1,28 +1,23 @@
-| Time | Shot | What is on screen | Voice line |
-|------|------|-------------------|------------|
-| 0:00 | Intro | Black screen | "The ethplane protocol enables collaborative development." |
-| 0:05 | Node Definition | Node creation interface showing criterion and session details | "Nodes represent roadmap items with verifiable criteria." |
-| 0:15 | Session Creation | Session terms display with stake distribution | "Sessions provide incentive alignment for contributors." |
-| 0:25 | Submission | Submission form with parents and artifact upload | "Submissions build upon previous work with proper attribution." |
-| 0:35 | Verifier | Verifier interface reviewing submissions | "The verifier ensures quality and maintains the ecosystem." |
-| 0:45 | Escrow Distribution | Financial distribution breakdown 68/15/10/5/2 | "Funds are distributed according to predetermined shares." |
-| 0:55 | ENS Resolution | ENS name resolution interface | "Every actor has a name under ethplane.eth." |
-| 1:05 | Privy Wallet | Wallet interface showing approval process | "Privy manages treasury with strict policies." |
-| 1:15 | Policy Enforcement | Policy enforcement screen showing refusal | "Policy refuses payouts before verdicts." |
-| 1:25 | Lineage Refusal | Lineage key refusal interface | "Lineage key refused writing head." |
-| 1:35 | Judge Registration | Judge registration interface | "Judge registers a new node with proper validation." |
-| 1:45 | Network View | Network visualization showing connections | "Collaborative development emerges from shared contributions." |
-| 1:55 | Recovery Beat | System recovery interface | "Even if agents die, work survives." |
-| 2:05 | Join Process | Join command interface | "ethplane join <name> rebuilds the tree from the name." |
-| 2:15 | Tree Reconstruction | Visual tree reconstruction from ENS | "Rebuilding from the name creates the complete history." |
-| 2:25 | Valid Attempts | Metrics display showing 65% vs 7.6% | "ROUTED 65% valid attempts vs SOLO 7.6%." |
-| 2:35 | Measurement Results | Measurement results chart | "Same model, unchanged cycles." |
-| 2:45 | Honest Rejection | Rejection interface showing honest decisions | "An honest rejection preserves integrity." |
-| 2:55 | Collaborative Flow | Flow diagram of collaborative process | "Human and AI swarm pull contributions, build on them." |
-| 3:05 | Attribution | Attribution display showing contributions | "Receive attribution for your work." |
-| 3:15 | Conclusion | Final screen with protocol summary | "The ethplane protocol enables collaborative development." |
-| 3:25 | Credits | Credits screen | "Thank you for watching." |
-| 3:35 | End | Black screen | "End of demonstration." |
+| Time | Shot | What is on screen | Voice line | Evidence |
+|------|------|-------------------|------------|----------|
+| 0:00 | Roadmap picture | Home page showing the 65-node map | "The ethplane protocol enables collaborative development." | https://ethplane.ecofrontiers.xyz |
+| 0:05 | Node page | cl-pq-leanxmss-attestations node page with 10,000 PLANE escrow | "Nodes represent roadmap items with verifiable criteria." | https://ethplane.ecofrontiers.xyz/node/cl-pq-leanxmss-attestations |
+| 0:10 | Policy refusal | Privy wallet showing RPC request denied due to policy violation | "Policy refuses payouts before verdicts." | 0x2afd79414b00c8124e36efb58cc6ee5fbd2fac4b7b613f579b8432c287f6eb19 |
+| 0:15 | EAC refusal | Lineage key refusal interface (custom error selector 0x73e36525) | "Lineage key refused writing head." | 0x0622b6fe0731ea411f02328988878bfe73a021348f24b6b25c10b248b5473cdb |
+| 0:20 | qwen-a session start | Session start from nothing with beat 5 hash | "Sessions provide incentive alignment for contributors." | 0xd13b5146c4ea8c61ad91b2db303586642e46275a66bc5eec0870a463ce077024 |
+| 0:25 | Heartbeats | qwen-a heartbeat transactions | "Heartbeats keep sessions alive." | 0xc6ec778079e875e2bee49305c1bc2bbae6a32f9957f0d598f66d49f4089f522a |
+| 0:30 | qwen-a submission | qwen-a submitting artifact 0x0caf464b… | "Submissions build upon previous work with proper attribution." | 0xe02ca9c39a31b28079ad7c5edadb9761e19df9ce32d5277d9799da89bb5c7053 |
+| 0:35 | Worker killed | System showing worker killed (no heartbeat for 120s) | "Even if agents die, work survives." | contract test |
+| 0:40 | Session lapses | Session lapsing and anyone ending it | "Sessions lapse when heartbeats stop." | 0x2afd79414b00c8124e36efb58cc6ee5fbd2fac4b7b613f579b8432c287f6eb19 |
+| 0:45 | fast-b restart | fast-b starting from qwen-a's artifact with beat 10 | "Recovery beats show work survives." | 0xaa4c2af0ad4a7a441845fdd921dfde759449c96ae25371ca0086049df0f61a15 |
+| 0:50 | fast-b submission | fast-b submitting with parent 0x0caf464b… | "Building on previous work." | 0xb8ac6f31… |
+| 0:55 | Verifier judgment | Verifier judging with beat 12-13 | "The verifier ensures quality and maintains the ecosystem." | 0x849b6baf6ec7eff608a2a808c9c18dfee38e2fe536b3546ef1bc2e5a555e5793 |
+| 1:00 | Honest rejection | Cycles unchanged, verdict FAIL, no payout | "An honest rejection preserves integrity." | 0x849b6baf6ec7eff608a2a808c9c18dfee38e2fe536b3546ef1bc2e5a555e5793 |
+| 1:05 | Join page | Join command interface | "ethplane join <name> rebuilds the tree from the name." | https://ethplane.ecofrontiers.xyz/join |
+| 1:10 | Guest name | Guest name under guests.ethplane.eth | "Guests with embedded wallets." | https://ethplane.ecofrontiers.xyz/node/cl-pq-leanxmss-attestations |
+| 1:15 | Numbers slide | Metrics display showing 65% vs 7.6% | "ROUTED 65% valid attempts vs SOLO 7.6%." | contract test |
+| 1:20 | Closing line | Final screen with protocol summary | "Human and AI swarm pull contributions, build on them, and are paid only for verified work." | contract test |
+
 ## Rehearsed facts (2026-09-08 evening, Sepolia)
 - **EAC refusal shot:** a freshly generated lineage key calling `setText(node, "ethplane.head", …)` on the node resolver `0xA11a923dA99Bb3aaE3643758DA8D408173199Bec` reverts (custom error selector `0x73e36525`); the same call estimated from the verifier key `0x0A6Ad2a627F8736E0f34849a0B5B80a109F81759` succeeds (54,439 gas). The verifier holds `setWriter` grants for `ethplane.head` and `ethplane.status` only.
 - **Policy refusal shot:** from the treasury wallet, `approve` and `fundNode` (10,000 PLANE) were signed and sent under policy `c8io5x5g08igo85ljedozu2k`; a `transfer` of 1 PLANE from the same wallet was refused at signing: `RPC request denied due to policy violation`.

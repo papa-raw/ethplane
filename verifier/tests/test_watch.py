@@ -242,5 +242,56 @@ class TestOncePass(WatchTestCase):
         self.assertIn("Error in watcher", buf.getvalue())
 
 
+class TestRootRefusal(WatchTestCase):
+    """Running as root over the verifier user's checkout is what made git refuse the worktree, and
+    that refusal was recorded on chain as two submissions' FAIL."""
+
+    def test_root_is_refused_before_anything_is_read_or_sent(self):
+        with patch.object(watch.os, "geteuid", return_value=0, create=True), \
+             patch.object(watch, "node_detail", side_effect=AssertionError("must not poll")), \
+             patch.object(sys, "argv", ["watch.py", "--once"]), \
+             patch.object(sys, "stderr", io.StringIO()) as err:
+            self.assertEqual(watch.main(), 1)
+        self.assertIn("Refusing to run as root", err.getvalue())
+
+    def test_an_ordinary_user_runs(self):
+        with patch.object(watch.os, "geteuid", return_value=1000, create=True):
+            self.assertFalse(watch.refuse_root())
+
+
+class TestHostReasons(WatchTestCase):
+    """A verdict that describes this host must not become a submission's permanent FAIL: the
+    contract will not accept a second measurement for the same artifact."""
+
+    def submission(self):
+        return {"artifact_hash": ARTIFACT}
+
+    def host_verdict(self, reason):
+        return {"cycles": None, "provingMicros": None, "proofSizeBytes": None, "verifyMicros": None,
+                "verifierAccepted": False, "reason": reason, "binarySha256": None}
+
+    def test_a_host_reason_records_nothing_and_leaves_the_submission_pending(self):
+        ledger = Path(os.path.join(self.tmp, ".watched"))
+        for reason in ("worktree", "host-config", "reference-build"):
+            with patch.object(watch, "fetch_artifact", return_value=os.path.join(self.tmp, "a.tar.gz")), \
+                 patch.object(watch, "run_verifier", return_value=self.host_verdict(reason)), \
+                 patch.object(watch, "record_measurement",
+                              side_effect=AssertionError(f"{reason} must not be recorded")), \
+                 redirect_stdout(io.StringIO()) as buf:
+                self.assertFalse(watch.process_one(watch.get_env_vars(), self.submission(), ledger, False))
+            self.assertIn("describes this host", buf.getvalue())
+            self.assertEqual(watch.read_watched(ledger), set())
+
+    def test_a_verdict_about_the_submission_is_still_recorded(self):
+        ledger = Path(os.path.join(self.tmp, ".watched"))
+        for reason in ("frozen-path", "regression-provingMicros", "statement-skip", "probe-timeout", ""):
+            with patch.object(watch, "fetch_artifact", return_value=os.path.join(self.tmp, "a.tar.gz")), \
+                 patch.object(watch, "run_verifier", return_value=dict(VERDICT, reason=reason)), \
+                 patch.object(watch, "record_measurement", return_value="0xtx"), \
+                 redirect_stdout(io.StringIO()):
+                self.assertTrue(watch.process_one(watch.get_env_vars(), self.submission(), ledger, False))
+            os.remove(ledger)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

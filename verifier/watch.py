@@ -34,6 +34,13 @@ import urllib.request
 from pathlib import Path
 
 CAST_TIMEOUT_SECONDS = 300
+# Reasons that describe this host rather than the submission. Recording one of them puts a FAIL on
+# chain against an artifact that did nothing wrong, and the submission can never be judged again
+# (recordMeasurement refuses anything that is not PENDING). It happened on 2026-09-09: watch.py was
+# run as root over the verifier user's checkout, git refused the worktree as dubious ownership, and
+# two innocent artifacts carry FAIL verdicts because of it. These are logged and left pending.
+HOST_REASONS = ("host-config", "reference-build", "worktree", "patch-missing", "patch-failed",
+                "probe-build", "binary-missing")
 WATCHED_FILE = os.environ.get("WATCHED_FILE", ".watched")
 RECORD_MEASUREMENT = (
     "recordMeasurement(bytes32,bytes32,uint256,uint256,uint256,uint256,bool,bytes32)"
@@ -47,6 +54,22 @@ REQUIRED_VARS = (
     "ETHPLANE_ADDRESS",
     "SEPOLIA_RPC_URL",
 )
+
+
+def refuse_root() -> bool:
+    """root is not a verifier.
+
+    git will not create a worktree inside another user's checkout when the caller is root ("dubious
+    ownership"), so every run under root fails at the same place and, before HOST_REASONS existed,
+    that failure was recorded as the submission's verdict. The fix is to run as the user that owns
+    the reference checkout — the same user that holds the verifier key."""
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
+        print("Refusing to run as root: run watch.py as the verifier user, which owns "
+              "$LEANVM_REF and the key. git refuses a worktree in another user's checkout, and "
+              "that failure would be recorded on chain as the submission's verdict.",
+              file=sys.stderr)
+        return True
+    return False
 
 
 def get_env_vars() -> dict:
@@ -214,6 +237,11 @@ def process_one(env: dict, submission: dict, watched_file: Path, dry_run: bool) 
         tarball_path = fetch_artifact(env["API_BASE"], artifact_hash)
         verdict = run_verifier(tarball_path)
         print(json.dumps(verdict))
+        reason = verdict.get("reason") or ""
+        if reason in HOST_REASONS:
+            print(f"!! {reason} describes this host, not the submission: {artifact_hash} is left "
+                  f"pending and nothing is recorded. Fix the host and run again.")
+            return False
         tx = record_measurement(env["NODE_ID"], artifact_hash, verdict, dry_run)
         if not dry_run:
             append_watched(watched_file, artifact_hash)
@@ -234,6 +262,8 @@ def main() -> int:
     parser.add_argument("--interval", type=int, default=30, help="Seconds between passes")
     args = parser.parse_args()
 
+    if refuse_root():
+        return 1
     try:
         env = get_env_vars()
     except ValueError as e:

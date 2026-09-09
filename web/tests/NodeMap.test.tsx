@@ -17,7 +17,7 @@ describe('NodeMap', () => {
     expect(screen.getAllByTestId('map-node')).toHaveLength(2);
   });
 
-  it('derives claimed and passed from the live columns, not from the stored state', () => {
+  it('derives in-session and passed from the live columns, not from the stored state', () => {
     render(
       <MapBody nodes={[
         node({ node_id: '0x1', active_lease_count: 2 }),
@@ -26,7 +26,7 @@ describe('NodeMap', () => {
       ]} />
     );
     const legend = screen.getByTestId('map-legend');
-    expect(legend).toHaveTextContent('claimed');
+    expect(legend).toHaveTextContent('in session');
     expect(legend).toHaveTextContent('passed');
     expect(legend).toHaveTextContent('seeded');
   });

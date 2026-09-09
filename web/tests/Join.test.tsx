@@ -29,13 +29,13 @@ describe('Join', () => {
     expect(screen.getByTestId('join-signed-out')).toHaveTextContent('name under ethplane.eth');
   });
 
-  it('claims a name and shows it back', async () => {
+  it('takes a name and shows it back', async () => {
     privy.authenticated = true;
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true, json: async () => ({ guestName: 'judge-7', wallet: '0xWALLET', returning: false }),
     }));
     render(<Join />);
-    fireEvent.click(screen.getByText('Claim my name'));
+    fireEvent.click(screen.getByText('Take my name'));
     await waitFor(() => expect(screen.getByTestId('join-result')).toHaveTextContent('judge-7.ethplane.eth'));
   });
 
@@ -45,7 +45,7 @@ describe('Join', () => {
       ok: false, status: 503, json: async () => ({ error: 'join is not configured' }),
     }));
     render(<Join />);
-    fireEvent.click(screen.getByText('Claim my name'));
+    fireEvent.click(screen.getByText('Take my name'));
     await waitFor(() => expect(screen.getByTestId('join-error')).toHaveTextContent('not configured'));
   });
 });

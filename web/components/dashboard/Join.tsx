@@ -48,7 +48,8 @@ export function Join() {
         <CardContent className="space-y-3 text-sm">
           <p className="text-muted-foreground">
             Sign in with an email or a wallet. You get a name under ethplane.eth and an embedded
-            wallet if you do not have one, and you can claim a lease like any other lineage.
+            wallet if you do not have one, and you can start a session on any open node, exactly like
+            any other contributor.
           </p>
           <Button onClick={login}>Sign in</Button>
         </CardContent>
@@ -72,7 +73,7 @@ export function Join() {
             </p>
           </div>
         ) : (
-          <Button onClick={join} disabled={busy}>{busy ? 'claiming…' : 'Claim my name'}</Button>
+          <Button onClick={join} disabled={busy}>{busy ? 'taking…' : 'Take my name'}</Button>
         )}
         {error ? <p data-testid="join-error" className="text-sm text-red-600">{error}</p> : null}
         <button onClick={logout} className="text-xs text-muted-foreground underline">sign out</button>

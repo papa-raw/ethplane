@@ -52,4 +52,15 @@ export async function readEnsText(name: string, key: string): Promise<{ value: s
   return { value, resolver };
 }
 
+/**
+ * viem's revert message is a page of ABI advice; a judge should see one line and no more. The full
+ * text still goes to the title attribute and the console, so nothing is hidden — only unstacked.
+ */
+export function shortEnsError(e: unknown): string {
+  const raw = e instanceof Error ? e.message : String(e);
+  if (/revert/i.test(raw)) return 'the Universal Resolver reverted for this name';
+  if (/fetch|network|timeout|ECONN/i.test(raw)) return 'the Sepolia RPC did not answer';
+  return raw.split('\n')[0].slice(0, 120);
+}
+
 export { toHex };

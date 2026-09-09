@@ -130,16 +130,32 @@ export function deckScreens(): Screen[] {
   });
 }
 
+/**
+ * Every markdown file at the root of docs/, in reading order for a judge. The list is ordered by
+ * hand and checked by a test against the directory, because the failure it had was the silent one:
+ * four files existed and were simply not listed, JUDGES.md among them — the document written for
+ * judges, absent from the page written for judges.
+ */
 export const DOC_FILES = [
+  { file: 'JUDGES.md', title: 'For a judge' },
+  { file: 'SUBMISSION.md', title: 'Submission' },
   { file: 'SPEC.md', title: 'Spec' },
   { file: 'CRITERION-pq-leanxmss.md', title: 'Criterion' },
+  { file: 'CRITERION-pq-leanxmss@a2e71ccb.md', title: 'Criterion, the frozen copy' },
   { file: 'DEPLOYMENTS.md', title: 'Deployments' },
   { file: 'ENS-PROBES.md', title: 'ENS probes' },
+  { file: 'REHEARSAL.md', title: 'Rehearsal' },
   { file: 'DECK.md', title: 'Deck' },
   { file: 'FILM.md', title: 'Film' },
   { file: 'JOIN.md', title: 'Join' },
   { file: 'ROLES.md', title: 'Roles' },
 ];
+
+/** The markdown files that exist at the root of docs/, for the test that guards DOC_FILES. */
+export function docsRootFiles(): string[] {
+  const d = docsDir();
+  return fs.existsSync(d) ? fs.readdirSync(d).filter((f) => f.endsWith('.md')).sort() : [];
+}
 
 /** Only the files that exist: a docs page that lists a missing file is a broken promise. */
 export function availableDocs(): Array<{ file: string; title: string; html: string }> {

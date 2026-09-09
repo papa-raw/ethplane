@@ -7,6 +7,19 @@ The node is `cl-pq-leanxmss-attestations` on the Ethereum roadmap. The task is t
 
 **Editable.** `crates/rec_aggregation/guests/` only: the guest program is a zkDSL text compiled by the frozen compiler, so nothing a submission writes is compiled as Rust and no `build.rs`, procedural macro or linker path can run on the verifier's host. Everything else is frozen, including the compiler, the signature schemes, the polynomial commitment, the transcript and the VM; a diff touching a frozen path is rejected before anything is built. (The compiler was editable in the first version of this criterion; it was frozen on 2026-09-08 after review, because a Rust crate under a submitter's control executes code at build time.)
 
+**Node 2 (`dl-leanvm`) admits the compiler, and that is a different bargain.** Sixteen guest-only
+measurements on 2026-09-09, from two independent swarms, all returned exactly 1,542,812 cycles: at
+this commit the guest program is not where the cycles are, and the overnight arms that edited
+`crates/lean_compiler/src/cse.rs` did move them. So `dl-leanvm`'s surface is
+`crates/rec_aggregation/guests/` **and** `crates/lean_compiler/`, set per node through the
+verifier's `EDITABLE`. The risk the freeze was about does not go away by being useful: `cargo build`
+and the reference harness's `cargo test` both run `build.rs` and procedural macros as the invoking
+user. So on that node the build runs `--offline --locked`, and it runs as a user that cannot read
+the verifier's key — the verifier refuses the surface (`host-config`, no verdict about the
+submission) unless `BUILD_USER` is set to such a user, or the risk is accepted deliberately with
+`ALLOW_UNSANDBOXED_BUILD=1`. Node 1 is unchanged: guests only, no Rust from a submitter, nothing to
+isolate.
+
 **Statement.** The verifier builds the submission and runs it on inputs it generates itself with the reference build: fresh keys, messages and 900 signatures, plus negative vectors (a flipped signature, a wrong message, a wrong key). The proof must verify with the reference `python-verifier/verifier.py` on the positive inputs and the run must fail on every negative vector. The Python verifier binds the bytecode hash into the transcript and fixes the proof-system parameters, so a proof of a weaker statement does not verify.
 
 **Review floor.** A cycle reduction above 20 % is recorded as REVIEW rather than PASS and released only after a human reads the diff.

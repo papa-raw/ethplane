@@ -49,15 +49,93 @@ PAID_GAIN_BPS = int(os.environ.get("ETHPLANE_PAID_GAIN_BPS", "0"))
 RUN_TIMEOUT_SECONDS = 600
 BUILD_TIMEOUT_SECONDS = 1800
 BASELINE_RUNS = 3
-# R6. The editable surface is the guest program and nothing else. `cargo build --release` runs in
-# the submission's worktree as the verifier user, and Rust executes build.rs and proc macros at
-# compile time — so any Rust crate the submitter can write is arbitrary code execution as the user
-# holding VERIFIER_PRIVATE_KEY. guests/aggregate.py is zkDSL compiled by the FROZEN compiler, so
-# nothing a submitter writes is compiled as Rust and the class disappears. The cost of this is
-# stated rather than hidden: the reachable space is smaller, and an honest rejection is a likelier
-# outcome than it was with the compiler editable.
-EDITABLE_PREFIXES = ("crates/rec_aggregation/guests/",)
-FROZEN_HINT = "only crates/rec_aggregation/guests/ may change"
+# The editable surface is per node, and it is a security decision, not a preference.
+#
+# `cargo build --release` and the reference harness's `cargo test` both compile the submission's
+# workspace, and Rust runs build.rs and procedural macros AT COMPILE TIME as the invoking user. So a
+# surface that admits any Rust is arbitrary code execution as whoever runs this file — and on hawk
+# that user holds VERIFIER_PRIVATE_KEY. That is why node 1 (pq-leanxmss) admits only
+# crates/rec_aggregation/guests/: zkDSL text compiled by the frozen compiler, no Rust from the
+# submitter, and the class disappears rather than being watched for.
+#
+# Node 2 (dl-leanvm) needs the compiler editable — sixteen guest-only measurements on 2026-09-09 all
+# returned exactly 1,542,812 cycles, while the overnight arms that edited crates/lean_compiler moved
+# it — so EDITABLE names the surface per node. When that surface admits Rust, two things become
+# required rather than advisable: the build runs `--offline --locked`, and it runs as a user that
+# cannot read the verifier's key (BUILD_USER). See build_isolation_reason().
+DEFAULT_EDITABLE_PREFIXES = ("crates/rec_aggregation/guests/",)
+GUEST_PREFIX = "crates/rec_aggregation/guests/"
+
+
+def editable_prefixes() -> Tuple[str, ...]:
+    """The paths a submission for THIS node may touch, from EDITABLE (comma or space separated).
+
+    swarm/client.py reads the same variable to decide what to put in the artifact, so the worker and
+    the verifier cannot disagree about the surface unless the two hosts are configured differently."""
+    raw = os.environ.get("EDITABLE", "")
+    parts = tuple(p.strip() for p in raw.replace(",", " ").split() if p.strip())
+    return parts or DEFAULT_EDITABLE_PREFIXES
+
+
+def frozen_hint() -> str:
+    return "only " + ", ".join(editable_prefixes()) + " may change"
+
+
+def surface_admits_rust(prefixes: Optional[Tuple[str, ...]] = None) -> bool:
+    """True when the surface reaches outside the guest program, which is where Rust lives.
+
+    Conservative on purpose: anything that is not under the guest directory is treated as possibly
+    compiled, because being wrong in the other direction means running a submitter's build.rs."""
+    for prefix in prefixes if prefixes is not None else editable_prefixes():
+        if not os.path.normpath(prefix).startswith(os.path.normpath(GUEST_PREFIX)):
+            return True
+    return False
+
+
+def build_user() -> str:
+    """The unprivileged user that compiles a submission when the surface admits Rust."""
+    return os.environ.get("BUILD_USER", "").strip()
+
+
+def build_isolation_reason() -> str:
+    """"" when it is safe to compile this surface here, or the reason it is not.
+
+    The question is concrete and it is asked of the system rather than of a flag: can the user that
+    will run cargo read the verifier's key? If BUILD_USER is set, that is answered by trying the
+    read as that user. If it is not set, cargo runs as this process's own user, which on hawk is the
+    user holding the key — so the answer is yes and the surface is refused.
+
+    ALLOW_UNSANDBOXED_BUILD=1 overrides it. That is a deliberate, named act; leaving EDITABLE set by
+    accident is not."""
+    if not surface_admits_rust():
+        return ""
+    if os.environ.get("ALLOW_UNSANDBOXED_BUILD") == "1":
+        print("WARNING: compiling a submitter's Rust as this user, with ALLOW_UNSANDBOXED_BUILD=1. "
+              "build.rs and proc macros run with this process's privileges.", file=sys.stderr)
+        return ""
+    user = build_user()
+    if not user:
+        return "host-config"
+    key_file = os.environ.get("VERIFIER_KEY_FILE", "")
+    if not key_file:
+        # Nothing to check against, so nothing is established. Fail closed.
+        return "host-config"
+    readable = subprocess.run(["sudo", "-n", "-u", user, "test", "-r", key_file],
+                              capture_output=True, text=True)
+    # returncode 0 means the build user CAN read the key: not isolation, just a different name.
+    return "host-config" if readable.returncode == 0 else ""
+
+
+def cargo_prefix() -> list:
+    """Run cargo as BUILD_USER when one is configured, otherwise as this user."""
+    user = build_user()
+    return ["sudo", "-n", "-u", user] if user else []
+
+
+def cargo_flags() -> list:
+    """--offline --locked whenever the submitter can write Rust: no dependency the lockfile does not
+    already pin, and no fetch during a build that is running their code."""
+    return ["--offline", "--locked"] if surface_admits_rust() else []
 
 VERDICT_KEYS = (
     "cycles", "provingMicros", "proofSizeBytes", "verifyMicros", "verifierAccepted", "reason", "binarySha256",
@@ -96,7 +174,7 @@ def verdict(
 
 
 def validate_paths(diff_files) -> Tuple[bool, str]:
-    """The frozen-path check: a submission may only touch the guest program (R6).
+    """The frozen-path check: a submission may only touch this node's editable surface.
 
     Archive safety is NOT this function's job — extract_tarball's filter='data' refuses absolute
     paths, escapes and symlinks before anything reaches here. So a path that normalises outside the
@@ -104,7 +182,7 @@ def validate_paths(diff_files) -> Tuple[bool, str]:
     swarm B's test_normpath expects, and it is the more useful answer for a submitter)."""
     for f in diff_files:
         norm = os.path.normpath(f)
-        if not norm.startswith(EDITABLE_PREFIXES):
+        if not norm.startswith(editable_prefixes()):
             return False, "frozen-path"
     return True, ""
 
@@ -178,7 +256,8 @@ def build(worktree: str) -> Tuple[bool, str]:
     """Built once. The old code shelled out to `cargo run` per measurement, so every timing carried
     cargo's own resolution and the build could silently differ between runs."""
     r = subprocess.run(
-        ["cargo", "build", "--release"], cwd=worktree, capture_output=True, text=True, timeout=BUILD_TIMEOUT_SECONDS
+        cargo_prefix() + ["cargo", "build", "--release"] + cargo_flags(),
+        cwd=worktree, capture_output=True, text=True, timeout=BUILD_TIMEOUT_SECONDS
     )
     return (r.returncode == 0, "" if r.returncode == 0 else "build")
 
@@ -384,8 +463,8 @@ def run_reference_verifier(worktree: str) -> Tuple[bool, str]:
         env["PATH"] = prefix + os.pathsep + env.get("PATH", "")
     try:
         r = subprocess.run(
-            ["cargo", "test", "--release", "-p", "lean_vm", "--test", "verifiers", "--",
-             "--include-ignored", "python_verifier"],
+            cargo_prefix() + ["cargo", "test", "--release"] + cargo_flags()
+            + ["-p", "lean_vm", "--test", "verifiers", "--", "--include-ignored", "python_verifier"],
             cwd=worktree, capture_output=True, text=True, timeout=RUN_TIMEOUT_SECONDS, env=env,
         )
     except subprocess.TimeoutExpired:
@@ -511,6 +590,16 @@ def main() -> None:
         # the worktree ("dubious ownership"), and that reason was recorded on chain as a FAIL
         # against two artifacts that had done nothing wrong.
         emit(verdict(reason="host-config"))
+        return
+    reason = build_isolation_reason()
+    if reason:
+        # EDITABLE admits Rust and this host cannot compile it safely. Refusing is the only honest
+        # answer: measuring would mean running the submitter's build.rs as the key holder, and the
+        # submission has done nothing wrong, so the reason names the host.
+        print(f"EDITABLE admits Rust ({', '.join(editable_prefixes())}) but the build is not "
+              f"isolated: set BUILD_USER to a user that cannot read $VERIFIER_KEY_FILE, or "
+              f"ALLOW_UNSANDBOXED_BUILD=1 to accept the risk deliberately.", file=sys.stderr)
+        emit(verdict(reason=reason))
         return
     if not args.artifact_tarball:
         emit(verdict(reason="no-artifact"))

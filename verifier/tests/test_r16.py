@@ -48,6 +48,7 @@ class TestR6EditableSurface(unittest.TestCase):
     """R6: cargo build runs the submitter's crate as the verifier user, so no Rust is editable."""
 
     def test_the_guest_program_is_the_whole_editable_surface(self):
+        os.environ.pop("EDITABLE", None)
         self.assertEqual(run.validate_paths(["crates/rec_aggregation/guests/aggregate.py"]), (True, ""))
         for frozen in (
             "crates/lean_compiler/src/lib.rs",
@@ -57,9 +58,13 @@ class TestR6EditableSurface(unittest.TestCase):
         ):
             self.assertEqual(run.validate_paths([frozen]), (False, "frozen-path"), frozen)
 
-    def test_no_rust_crate_is_named_editable_anywhere(self):
-        self.assertEqual(run.EDITABLE_PREFIXES, ("crates/rec_aggregation/guests/",))
-        self.assertNotIn("lean_compiler", run.FROZEN_HINT)
+    def test_no_rust_crate_is_editable_by_default(self):
+        """The surface is per node now (test_surface.py), but the DEFAULT is still R6's answer: a
+        host that sets nothing compiles no Rust of the submitter's."""
+        os.environ.pop("EDITABLE", None)
+        self.assertEqual(run.editable_prefixes(), ("crates/rec_aggregation/guests/",))
+        self.assertEqual(run.DEFAULT_EDITABLE_PREFIXES, ("crates/rec_aggregation/guests/",))
+        self.assertNotIn("lean_compiler", run.frozen_hint())
 
 
 class TestR1ProbeTimeout(unittest.TestCase):

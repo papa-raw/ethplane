@@ -10,10 +10,13 @@ Real mode runs the same commands dry-run prints. Three rules shape the code:
     with a raw key file, cast's only option is --private-key, and the value is then visible in
     `ps` for the life of the call — stated here because host A has more than one user.
   * the artifact is what the verifier accepts. verifier/run.py walks every file in the tarball and
-    rejects the submission if any path is outside crates/rec_aggregation/guests/ — so the tarball
-    carries the changed guest files at their repository-relative paths and nothing else. A
-    manifest.json in there would be a frozen-path rejection; the lineage, the node and the parents
-    are on chain, which is where a verifier can trust them.
+    rejects the submission if any path is outside the node's editable surface — so the tarball
+    carries the changed files under EDITABLE, at their repository-relative paths, and nothing else.
+    A manifest.json in there would be a frozen-path rejection; the lineage, the node and the parents
+    are on chain, which is where a verifier can trust them. EDITABLE is the same variable the
+    verifier reads, per node: guests only for node 1, guests and the compiler for node 2, so a
+    worker and its verifier cannot disagree about the surface unless their hosts are configured
+    differently.
   * nothing is guessed. keccak comes from `cast keccak`, not from a hash that happens to be
     available; the parents of a submission default to the head the session actually started from,
     recorded at claim time; and a heartbeat loop stops when the chain says the session is over.

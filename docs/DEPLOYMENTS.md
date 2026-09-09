@@ -8,7 +8,19 @@ Chain id 11155111. Source of truth: `contracts/deployments/sepolia.json` and `se
 | PlaneToken (PLANE, test ERC-20; whole supply to the treasury) | `0x814817A2e7332749990500c324cb6B0c77deBFC1` |
 | EthplaneSubregistry (our ENSv2 registry under `ethplane.eth`) | `0x58CB4caaDb0ebEdf7E1c96CeA6578Afb2f99d05b` |
 | EthplaneResolver for `cl-pq-leanxmss-attestations.ethplane.eth` | `0xA11a923dA99Bb3aaE3643758DA8D408173199Bec` |
+| EthplaneResolver for `dl-leanvm.ethplane.eth` | `0xaFE89fc8d99950B7F4c61BAE2602A80BC31De872` |
 | EthplaneResolver for operator, lineage and guest names | `0x47572265f1795F26A3e657DA154577904aAA57Ed` |
+
+## Nodes
+
+| node | id | escrow | editable surface |
+|---|---|---|---|
+| `cl-pq-leanxmss-attestations` | `0x06a4f6e3ff9a3a75afd950c17d954f663b553eb0068b0fbb306e19e4df7d18d8` | 10,000 PLANE | `crates/rec_aggregation/guests/` |
+| `dl-leanvm` | `0x662b44f5cf418a3e3d4126a187d0154034afbdc8d2536b9076c68f2a4440c37e` | 10,000 PLANE (`0x188306499ff4e106b9d8a35981c1c76bbfec7378247096164a15a64b6d9df2d9`) | `crates/rec_aggregation/guests/`, `crates/lean_compiler/` |
+
+The surface is per node and it is the verifier's `EDITABLE`, not a constant: one watcher per node, each
+with its own value. Node 2 admits Rust, which is why its watcher also needs `BUILD_USER` — see
+`verifier/README.md`, "Whole numbers only" and the criterion's Editable paragraph.
 
 ## Names (ENSv2, hackathon deployment on Sepolia)
 

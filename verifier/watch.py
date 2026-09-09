@@ -17,7 +17,10 @@ The wallet helpers are duplicated from swarm/client.py on purpose: the verifier 
 submitter's code. That is the same boundary as the frozen paths, expressed in the import graph.
 
 Environment: VERIFIER_KEY_FILE (or VERIFIER_KEYSTORE [+ VERIFIER_KEYSTORE_PASSWORD_FILE]),
-API_BASE, NODE_ID, LEANVM_REF, REFERENCE_COMMIT, ETHPLANE_ADDRESS, SEPOLIA_RPC_URL.
+API_BASE, NODE_ID, LEANVM_REF, REFERENCE_COMMIT, ETHPLANE_ADDRESS, SEPOLIA_RPC_URL. EDITABLE is the
+node's editable surface and is passed to run.py — one watcher per node, so node 1 runs with the
+default (guests only) and node 2 with the compiler included, and neither can be confused for the
+other. When the surface admits Rust, run.py also requires BUILD_USER (see its build_isolation_reason).
 
 Usage: watch.py [--once] [--dry-run] [--interval 30]
 """
@@ -286,6 +289,10 @@ def main() -> int:
         return 1
 
     watched_file = Path(WATCHED_FILE)
+    # Say which surface this watcher judges with. Two watchers with different EDITABLE values is the
+    # whole per-node design, and a log that does not name it is a log nobody can check.
+    print(f"node {env['NODE_ID']} · editable surface: {os.environ.get('EDITABLE', 'crates/rec_aggregation/guests/ (default)')}"
+          + (f" · build user: {os.environ['BUILD_USER']}" if os.environ.get("BUILD_USER") else ""))
     while True:
         try:
             detail = node_detail(env["API_BASE"], env["NODE_ID"])

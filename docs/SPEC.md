@@ -1,6 +1,6 @@
 # Ethplane — technical specification (public)
 
-Derived from the internal plan on 2026-09-08. Strategy, budget, prize and judging material is kept private; this file carries the design. Planning only: nothing here is built yet.
+Derived from the internal plan on 2026-09-08. Strategy, budget, prize and judging material is kept private; this file carries the design. It describes the design rather than the deployment; what is on chain is recorded in DEPLOYMENTS.md.
 
 ## 0. The question this plan answers
 Pat, 2026-09-08: **"How can we design a collaborative plane that allows humans and AI as a swarm to pull and rebuild a history of contributions, build on it, and receive attribution for their own contributions?"**

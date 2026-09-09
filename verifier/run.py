@@ -14,6 +14,7 @@ proof — and it answers it in a way the submitter cannot influence. Three rules
     probes live in a worktree of the pinned commit that the submission's files cannot reach.
 
 Usage:  run.py <artifact.tar.gz> [reference_leanvm] [baseline.json]
+        run.py --baseline [reference_leanvm]   measure the reference and print recordBaseline
         run.py --self-test
 """
 import argparse
@@ -32,7 +33,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from parse import parse_output  # noqa: E402
 
 REFERENCE_LEANVM_PATH = os.environ.get("LEANVM_REF", "/home/ubuntu/leanVM")
-REFERENCE_COMMIT = os.environ.get("LEANVM_COMMIT", "a210ef1b")
+REFERENCE_COMMIT = os.environ.get("LEANVM_COMMIT", os.environ.get("REFERENCE_COMMIT", "a210ef1b"))
 BASELINE_CYCLES = 1542812
 BASELINE_PROVING_MICROS = 1433000
 BASELINE_PROOF_SIZE_BYTES = 302592
@@ -47,7 +48,7 @@ PAID_GAIN_BPS = int(os.environ.get("ETHPLANE_PAID_GAIN_BPS", "0"))
 
 RUN_TIMEOUT_SECONDS = 600
 BUILD_TIMEOUT_SECONDS = 1800
-TASKSET_CPUS = os.environ.get("VERIFIER_CPUS", "0-7")
+BASELINE_RUNS = 3
 # R6. The editable surface is the guest program and nothing else. `cargo build --release` runs in
 # the submission's worktree as the verifier user, and Rust executes build.rs and proc macros at
 # compile time — so any Rust crate the submitter can write is arbitrary code execution as the user
@@ -61,6 +62,10 @@ FROZEN_HINT = "only crates/rec_aggregation/guests/ may change"
 VERDICT_KEYS = (
     "cycles", "provingMicros", "proofSizeBytes", "verifyMicros", "verifierAccepted", "reason", "binarySha256",
 )
+
+
+def running_as_root() -> bool:
+    return hasattr(os, "geteuid") and os.geteuid() == 0
 
 
 def verdict(
@@ -113,11 +118,21 @@ def extract_tarball(tarball: str, dest: str) -> Tuple[bool, str]:
 
 def make_worktree(reference: str, dest: str, commit: str = REFERENCE_COMMIT) -> Tuple[bool, str]:
     """A worktree DETACHED AT THE PINNED COMMIT. Without --detach <commit> the verifier measures
-    whatever the reference checkout happens to be on, which is not the criterion."""
-    r = subprocess.run(
-        ["git", "worktree", "add", "--detach", dest, commit],
-        cwd=reference, capture_output=True, text=True,
-    )
+    whatever the reference checkout happens to be on, which is not the criterion.
+
+    A reference checkout that is not there at all is `host-config`, not `worktree`: the module's
+    first rule is that every path returns a reason rather than an exception, and running with
+    LEANVM_REF pointing at nothing used to raise FileNotFoundError out of subprocess — which
+    reaches watch.py as an outage rather than as anything anyone can act on."""
+    if not os.path.isdir(reference):
+        return False, "host-config"
+    try:
+        r = subprocess.run(
+            ["git", "worktree", "add", "--detach", dest, commit],
+            cwd=reference, capture_output=True, text=True,
+        )
+    except OSError:
+        return False, "host-config"
     return (r.returncode == 0, "" if r.returncode == 0 else "worktree")
 
 
@@ -163,10 +178,24 @@ def build(worktree: str) -> Tuple[bool, str]:
     return (r.returncode == 0, "" if r.returncode == 0 else "build")
 
 
+def verifier_cores() -> str:
+    """The core list to pin measurements to, or "" for no pinning, which is the default.
+
+    A timing baseline and the submission that is judged against it must be measured the same way.
+    The version this replaces pinned `taskset -c 0-7` unconditionally while the node's recorded
+    baseline had been measured on all 26 cores of the host — so a correct submission came back
+    `regression-provingMicros` at 3.74 s against a 1.43 s bound, purely because it was given eight
+    cores and the bound was not. Not pinning by default means the two agree; VERIFIER_CORES pins
+    both when a host needs isolation. (VERIFIER_CPUS is the old name, honoured only when set
+    explicitly, never as a default.)"""
+    return os.environ.get("VERIFIER_CORES", os.environ.get("VERIFIER_CPUS", "")).strip()
+
+
 def pinned_command(worktree: str) -> list:
-    """The criterion's command line, run as the built binary under taskset."""
-    return [
-        "taskset", "-c", TASKSET_CPUS,
+    """The criterion's command line, run as the built binary, on the cores the host asked for."""
+    cores = verifier_cores()
+    prefix = ["taskset", "-c", cores] if cores else []
+    return prefix + [
         binary_path(worktree),
         "aggregate", "--xmss", "900", "--log-inv-rate", "1", "--repeat", "3",
     ]
@@ -193,6 +222,109 @@ def measure(worktree: str) -> Tuple[Optional[Dict[str, int]], str]:
     if reason:
         return None, reason
     return parsed, ""
+
+
+def measure_repeatedly(worktree: str, runs: int = BASELINE_RUNS):
+    """Run the pinned command `runs` times and return every measurement, or a reason."""
+    measurements = []
+    for _ in range(runs):
+        measured, reason = measure(worktree)
+        if reason:
+            return None, reason
+        measurements.append(measured)
+    return measurements, ""
+
+
+def summarise_baseline(measurements) -> Tuple[Optional[Dict[str, int]], str]:
+    """Mean timings, and a spread taken from the runs rather than assumed.
+
+    Cycles are deterministic for a given program and input, so three runs that disagree on cycles
+    mean the measurement is not measuring what the criterion says — that is a reason, not a number
+    to average. spreadBps is the full range of proving time over its mean, rounded up, which is the
+    allowance the contract then gives every submission judged against this baseline."""
+    if not measurements:
+        return None, "parse"
+    cycles = {m["cycles"] for m in measurements}
+    if len(cycles) != 1:
+        return None, "nondeterministic-cycles"
+    proving = [m["provingMicros"] for m in measurements]
+    mean_proving = sum(proving) // len(proving)
+    if mean_proving <= 0:
+        return None, "parse"
+    spread_bps = -((min(proving) - max(proving)) * 10000 // mean_proving)  # ceiling of the range
+    return {
+        "cycles": measurements[0]["cycles"],
+        "provingMicros": mean_proving,
+        "proofSizeBytes": max(m["proofSizeBytes"] for m in measurements),
+        "verifyMicros": sum(m["verifyMicros"] for m in measurements) // len(measurements),
+        "spreadBps": int(spread_bps),
+        "runs": len(measurements),
+    }, ""
+
+
+def record_baseline_command(baseline: Dict[str, int]) -> str:
+    """The cast line that puts this baseline on chain, with the environment's own names where the
+    values are secrets or deployment details. Printed, never sent: the verifier key lives on the
+    host, and this file has no business holding it."""
+    contract = os.environ.get("ETHPLANE_ADDRESS", "$ETHPLANE_ADDRESS")
+    node = os.environ.get("NODE_ID", "$NODE_ID")
+    rpc = os.environ.get("SEPOLIA_RPC_URL", "$SEPOLIA_RPC_URL")
+    return (
+        f"cast send {contract} "
+        f"'recordBaseline(bytes32,uint256,uint256,uint256,uint256,uint16)' "
+        f"{node} {baseline['cycles']} {baseline['provingMicros']} {baseline['proofSizeBytes']} "
+        f"{baseline['verifyMicros']} {baseline['spreadBps']} "
+        f"--private-key \"$(cat $VERIFIER_KEY_FILE)\" --rpc-url {rpc}"
+    )
+
+
+def run_baseline(reference: str) -> int:
+    """Measure the REFERENCE at the pinned commit, the same way a submission is measured.
+
+    A node's baseline has to come from the verifier's own procedure on the verifier's own host. The
+    PoC node's did not — it was measured on all cores by a different process than the one that
+    later judged against it — and that mismatch is exactly what `--baseline` exists to prevent for
+    the next node."""
+    if running_as_root():
+        print(json.dumps({"error": "host-config",
+                          "detail": "run as the verifier user, not root: git refuses a worktree "
+                                    "in another user's checkout (dubious ownership)"}, indent=2))
+        return 1
+    if not os.path.isdir(reference):
+        print(json.dumps({"error": "host-config",
+                          "detail": f"no reference checkout at {reference}; pass one as the first "
+                                    f"argument or set LEANVM_REF"}, indent=2))
+        return 1
+    with tempfile.TemporaryDirectory() as temp_dir:
+        worktree = os.path.join(temp_dir, "reference")
+        ok, reason = make_worktree(reference, worktree)
+        if not ok:
+            print(json.dumps({"error": reason}, indent=2))
+            return 1
+        try:
+            ok, reason = build(worktree)
+            if not ok:
+                print(json.dumps({"error": "reference-build"}, indent=2))
+                return 1
+            measurements, reason = measure_repeatedly(worktree)
+            if reason:
+                print(json.dumps({"error": reason}, indent=2))
+                return 1
+            baseline, reason = summarise_baseline(measurements)
+            if reason:
+                print(json.dumps({"error": reason, "runs": measurements}, indent=2))
+                return 1
+            baseline["cores"] = verifier_cores() or "all (no pinning)"
+            baseline["commit"] = REFERENCE_COMMIT
+            baseline["binarySha256"] = get_binary_hash(worktree)
+            baseline["runsDetail"] = measurements
+            print(json.dumps(baseline, indent=2))
+            print()
+            print(record_baseline_command(baseline))
+            return 0
+        finally:
+            subprocess.run(["git", "worktree", "remove", "--force", worktree], cwd=reference,
+                           check=False, capture_output=True)
 
 
 def check_non_regression(measured: Dict[str, int], baseline: Dict[str, int], spread_bps: int) -> str:
@@ -354,6 +486,8 @@ def run_self_test() -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Verify a leanVM submission against the pinned criterion")
     parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--baseline", action="store_true",
+                        help="measure the reference at the pinned commit and print recordBaseline")
     parser.add_argument("artifact_tarball", nargs="?")
     parser.add_argument("reference_leanvm", nargs="?", default=REFERENCE_LEANVM_PATH)
     parser.add_argument("baseline_json", nargs="?")
@@ -361,6 +495,17 @@ def main() -> None:
 
     if args.self_test:
         run_self_test()
+        return
+    if args.baseline:
+        # `run.py --baseline /path/to/leanVM` puts the path in the first positional, which is
+        # normally the artifact; a directory there is the reference checkout, not a tarball.
+        given = args.artifact_tarball or args.reference_leanvm
+        sys.exit(run_baseline(given))
+    if running_as_root():
+        # The host, not the submission. Running as root over another user's checkout made git refuse
+        # the worktree ("dubious ownership"), and that reason was recorded on chain as a FAIL
+        # against two artifacts that had done nothing wrong.
+        emit(verdict(reason="host-config"))
         return
     if not args.artifact_tarball:
         emit(verdict(reason="no-artifact"))

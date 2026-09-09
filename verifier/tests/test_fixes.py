@@ -89,12 +89,12 @@ class TestParseFailClosed(unittest.TestCase):
 
 
 class TestBinaryRun(unittest.TestCase):
-    """(e) Build once, then run the BUILT binary under taskset with a 600 s timeout."""
+    """(e) Build once, then run the BUILT binary with a 600 s timeout. Pinning is the host's
+    choice now (VERIFIER_CORES), not a constant — see test_cores.py."""
 
     def test_command_is_the_binary_not_cargo_run(self):
         cmd = run.pinned_command("/tmp/wt")
         self.assertNotIn("cargo", cmd)
-        self.assertIn("taskset", cmd)
         self.assertTrue(any(c.endswith("leanvm") for c in cmd), cmd)
         self.assertIn("--xmss", cmd)
 

@@ -86,6 +86,15 @@ A node's baseline should always come from this command, on the host that will do
 PoC node's did not: it was measured by a different process on all cores and recorded once-only, and
 that mismatch is what `--baseline` exists to prevent for every node after it.
 
+## Whole numbers only
+
+`recordMeasurement` takes four uint256 arguments and cast refuses a decimal point outright
+(`parser error: 1500000.0 expected at most 0 decimals`). On 2026-09-09 a submission was measured
+and judged and then *not recorded* for that reason, and it stayed pending with its verdict
+unspoken. The parser returns ints, `verdict()` coerces whatever reaches it, and `watch.py` coerces
+again at the argument list — three places, because losing this loses the verdict rather than a
+digit.
+
 ## Not as root
 
 `watch.py` refuses to run as root, and `run.py` answers `host-config` instead of measuring. git
@@ -111,11 +120,14 @@ The `watch.py` script polls the ethplane API for pending submissions and process
 
 1. Reads `/api/nodes/<NODE_ID>`, where PENDING is a submission with no verdict (the API has no
    status column)
-2. Skips any artifact hash already in `.watched`
+2. Skips any artifact hash already in the ledger
 3. Fetches each artifact from `/api/artifacts/<hash>`
 4. Runs `verifier/run.py` on each artifact
 5. Sends `recordMeasurement` with the verifier wallet (`--dry-run` prints the line instead)
-6. Appends the artifact hash to `.watched` — after the verdict is on chain, never before
+6. Appends the artifact hash to the ledger — after the verdict is on chain, never before. The
+   ledger is `~/.ethplane-watched` (override with `WATCHED_FILE`), not `./.watched`: watch.py runs
+   from wherever it is started, and on 2026-09-09 that was a directory the verifier user could not
+   write
 
 The script supports:
 - `--dry-run`: Shows what would happen without executing

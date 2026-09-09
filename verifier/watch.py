@@ -41,7 +41,10 @@ CAST_TIMEOUT_SECONDS = 300
 # two innocent artifacts carry FAIL verdicts because of it. These are logged and left pending.
 HOST_REASONS = ("host-config", "reference-build", "worktree", "patch-missing", "patch-failed",
                 "probe-build", "binary-missing")
-WATCHED_FILE = os.environ.get("WATCHED_FILE", ".watched")
+# The ledger follows the user, not the working directory: watch.py is run from wherever systemd or
+# a shell happens to put it, and on 2026-09-09 that was a directory the verifier user could not
+# write. WATCHED_FILE overrides it.
+WATCHED_FILE = os.environ.get("WATCHED_FILE", os.path.join(os.path.expanduser("~"), ".ethplane-watched"))
 RECORD_MEASUREMENT = (
     "recordMeasurement(bytes32,bytes32,uint256,uint256,uint256,uint256,bool,bytes32)"
 )
@@ -175,6 +178,18 @@ def evidence_hash(verdict: dict) -> str:
     return "0x" + hashlib.sha256(json.dumps(verdict, sort_keys=True).encode()).hexdigest()
 
 
+def whole(value) -> int:
+    """A uint256 argument, from whatever the verdict carried.
+
+    cast parses these itself and refuses a decimal point: `parser error: 1500000.0 expected at most
+    0 decimals`. On 2026-09-09 that error came back after a real measurement, so nothing was
+    recorded and the submission stayed pending — the verdict existed and could not be told. The
+    parser returns ints now; this is the last place it can still be made true."""
+    if value is None:
+        return 0
+    return int(round(float(value)))
+
+
 def measurement_args(node_id: str, artifact_hash: str, verdict: dict) -> list:
     """The call, without the wallet: node, artifact, the four numbers, the flag, the evidence.
 
@@ -182,16 +197,16 @@ def measurement_args(node_id: str, artifact_hash: str, verdict: dict) -> list:
     verifierAccepted true would be a pass at no cost, so that combination is refused here rather
     than left to the contract's own ordering to make harmless."""
     accepted = bool(verdict.get("verifierAccepted", False))
-    cycles = verdict.get("cycles") or 0
+    cycles = whole(verdict.get("cycles"))
     if accepted and cycles <= 0:
         raise RuntimeError("refusing to record an accepted measurement with no cycle count")
     return [
         node_id,
         artifact_hash,
         str(cycles),
-        str(verdict.get("provingMicros") or 0),
-        str(verdict.get("proofSizeBytes") or 0),
-        str(verdict.get("verifyMicros") or 0),
+        str(whole(verdict.get("provingMicros"))),
+        str(whole(verdict.get("proofSizeBytes"))),
+        str(whole(verdict.get("verifyMicros"))),
         "true" if accepted else "false",
         evidence_hash(verdict),
     ]

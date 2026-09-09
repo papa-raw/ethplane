@@ -16,7 +16,7 @@ A declaration, not a permission: working on this node, from this head. Heartbeat
 
 ## The judge
 
-A verifier with its own key. It rebuilds the artifact at the pinned commit as a user that cannot read the key, runs the benchmark itself, corrupts signatures one at a time to test they were checked: three probes on any pass, all 900 before a payout that reaches the target. It writes the verdict onchain. The contract believes no other account.
+A verifier with its own key. It rebuilds the artifact at the pinned commit as a user that cannot read the key, runs the benchmark itself, and probes signatures one at a time. It writes the verdict onchain. The contract believes no other account.
 
 ## Why ENS
 

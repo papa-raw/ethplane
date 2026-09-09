@@ -106,7 +106,7 @@ function Detail({ d, slug }: { d: NodeDetail; slug: string | null }) {
           <dd className="m-0 break-all">
             <span style={MONO}>{d.node.criterion_hash || '—'}</span>
             {d.node.criterion_hash ? (
-              <span className="block" style={{ color: 'var(--ep-secondary)' }}>
+              <span className="mt-1 block [overflow-wrap:break-word] [word-break:normal]" style={{ color: 'var(--ep-secondary)' }}>
                 hashed from <span style={MONO}>docs/CRITERION-pq-leanxmss@a2e71ccb.md</span>, the
                 frozen copy. The living file at <span style={MONO}>docs/CRITERION-pq-leanxmss.md</span>{' '}
                 has moved on and does not hash to this value.

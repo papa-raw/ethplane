@@ -42,11 +42,19 @@ was recorded while both swarms were working the host: cycles 1,542,812, provingM
 (7.16 s), spreadBps **2367** — decoded from the `BaselineRecorded` log at block 11668042, not from a
 note. The non-regression bound that follows is 8.85 s against roughly 1.43 s in a local run on a quiet host (not an on-chain figure), so the
 time bound on that node is lenient. That is the safe direction: a lenient bound cannot wrongly reject
-a good submission, only fail to catch a slow one. The decision on both nodes is the cycles criterion
-— strictly below 1,542,812, thresholdBps 0, measured by the verifier's own `measure` and re-measured
-by the critic. Node 1 is the opposite case and is stated in `docs/DEPLOYMENTS.md`: its bound of 1.46 s
-against ~1.5 s measured on the same host today is tight enough to fail a correct submission on time
-alone.
+a good submission, only fail to catch a slow one.
+
+The cycles criterion — strictly below 1,542,812, thresholdBps 0 — is what decides a submission the
+verifier has accepted. None has been: all seven `MeasurementRecorded` events on the two nodes carry
+`verifierAccepted = false`, so not one has reached that comparison, and `_judge` returns FAIL on the
+flag before it looks at the number. What has actually decided every recorded verdict so far is the
+verifier's own non-regression check, and on node 2 that was proof size — 302,489 B against the
+302,182 B recorded, the one field with no allowance at all, and 410 bytes tighter than node 1's
+302,592 B. `docs/JUDGES.md` §8 lists every row with its transaction.
+
+Node 1 is the opposite case for time and is stated in `docs/DEPLOYMENTS.md`: its bound of 1.46 s,
+against roughly 1.5 s in a local run on the same host on 2026-09-09 (a local measurement, not an
+on-chain figure), is tight enough to fail a correct submission on time alone.
 
 **Statement.** The verifier builds the submission and runs it on inputs it generates itself with the reference build: fresh keys, messages and 900 signatures, plus negative vectors (a flipped signature, a wrong message, a wrong key). The proof must verify with the reference `python-verifier/verifier.py` on the positive inputs and the run must fail on every negative vector. The Python verifier binds the bytecode hash into the transcript and fixes the proof-system parameters, so a proof of a weaker statement does not verify.
 
@@ -59,4 +67,4 @@ alone.
 **Measured binary.** The verifier records the hash of the binary it ran with every measurement. If a submission's diff is non-empty and the built binary hashes the same as the reference, the verifier refuses to measure: it will not credit a submission with another build's numbers. Negative vectors flip a byte at a random offset inside the signature, so partial verification of a signature is caught as well as a skipped one.
 
 
-**Procedure note (2026-09-09, from the rehearsal).** The baseline must be recorded by the verifier's own `run.py --baseline` on the reference checkout, on the same host, with the same core pinning the verifier uses for submissions; otherwise the non-regression bounds compare unlike measurements. The first node's baseline was recorded from an earlier measurement taken with all cores, while the verifier pinned eight, and the first measured submission therefore failed non-regression on proving time (3.74 s against 1.43 s) although its cycle count was identical to the baseline. The baseline is once-only by contract, so this is recorded here rather than corrected; the verifier now runs unpinned on this host so its numbers are comparable.
+**Procedure note (2026-09-09, from the rehearsal).** The baseline must be recorded by the verifier's own `run.py --baseline` on the reference checkout, on the same host, with the same core pinning the verifier uses for submissions; otherwise the non-regression bounds compare unlike measurements. The first node's baseline was recorded from an earlier measurement taken with all cores, while the verifier pinned eight, and the first measured submission therefore failed non-regression on proving time although its cycle count was identical to the baseline. The 3.74 s that failed against the 1.43 s bound was a local run on the judging host that day, not an on-chain figure: the proving times node 1 actually carries on chain are 0, 0, 7,240,000 and 6,696,000 µs (`docs/JUDGES.md` §8), the two non-zero ones recorded later while both swarms were working the host. Different load, different numbers, same lesson. The baseline is once-only by contract, so this is recorded here rather than corrected; the verifier now runs unpinned on this host so its numbers are comparable.

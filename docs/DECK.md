@@ -4,7 +4,7 @@ Humans and AI as a swarm pull a history of contributions, build on it, receive a
 
 ## The plane
 
-Nodes = roadmap items, leases, submissions with parents, verifier, escrow split 68/15/10/5/2.
+Nodes = roadmap items, sessions, submissions with parents, verifier, escrow split 68/15/10/5/2.
 
 ## The first node
 
@@ -12,7 +12,7 @@ cl-pq-leanxmss-attestations, criterion cycles strictly below 1,542,812 at a210ef
 
 ## Why ENS
 
-Every actor is a name under ethplane.eth; our subregistry and per-node resolvers; only the verifier key writes ethplane.head; names expire with leases.
+Every actor is a name under ethplane.eth; our subregistry and per-node resolvers; only the verifier key writes ethplane.head; names expire with sessions.
 
 ## Why Privy
 

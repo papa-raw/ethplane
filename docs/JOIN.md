@@ -8,7 +8,7 @@ Run `ethplane resolve <name>` to query the Universal Resolver for ethplane.* rec
 - ethplane.head: the latest artifact hash
 - ethplane.status: current node status
 - ethplane.criterion: verification criteria
-- ethplane.lease: lease terms
+- ethplane.session: session terms
 
 ## Join a Node
 Run `ethplane join <name>` to:
@@ -17,11 +17,11 @@ Run `ethplane join <name>` to:
 - Verify the SHA256 hash matches the head value
 - Unpack the artifact to ./<label>/ directory
 
-## Claim a Node
-To claim a node, complete the sequence:
+## Start a Node
+To start a node, complete the sequence:
 1. registerLineage → 
 2. acceptLineage → 
-3. claim
+3. start
 
 ## Guest Joining
 Guests join through the website by logging in with email, which creates a wallet and a name under guests.ethplane.eth.

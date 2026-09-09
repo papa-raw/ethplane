@@ -1,8 +1,8 @@
 | Time | Shot | What is on screen | Voice line |
 |------|------|-------------------|------------|
 | 0:00 | Intro | Black screen | "The ethplane protocol enables collaborative development." |
-| 0:05 | Node Definition | Node creation interface showing criterion and lease details | "Nodes represent roadmap items with verifiable criteria." |
-| 0:15 | Lease Creation | Lease terms display with stake distribution | "Leases provide incentive alignment for contributors." |
+| 0:05 | Node Definition | Node creation interface showing criterion and session details | "Nodes represent roadmap items with verifiable criteria." |
+| 0:15 | Session Creation | Session terms display with stake distribution | "Sessions provide incentive alignment for contributors." |
 | 0:25 | Submission | Submission form with parents and artifact upload | "Submissions build upon previous work with proper attribution." |
 | 0:35 | Verifier | Verifier interface reviewing submissions | "The verifier ensures quality and maintains the ecosystem." |
 | 0:45 | Escrow Distribution | Financial distribution breakdown 68/15/10/5/2 | "Funds are distributed according to predetermined shares." |

@@ -7,7 +7,7 @@ Pat, 2026-09-08: **"How can we design a collaborative plane that allows humans a
 
 Each clause maps to a part of the design:
 - *pull and rebuild a history of contributions*: the contribution tree addressed by ENS names and reconstructed by the resolver (§17); the public record and boards (§3, §10.2).
-- *build on it*: leases, submissions with declared parents, the join and resume path from a name (§4, §15.2, §17.3); the routing function deciding how a group organises inside a node (§1, §13).
+- *build on it*: sessions, submissions with declared parents, the join and resume path from a name (§4, §15.2, §17.3); the routing function deciding how a group organises inside a node (§1, §13). A session is not permission or exclusivity: it says you are working on the node from a known head, heartbeats keep it live, it lapses when they stop, and many sessions run on one node at once.
 - *as a swarm, humans and AI*: any harness or person is a group under an operator identity; execution is isolated, everything else is shared (§9.2, §10).
 - *receive attribution for their own contributions*: attribution rows for verified results, criteria, reuse, verification and compute, accruing to operator identities, judged by verifiers the contributors cannot write to (§9.4, §9.6, §10.3).
 The Ethereum roadmap (§5, §16) is the first history the plane holds, because its owners have said in writing that it needs more hands in parallel than a linear process can supply (§16.1).
@@ -37,8 +37,8 @@ Ethplane is a task registry and verification system. It holds the Ethereum roadm
 
 | Component | Function | Implementation |
 |---|---|---|
-| Node registry | Stores every roadmap node: id, layer, track, fork target, status, criterion, dependencies, current lease | Smart contract on Sepolia (or Hedera; decided by spike); ENSv2 names as identifiers |
-| Lease | Time-bounded right to submit work on a node. Has a duration, a heartbeat interval and a holder | Contract state. Default duration 12 min for compute tasks, 24 h for specification tasks |
+| Node registry | Stores every roadmap node: id, layer, track, fork target, status, criterion, dependencies, current session | Smart contract on Sepolia (or Hedera; decided by spike); ENSv2 names as identifiers |
+| Session | Time-bounded right to submit work on a node. Has a duration, a heartbeat interval and a holder | Contract state. Default duration 12 min for compute tasks, 24 h for specification tasks |
 | Submission | A signed reference to work: a diff, a document hash, a benchmark run id | Contract event + content on IPFS or in the public repo |
 | Verifier | Runs the node's criterion on the submission using verifier-owned code and data. Signs the result | Separate process, separate OS user, separate key. For compute tasks: a GPU runner that executes the submitted diff and computes the metric on a held-out split the submitter never sees |
 | Release | Pays the bounty and marks the node's progress when a verified result meets the criterion | Escrow contract releases on the verifier's signature |
@@ -49,10 +49,10 @@ Ethplane is a task registry and verification system. It holds the Ethereum roadm
 
 ## 4. Rules
 
-1. Agents can read all records. Agents can write only claims, heartbeats and submissions for leases they hold.
+1. Agents can read all records. Agents can write only claims, heartbeats and submissions for sessions they hold.
 2. The verifier's code, data and key are set by the operator. No agent can modify them through any path.
-3. A lease expires when its holder misses a heartbeat or the duration ends. No group of the same operator can re-claim that node for one lease duration.
-4. Several groups may hold leases on the same node when the node is marked open. The first verified result that meets the criterion is paid. Other submissions remain on record.
+3. A session lapses when its holder misses a heartbeat or the duration ends. No group of the same operator can re-start that node for one session duration.
+4. Several groups may hold sessions on the same node when the node is marked open. The first verified result that meets the criterion is paid. Other submissions remain on record.
 5. Arrows on the strawmap are NOT dependencies in Ethplane. Source conflict found by the researcher (eth-governance.md (d)): the image dated 2026-08-04 says arrows "represent throughlines, not hard dependencies"; the live strawmap.org FAQ says arrows are "hard technical dependencies or natural upgrade progressions". Decision: the ingested artefact's own disclaimer governs. Throughlines are stored as `throughlines_to` for display only; a hard dependency exists only when the registry maintainer sets it explicitly on a node, with a source. Pat can overrule.
 6. When the verifier cannot run (no data, no compute, no key), it emits no verdict. No verdict means no release and no status change.
 7. Rule changes to the registry or verifier go through a proposal process (section 5). Rule changes to agent-side code (prompts, skills, routing) need no approval; they are recorded.
@@ -95,12 +95,12 @@ Every unit of work in Ethplane must be attributable to an identity that persists
 | Operator | A person or organisation that runs agents and is accountable for them | Permanent | ENS name owned by the operator (e.g. `ecofrontiers.eth`) | Operator key; used to create groups and set policy |
 | Agent group | One configuration: harness, model tier, prompts, routing rules. Equivalent to a client team in Ethereum's process | Months | Non-transferable subname under the operator (e.g. `swarm-a.ecofrontiers.eth`) plus an entry in a Ethplane-deployed instance of the ERC-8004 identity registry with a capability card URI (ERC-8004 is Draft status and has no canonical deployed registry; researcher, identity-checks.md (1)) | Group key; signs claims and submissions |
 | Agent instance | One running session | Minutes to hours | No name. A session id recorded in the claim, bound to the group key | Uses the group key through the harness; never holds it directly |
-| Verifier operator | Whoever runs a node's verifier | Per node | Subname under the registry's name (e.g. `verify.sparse-blobpool.ethplane.eth`), set by the registry maintainer | Verifier key; signs verdicts. A verifier operator cannot hold a lease on the node it verifies |
+| Verifier operator | Whoever runs a node's verifier | Per node | Subname under the registry's name (e.g. `verify.sparse-blobpool.ethplane.eth`), set by the registry maintainer | Verifier key; signs verdicts. A verifier operator cannot hold a session on the node it verifies |
 
 ### 9.3 ENS use
-- **Nodes are names.** Each strawmap node is a subname under the registry name: `sparse-blobpool.ethplane.eth`. Text records hold the node's status, fork target, criterion hash and current lease holder. Only the registry maintainer's key and the node's verifier key can write these records (ENSv2 Enhanced Access Control roles; confirmed: the Permissioned Resolver has 11 roles, 8 of them per-record, identity-checks.md (2)).
+- **Nodes are names.** Each strawmap node is a subname under the registry name: `sparse-blobpool.ethplane.eth`. Text records hold the node's status, fork target, criterion hash and current session holder. Only the registry maintainer's key and the node's verifier key can write these records (ENSv2 Enhanced Access Control roles; confirmed: the Permissioned Resolver has 11 roles, 8 of them per-record, identity-checks.md (2)).
 - **Groups are names.** Operators register groups as subnames under their own name. Subnames are non-transferable, so a reputation cannot be sold, and revocable, so an operator can retire a group.
-- **Leases are records, not names.** Creating a subname per lease costs a transaction per claim and adds nothing the contract event does not already hold. The lease is a contract state; the node's text record mirrors the current holder for human lookup.
+- **Sessions are records, not names.** Creating a subname per session costs a transaction per start and adds nothing the contract event does not already hold. The session is a contract state; the node's text record mirrors the current holder for human lookup.
 - **Resolution.** Any client resolves a node name to its contract, its verifier key and its record; any group name resolves to its operator, its capability card and its attribution total. Resolution of every node under the registry through the Universal Resolver V2 traversing the hierarchical registry (confirmed functionally; the phrase "wildcard" is not used in the ENSv2 docs, identity-checks.md (2)).
 
 ### 9.4 What is attributed
@@ -121,13 +121,13 @@ The allocation function is: input, attribution rows for one period; output, a di
 
 ### 9.6 Controls against gaming
 - **Sybil groups.** A group needs an operator name, which costs a registration and is accountable. Weight accrues to operators, not to groups, so splitting one operator into many groups gains nothing.
-- **Self-verification.** A verifier operator's key cannot hold a lease on the same node. Checked by the registry on claim.
+- **Self-verification.** A verifier operator's key cannot hold a session on the same node. Checked by the registry on start.
 - **Reuse fraud.** Declared parents must exist in the record before the child submission; the verifier rejects submissions whose parents post-date them.
 - **Metric gaming.** The verifier computes the metric on data the submitter never sees, on verifier-owned compute (§10.3); a submission only ever earns the fraction the verifier computes.
-- **Criterion author advantage.** The group that contributed a node's criterion cannot hold a lease on that node for the first two lease periods after the criterion is accepted.
+- **Criterion author advantage.** The group that contributed a node's criterion cannot hold a session on that node for the first two session periods after the criterion is accepted.
 - **Reuse under-declaration and self-dealing.** The verifier compares a submission against all prior submissions on the node (diff similarity) and adds missing parents; reuse rows between groups of the same operator pay nothing, since weight accrues to the operator.
-- **Lease squatting and verdict farming.** Cooldown (§4 rule 3) applies per operator, not per group; verification rows pay only after the verdict survives the spot-check window.
-- **Identity cost.** An operator identity requires the ENS registration and a bonded deposit held by the treasury, forfeited on a proven fraud (fabricated result, forged parent, untrusted runner).
+- **Session squatting and verdict farming.** Cooldown (§4 rule 3) applies per operator, not per group; verification rows pay only after the verdict survives the spot-check window.
+- **Identity cost.** An operator identity requires the ENS registration and a bonded deposit held by the treasury, lapsed on a proven fraud (fabricated result, forged parent, untrusted runner).
 - **Weight inflation by cheap nodes.** Weights are set per node by the registry maintainer, following the strawmap tag (SFI highest), so many trivial nodes cannot outweigh one scheduled one.
 
 ### 9.7 Hackathon scope for this section
@@ -147,8 +147,8 @@ Register the registry name and node subnames on Sepolia ENSv2 with text records 
 All four accrue to the contributor's operator identity in the same attribution table. Allocation (section 9.5) reads one table.
 
 ### 10.2 The shared plane
-- **One record, all operators.** Every node, lease, submission, partial and verdict is on the same registry and readable by every participant. A group from operator A can claim a node, read operator B's partial, and build on it; B receives a reused-work row when A's submission is verified.
-- **Cross-group sub-tasks.** A group that reaches a sub-problem outside its capability publishes it as a child task on the same node with its own criterion and lease. Any group may claim it. The routing function decides the child's mode: pre-assigned if the child's result would change decisions the parent has already made (the stop rule), open claim otherwise.
+- **One record, all operators.** Every node, session, submission, partial and verdict is on the same registry and readable by every participant. A group from operator A can start working on this node, read operator B's partial, and build on it; B receives a reused-work row when A's submission is verified.
+- **Cross-group sub-tasks.** A group that reaches a sub-problem outside its capability publishes it as a child task on the same node with its own criterion and session. Any group may start working on it. The routing function decides the child's mode: pre-assigned if the child's result would change decisions the parent has already made (the stop rule), work alongside otherwise.
 - **Shared boards.** Each group's working board is public and append-only. Execution state (sandboxes, contexts, worktrees) is private to the group. This is the only isolation.
 
 ### 10.3 Trust in pooled compute
@@ -159,7 +159,7 @@ A pooled runner belongs to a contributor, so its output is a claim, not a verdic
 Hardware attestation (TEE) is a later upgrade, not a hackathon dependency.
 
 ### 10.4 Dispatcher
-A service that reads the queue of submissions, matches each to an idle runner that satisfies the node's compute requirement and the no-self-scoring rule, records the assignment, and forwards the runner's signed output to the verifier operator. It is stateless except for the queue; the record is the state. Runners heartbeat like leases; a runner that misses heartbeats is marked offline and its jobs re-queued.
+A service that reads the queue of submissions, matches each to an idle runner that satisfies the node's compute requirement and the no-self-scoring rule, records the assignment, and forwards the runner's signed output to the verifier operator. It is stateless except for the queue; the record is the state. Runners heartbeat like sessions; a runner that misses heartbeats is marked offline and its jobs re-queued.
 
 ### 10.5 Hackathon scope
 Two runners from two operator identities in the pool; jobs from a third identity dispatched across both; one spot-check re-score shown agreeing; compute-provided rows visible per operator in the attribution query. Cross-group reuse shown once: the recovering group in the demo builds on the killed group's partial and both receive rows.
@@ -171,7 +171,7 @@ Two runners from two operator identities in the pool; jobs from a third identity
 A web application that renders the EF strawmap as an interactive graph. Every roadmap item is a node. Clicking a node opens its page: what the problem is, how it is judged, who is working on it, what has been submitted and verified, what it depends on, and how to join. The dashboard reads the registry, the record and the attribution table through the query API (subgraph or HCS mirror). It writes through the same contract calls an agent uses (claim, submit), signed by the user's key, and through one operator-run service, the launcher (§15.2), which owns the cloud credential and spends only against one-time codes and an account ceiling.
 
 ### 12.2 Layout
-The strawmap's own grid is the layout: three layer bands (consensus, data, execution), fork columns (G, H, I, J, K, L, longer term, north stars), track rows within each band, throughlines as arrows. Node colour follows the strawmap legend (headliner, onchain, offchain, north star) and an added state ring: open, leased, verified, specification only, locked by dependency. Filters: layer, fork, tag (EIP, SFI, CFI), state, operator.
+The strawmap's own grid is the layout: three layer bands (consensus, data, execution), fork columns (G, H, I, J, K, L, longer term, north stars), track rows within each band, throughlines as arrows. Node colour follows the strawmap legend (headliner, onchain, offchain, north star) and an added state ring: open, active sessions, verified, specification only, locked by dependency. Filters: layer, fork, tag (EIP, SFI, CFI), state, operator.
 
 ### 12.3 Node page: fields and their sources
 | Field | Source | Notes |
@@ -181,13 +181,13 @@ The strawmap's own grid is the layout: three layer bands (consensus, data, execu
 | Throughlines in and out; hard dependencies | `strawmap-nodes.json` | The strawmap says arrows are throughlines, not hard dependencies; the registry maintainer marks which are hard |
 | Acceptance criterion: type (metric, test suite, proof check, spec conformance, reviewed checklist), definition, held-out data policy, current baseline | Registry contract (`criterion_hash`) + the criterion document in the public repo | "Specification only" nodes show the checklist and the reviewer assignment rule |
 | Bounty weight and funding state | Registry + treasury | Weight follows the tag (SFI > CFI > others) |
-| Current lease: holder group, operator, started, expires, last heartbeat | Registry events | Countdown shown live |
-| Lease timeline: every claim, heartbeat, missed heartbeat, FORFEIT and expiry on this node, in order, with the group and operator | Registry events | The demo's kill-and-recover beat happens here; the design brief's countdown lives on the current entry |
+| Current session: holder group, operator, started, expires, last heartbeat | Registry events | Countdown shown live |
+| Sessions: every claim, heartbeat, missed heartbeat, lapse and expiry on this node, in order, with the group and operator | Registry events | The demo's kill-and-recover beat happens here; the design brief's countdown lives on the current entry |
 | Coordination mode for the current task: the routing mode chosen (single, sequential, orchestrated, open claim) and the stop-rule reason in one sentence | Routing function output, recorded with the claim | This is where coharness is visible on the product |
 | Submissions: list with group, time, hash, declared parents, verdict, metric value | Record events | Partials are submissions without a verdict request; visible to everyone |
 | Verdicts: verifier operator, metric computed, pass/fail, spot-check status | Record events (verifier key) | Only these change node state |
 | Attribution on this node: rows by type and operator | Attribution events via subgraph | Links to each operator's page |
-| Boards: each group's public working board for this node | Board topic or repo path per lease | Read-only view, newest first |
+| Boards: each group's public working board for this node | Board topic or repo path per session | Read-only view, newest first |
 | Runner queue for this node: jobs waiting, running, done; pooled runners eligible | Dispatcher state | From §10.4 |
 | How to join: claim button (if open), required capability, compute requirement, the CLI or harness command that does the same | Registry + docs | The button issues the same contract call an agent makes |
 | Freshness and provenance: time of the last indexed block behind this page, and on every event row a link to the transaction on a chain explorer and to the subgraph query that produced it | Query API metadata + explorer URL pattern | The field that lets a judge confirm the data is live rather than take it on trust |
@@ -228,7 +228,7 @@ GPU-hours (training or search loops), CPU-hours (test suites, simulations), proo
 ### 13.4 Coverage accounting
 - 65 nodes classified (CL 22, DL 12, EL 31): 2 computable today, 29 reviewer-judged by design, 34 with judgement data unknown and a named next step in each row. That is the honest headline; "100 percent coverage" means every node has a filled row under the definition above, not that every node is computable.
 - By criterion type: reviewed checklist 29, proof check 11, spec conformance 10, test suite 8, metric 7. Judgement data exists: unknown 34, no 29, yes 2.
-- Routing modes (new in v2, from the criterion type): metric, test suite and spec conformance nodes run sequential (C2) loops, one lineage per lease, never split; proof-check nodes run single-agent attempts (C1) in parallel with the checker as verifier; reviewed-checklist nodes run orchestrated (C4) with an integrator and a reviewer from another node. The stop rule is why a five-minute experiment is never split.
+- Routing modes (new in v2, from the criterion type): metric, test suite and spec conformance nodes run sequential (C2) loops, one lineage per session, never split; proof-check nodes run single-agent attempts (C1) in parallel with the checker as verifier; reviewed-checklist nodes run orchestrated (C4) with an integrator and a reviewer from another node. The stop rule is why a five-minute experiment is never split.
 - Hard dependencies: none set for any node today (rule 4.5); the dependency field on the node page and the dependency-unblocked attribution event are inert until the registry maintainer sets one with a source.
 - Orchestrator rulings on the researcher's flags, as applied in the data: data-layer tagged nodes judged by consensus-spec-tests; the FOUR untagged headliners that are reviewer-judged (decoupled consensus, 1-round finality, mandatory 1-of-1 proofs, zkzk frames) carry the state "headliner, checklist pending EIP"; post-quantum-l1 is a proof check.
 - Day-1 checks before any node is called computable: open execution-spec-tests and consensus-spec-tests and confirm a runnable vector for EIP-7732 or EIP-7928.
@@ -432,7 +432,7 @@ GPU-hours (training or search loops), CPU-hours (test suites, simulations), proo
 The Protocol cluster (about 60 researchers and engineers) has fixed a north star: Ethereum L1 quantum-resistant across execution, consensus and data by December 2029, with a minimum viable post-quantum milestone in J*. Reaching it needs an average cadence of 7.2 months per fork. The post states that "simply shipping the forks in a linear sequence cannot meet the December 2029 schedule", that forks will overlap, and that delivery "will take more hands than any prior fork sequence, including cryptographers, client devs, researchers, security reviewers, and testing capacity, inside the EF and well beyond it". The Glamsterdam retrospectives add: "size an EIP by its integration depth; complexity compounds; testing surface is the scarce resource; champions often underestimate complexity." Ethplane is a system for adding hands to that pipeline in parallel, with verification instead of trust, and its criterion-contributed event (§9.4) targets the resource the EF names as scarce: testing surface.
 
 ### 16.2 Node lifecycle = the EF maturity pipeline
-The priorities post gives the pipeline that decides how work earns inclusion: **Research → EIP → Prototype → Devnet → PFI → CFI → SFI → Mainnet**, with the rule that "each step should add evidence, reduce uncertainty, and make ownership visible before the next commitment is made. A devnet can send work back to research. PFI, CFI, and SFI signal rising confidence among AllCoreDevs; they do not substitute for implementation evidence." This replaces any Ethplane-invented node lifecycle. A node's `state` is its position in this pipeline as recorded by the EF (strawmap tag, tier list, ACD outcome), read-only in Ethplane. Ethplane's own state machine applies only to submissions (claimed → submitted → verified → released) and to leases. What Ethplane adds at each pipeline step is evidence: a prototype that passes a verifier-owned test, a devnet result, a test vector contributed.
+The priorities post gives the pipeline that decides how work earns inclusion: **Research → EIP → Prototype → Devnet → PFI → CFI → SFI → Mainnet**, with the rule that "each step should add evidence, reduce uncertainty, and make ownership visible before the next commitment is made. A devnet can send work back to research. PFI, CFI, and SFI signal rising confidence among AllCoreDevs; they do not substitute for implementation evidence." This replaces any Ethplane-invented node lifecycle. A node's `state` is its position in this pipeline as recorded by the EF (strawmap tag, tier list, ACD outcome), read-only in Ethplane. Ethplane's own state machine applies only to submissions (started → submitted → verified → released) and to sessions. What Ethplane adds at each pipeline step is evidence: a prototype that passes a verifier-owned test, a devnet result, a test vector contributed.
 
 ### 16.3 Priority = the EF tier where one exists
 The Hegotá tier list grades 62 EIPs on a ladder with stated delivery commitments: S must ship and defines the fork; A is expected to ship and is cut only before any S item; B is on the bubble, admitted one at a time and only after devnets with all S and A items are stable, and "most B-tiered EIPs carry 3 explicit requirements: a prototype, a sign-off, and a settled specification"; C is below the line, not disqualified; DFI is declined with a structural rationale; TBD is deliberately unranked pending mainnet data. Node priority in the registry: S = 1, A = 2, B = 3, C = 4, TBD = held, DFI = parked with the rationale shown. Nodes without an EF grade keep the strawmap-tag priority from §13. The B-tier requirements become node advancement criteria that a group can claim: "prototype", "settled specification" and "sign-off" are each a task with a verifiable deliverable.
@@ -455,8 +455,8 @@ Each coverage row gains `integration_depth` (low, medium, high: how many layers 
 Every submission on a node is a checkpoint. A checkpoint is a content-addressed record: `{parents: [hash…], node, lineage, submission hash, artefact references (diff, results, board slice), metric, verifier signature or null, block}`. Parents are the checkpoints it built on: its own lineage's previous checkpoint, and any other lineage's checkpoint it declared as reused (§9.4). Checkpoints therefore form a directed acyclic graph per node. The attribution graph and the contribution tree are the same object: the reuse declarations are its edges, the identities are its labels.
 
 ### 17.2 What ENS holds
-- **Node name** (`sparse-blobpool.ethplane.eth`): a `head` record holding the hash of the latest VERIFIED checkpoint, writable only by the node's verifier key (EAC per-record role, confirmed in identity-checks.md); plus the records already in §9.3 (status, criterion hash, current lease).
-- **Lineage subname** (`swarm-a.ecofrontiers.eth`, or `swarm-a.sparse-blobpool.ethplane.eth` for the node-scoped view): identity, roles and the operator link. Its frontier (latest checkpoint, verified or not) is NOT an ENS record: it is derived from the registry's checkpoint events by the resolver and the subgraph, so the only ENS head write is the verifier's on the node, at the verdict rate. This keeps the argument used against per-lease subnames (§9.3) consistent.
+- **Node name** (`sparse-blobpool.ethplane.eth`): a `head` record holding the hash of the latest VERIFIED checkpoint, writable only by the node's verifier key (EAC per-record role, confirmed in identity-checks.md); plus the records already in §9.3 (status, criterion hash, current session).
+- **Lineage subname** (`swarm-a.ecofrontiers.eth`, or `swarm-a.sparse-blobpool.ethplane.eth` for the node-scoped view): identity, roles and the operator link. Its frontier (latest checkpoint, verified or not) is NOT an ENS record: it is derived from the registry's checkpoint events by the resolver and the subgraph, so the only ENS head write is the verifier's on the node, at the verdict rate. This keeps the argument used against per-session subnames (§9.3) consistent.
 - **Registry name**: a `manifest` record pointing to the reconstruction code (the harness image hash, the checkpoint schema version).
 Because names are hierarchical, resolving the node gives the verified state of the problem; resolving a lineage under it gives one group's frontier; resolving the operator gives every group it runs. The tree is addressable at every level by ID.
 
@@ -537,19 +537,19 @@ The generic product is the plane: registry, verifier, names, attribution, treasu
 | Define the node: label, criterion (type and definition), held-out data policy, fixed budget, lane (open or pre-assigned), default routing mode | Maintainer | Registry: node created, `criterion_hash`; ENS: node subname under Ethplane's registry with a Permissioned Resolver, empty `head`, roles set (verifier key may write head and status) |
 | Set the allocation policy for this node: bounty weight, split among event types (verified result, reused parents, verification, compute), per-period cap | Maintainer + treasurer | Registry: weights; Privy: organisation-wallet policy permits release only to group keys with a verified row on this node, signed by the node's verifier key, within the cap |
 | Fund the bounty | Treasurer, quorum above threshold | Privy: treasury operation into the node's escrow, approved 2-of-3; Registry: node funded, visible on the map |
-| Assign the verifier operator | Maintainer | Registry: verifier key bound to the node; the operator holds no lease on it |
+| Assign the verifier operator | Maintainer | Registry: verifier key bound to the node; the operator holds no session on it |
 Dashboard: the node turns from locked to open; the node page shows criterion, budget, lane, routing mode, allocation policy and the funding transaction with its approvals.
 
 ### 20.2 Phase 2: work
 | Step | Who | What lands where |
 |---|---|---|
-| Claim: resolve the node name, pick a start point (verified head or a lineage's frontier), record its content hash in the claim | Any group, from the page button or `ethplane join <node>` | Registry: lease with holder, expiry, parent hash; ENS resolution used, never a hard-coded address |
+| Claim: resolve the node name, pick a start point (verified head or a lineage's frontier), record its content hash in the claim | Any group, from the page button or `ethplane join <node>` | Registry: session with holder, expiry, parent hash; ENS resolution used, never a hard-coded address |
 | Run the autoresearch loop: the group edits the one editable file, submits a diff; the dispatcher sends the training job to a pooled runner; the verifier scores on its own compute against the held-out split | Groups, pooled runners, verifier | Registry: checkpoint events (parents, submission hash, metric, verifier signature); board topic: the group's public working board |
-| Heartbeats, forfeits, recoveries: a missed heartbeat forfeits the lease; another group claims alongside or resumes from the forfeited lineage's frontier at a fixed hash | Registry, groups | Registry: lease timeline events; the node page's timeline strip |
+| Heartbeats, lapses, recoveries: a missed heartbeat lapses the session; another group starts alongside or resumes from the lapsed lineage's frontier at a fixed hash | Registry, groups | Registry: session timeline events; the node page's timeline strip |
 | Cross-group reuse: a submission declares parents from other lineages; the verifier checks parents pre-date it and adds missing ones by diff similarity | Groups, verifier | Checkpoint DAG edges; attribution rows of type reused work |
 | Attribution in real time: every verified result, reuse, verification, compute job writes a row as it happens | Verifier, dispatcher | Attribution events indexed by the subgraph; the node page and operator pages update within one block |
 | Coordination visible: each claim records the routing mode chosen and the stop-rule reason; cross-node critics and child tasks appear on the record | Routing function, groups | Node page mode field; record page |
-Dashboard: the map shows leased nodes; the node page shows the live lease countdown, the timeline strip, the checkpoint tree growing, attribution rows arriving, and the freshness block with per-event explorer links.
+Dashboard: the map shows active sessions; the node page shows the active session countdown, the timeline strip, the checkpoint tree growing, attribution rows arriving, and the freshness block with per-event explorer links.
 
 ### 20.3 Phase 3: complete and allocate
 | Step | Who | What lands where |

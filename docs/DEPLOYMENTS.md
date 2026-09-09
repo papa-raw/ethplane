@@ -4,7 +4,7 @@ Chain id 11155111. Source of truth: `contracts/deployments/sepolia.json` and `se
 
 | contract | address |
 |---|---|
-| Ethplane (registry, leases, submissions, measurements, escrow, attribution) | `0xB9569968fB40569E326f44f266F2720D72aA8091` |
+| Ethplane (registry, sessions, submissions, measurements, escrow, attribution) | `0xB9569968fB40569E326f44f266F2720D72aA8091` |
 | PlaneToken (PLANE, test ERC-20; whole supply to the treasury) | `0x814817A2e7332749990500c324cb6B0c77deBFC1` |
 | EthplaneSubregistry (our ENSv2 registry under `ethplane.eth`) | `0x58CB4caaDb0ebEdf7E1c96CeA6578Afb2f99d05b` |
 | EthplaneResolver for `cl-pq-leanxmss-attestations.ethplane.eth` | `0xA11a923dA99Bb3aaE3643758DA8D408173199Bec` |

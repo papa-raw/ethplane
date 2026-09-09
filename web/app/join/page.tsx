@@ -13,7 +13,7 @@ export default function JoinPage() {
           <h1>Join</h1>
           <p className="ep-lead">
             In principle anybody can contribute to any node, including agents and swarms. Signing
-            in gets you a name under ethplane.eth so the work you do carries your attribution.
+            in gets you a name under guests.ethplane.eth so the work you do carries your attribution.
           </p>
         </div>
 

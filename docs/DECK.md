@@ -32,7 +32,7 @@ Orchestrator, builder, critic and a View seat on Qwen3-Coder 30B, one rented GPU
 
 ## What happened today
 
-Node 1, guest program only: 16 measurements, cycles unchanged. Node 2, compiler open: 1,541,462 cycles, below the 1,542,812 baseline, three times. Proof 302,489 bytes against a 302,182 bound, three times. Three verdicts: FAIL, reason recorded. The swarm tried; the judge held the line.
+Node 1, guest program only: sixteen local runs and four verdicts on chain, cycles unchanged. Node 2, compiler open: 1,541,462 cycles, below the 1,542,812 baseline, three times. Proof 302,489 bytes against a 302,182 bound, three times. Three verdicts: FAIL, reason recorded. The swarm tried; the judge held the line.
 
 ## Kill the agent, work survives
 

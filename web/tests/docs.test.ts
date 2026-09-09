@@ -52,10 +52,14 @@ describe('deck screens', () => {
 
   it('lifts a figure only where the file labels it in one word', () => {
     const today = screens.find((s) => s.title === 'What happened today');
+    // Two figures, not three: both of these come from the chain. The sixteen guest-only runs are
+    // real (CRITERION-pq-leanxmss.md) but they are local measurements, and a strip that sets them in
+    // the same type as an on-chain number reads as three facts of one kind. It is spelled in the
+    // deck now, so the parser does not lift it.
     expect(today?.figures).toEqual([
-      { value: '16', label: 'measurements' },
       { value: '1,541,462', label: 'cycles' },
       { value: '1,542,812', label: 'baseline' },
+      { value: '302,182', label: 'bound' },
     ]);
     expect(screens.find((s) => s.title === 'The plane')?.figures).toEqual([]);
   });

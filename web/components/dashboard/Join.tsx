@@ -8,7 +8,7 @@ export type JoinResult = { guestName: string; wallet: string; returning?: boolea
 
 /**
  * Login, then one call to POST /api/join, which verifies the Privy token server-side and hands back
- * a name under ethplane.eth. The page never signs anything and never sees a key: the ENS
+ * a name under guests.ethplane.eth. The page never signs anything and never sees a key: the ENS
  * registration is a job the maintainer runs from the pending_names table.
  */
 export function Join() {
@@ -51,7 +51,7 @@ export function Join() {
       <div data-testid="join-signed-out" className="ep-panel">
         <h2>Join the plane</h2>
         <p>
-          Sign in with an email or a wallet. You get a name under ethplane.eth and an embedded
+          Sign in with an email or a wallet. You get a name under guests.ethplane.eth and an embedded
           wallet if you do not have one, and you can start a session on any open node, exactly like
           any other contributor.
         </p>
@@ -70,7 +70,7 @@ export function Join() {
       </p>
       {result ? (
         <div data-testid="join-result">
-          <p className="ep-name">{result.guestName}.ethplane.eth</p>
+          <p className="ep-name">{result.guestName}.guests.ethplane.eth</p>
           <p>
             {result.returning
               ? 'This name was already reserved for this wallet.'

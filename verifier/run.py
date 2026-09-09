@@ -78,12 +78,17 @@ def verdict(
     binary_sha256: Optional[str] = None,
 ) -> Dict[str, object]:
     """The only verdict shape. `status` is gone: the contract decides status from these fields, and
-    two places deciding it is one place too many."""
+    two places deciding it is one place too many.
+
+    The four measurements are integers here whatever arrives: they become uint256 arguments, and
+    cast refuses a decimal point (`expected at most 0 decimals`). The parser already returns ints;
+    this is the boundary that has to be true even if it stops."""
+    whole = lambda v: None if v is None else int(round(float(v)))
     return {
-        "cycles": cycles,
-        "provingMicros": provingMicros,
-        "proofSizeBytes": proofSizeBytes,
-        "verifyMicros": verifyMicros,
+        "cycles": whole(cycles),
+        "provingMicros": whole(provingMicros),
+        "proofSizeBytes": whole(proofSizeBytes),
+        "verifyMicros": whole(verifyMicros),
         "verifierAccepted": verifier_accepted,
         "reason": reason,
         "binarySha256": binary_sha256,

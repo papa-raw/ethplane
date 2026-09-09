@@ -5,7 +5,12 @@ extracted; two are first-party images in the estate's library, looked at rather 
 
 Everything below is written to be *checked*, not admired. A reviewer should be able to hold a
 screenshot beside this file and say yes or no to each line. Where a rule cannot be checked from a
-PNG, it names the command that checks it.
+PNG, it names the command that checks it — and every one of those commands is in
+**`web/design/check-brief.sh`**, which runs them together and prints PASS or FAIL with the number it
+found. A check that cannot run prints NOT RUN and fails the script, because three of these were
+wrong in exactly that way before they were executed: one depended on the reviewer's shell, one
+counted a substring in one file, and one read an empty result from a directory that did not exist.
+Run the script; do not read the table and assume.
 
 ## 1. Who reads it, and what they must get in ten seconds
 
@@ -41,7 +46,7 @@ alone.
 | 3 | **Uniform weight** | Everything at 500 reads as a wireframe; hierarchy then has to come from boxes | Exactly **three** weights in the built CSS: 400, 500, 700. No 600 |
 | 4 | **A card on everything** | Cards are for things you can act on; a roadmap is a diagram, not fourteen cards | At most **four** bordered containers on the home page, and the map is not one of them |
 | 5 | **A sidebar whose width follows its content** | Content-driven width makes the page jump between routes | No sidebar on the site at all. Node, docs and deck use the same 1240px content column |
-| 6 | **A font the page has to fetch, and the serif it falls back to** | A webfont that fails on a judge's laptop leaves a serif, and the page reads as broken | Nothing fetches a font at runtime: `grep -rl "fonts.gstatic\|fonts.googleapis" web/out` is empty after a build. Every stack ends in `sans-serif` or `monospace`: `grep -rhoE "font-family:[^;]+" web/app web/components web/lib \| grep -vE "(sans-serif\|monospace) *;?$"` prints nothing. **Geist and Geist Mono stay** — `next/font/google` self-hosts them into the export (11 woff2 files, no runtime request), and they are already installed, so they are not a new font from the network. A count is not a verdict, and one file is not the page |
+| 6 | **A font the page has to fetch, and the serif it falls back to** | A webfont that fails on a judge's laptop leaves a serif, and the page reads as broken | Nothing fetches a font at runtime: **`[ -d web/out ] || echo "NOT RUN: build first"`**, then `grep -rl "fonts.gstatic\|fonts.googleapis" web/out` empty and `find web/out -name "*.woff2" \| wc -l` non-zero. An empty grep over a directory that does not exist is not a pass — the critic hit exactly that after a failed build. Every stack ends in `sans-serif` or `monospace`: `grep -rhoE "font-family:[^;]+" web/app web/components web/lib \| grep -vE "(sans-serif\|monospace) *;?$"` prints nothing. **Geist and Geist Mono stay** — `next/font/google` self-hosts them into the export (11 woff2 files, no runtime request), and they are already installed, so they are not a new font from the network. A count is not a verdict, and one file is not the page |
 
 Two more, from this project's own record:
 
@@ -60,7 +65,13 @@ Not up for variant choice. These come from the constraints and from the research
 - **Weights:** 400, 500, 700. Three, and the 700 is for h1 and for a chip's label when it is live.
 - **Grid:** 1240px content column, 8px base spacing (4 8 12 16 24 32 48), radius 8px, 1px borders.
 - **Vocabulary:** session, active session, started, lapses, cooldown. **Never "lease"** in any text a
-  person reads. (`grep -riE "\blease" web/app web/components` returns nothing.)
+  person reads. The check reads the *rendered* pages, because the source legitimately calls the API's
+  field `lease_events` and a variable `leases` — those are identifiers, not prose, and a check that
+  fails on them can never go green:
+  the check strips `<script>` before searching, because the embedded page data legitimately carries
+  the API's `lease_events` field names — a raw grep over the built HTML finds **142** and a grep over
+  the rendered text finds **0**, and only the second is a statement about what a person reads.
+  `web/design/check-brief.sh` runs it.
 - **Copy discipline:** no client names, no budgets, no compute costs, no IP addresses, no private
   paths, no email addresses — including in placeholder text and lorem. Numbers on the page are read
   from the API or from the chain, never typed.
@@ -99,7 +110,7 @@ display line, and a halftone dot field behind the masthead only.
   two live ones invisible, which is what §1.2 and refusal 2 forbid — the tick is the direction's way
   of marking the two, not a texture for the map. (It is not refusal 1: that tell is a coloured border
   **plus** a tinted icon chip **on a card**, and this direction has no icons and no cards in the map.)
-- **Hero composition:** a 96px masthead band carrying a 4px dot-matrix texture at 8% opacity, the map
+- **Hero composition:** a 96px masthead band carrying a 3px dot-matrix texture at 8% opacity, the map
   immediately under it, the three numbers set as a printed table with rules above and below. Every measurement in this
   direction is 3px or 1px; there is no 4px mark anywhere.
 - **Mood:** an audit report you would sign.

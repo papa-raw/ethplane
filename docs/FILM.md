@@ -32,7 +32,7 @@ Two to four minutes, real time, my voice, shot on the live product. No slides. E
 
 **2:40, the names.** Screen: cast resolving dl-leanvm.ethplane.eth through the hackathon Universal Resolver: addr, ethplane.status, ethplane.head; then the same setText from a fresh key reverting.
 
-> Every node is an ENS name on the v2 registry. Status and head live in its records, and only the verifier can write them. A lineage key that tries gets a revert.
+> Every worknode is an ENS name on the v2 registry. Status and head live in its records, written by the verifier under a writer role; the name's owner can write them too. A lineage key that tries gets a revert.
 
 **3:00, join.** Screen: the join page, email login, an embedded wallet created on the spot, a guest name under guests.ethplane.eth.
 

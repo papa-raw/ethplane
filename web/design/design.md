@@ -19,48 +19,48 @@ colors:
   state-unknown: "#D4D4D8"
 typography:
   headline-display:
-    fontFamily: system-sans
+    fontFamily: Geist
     fontSize: 32px
     fontWeight: 700
     lineHeight: 1.2
     letterSpacing: -0.01em
   headline-lg:
-    fontFamily: system-sans
+    fontFamily: Geist
     fontSize: 24px
     fontWeight: 700
     lineHeight: 1.25
   headline-md:
-    fontFamily: system-sans
+    fontFamily: Geist
     fontSize: 18px
     fontWeight: 500
     lineHeight: 1.35
   body-md:
-    fontFamily: system-sans
+    fontFamily: Geist
     fontSize: 16px
     fontWeight: 400
     lineHeight: 1.6
   body-sm:
-    fontFamily: system-sans
+    fontFamily: Geist
     fontSize: 13px
     fontWeight: 400
     lineHeight: 1.5
   label-sm:
-    fontFamily: system-sans
+    fontFamily: Geist
     fontSize: 11px
     fontWeight: 500
     lineHeight: 1.2
   mono-sm:
-    fontFamily: system-mono
+    fontFamily: Geist Mono
     fontSize: 13px
     fontWeight: 400
     lineHeight: 1.5
   chip-label:
-    fontFamily: system-sans
+    fontFamily: Geist
     fontSize: 11px
     fontWeight: 500
     lineHeight: 1
   chip-label-live:
-    fontFamily: system-sans
+    fontFamily: Geist
     fontSize: 11px
     fontWeight: 700
     lineHeight: 1
@@ -175,10 +175,12 @@ among 65 would read as an alert rather than as a record.
 
 ## Typography
 
-System stack only — `ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
-sans-serif` — with no `@font-face` and no network request. A webfont that fails on a judge's laptop
-falls back to a serif and the page reads as broken; the fastest way to never show that is to have no
-webfont.
+**Geist** and **Geist Mono**, already installed and self-hosted by `next/font/google` — the files are
+written into the export (11 woff2) and nothing is fetched at runtime. The stacks end in `sans-serif`
+and `monospace`, so a failure lands on a sans and never on a serif, which is the actual risk the "no
+webfont" instinct is guarding against. An earlier draft of this file said "system stack only, no
+`@font-face`"; that forbade what the tree already does, for a reason that does not apply to a
+self-hosted font, and it is corrected here rather than argued.
 
 Six sizes: 32, 24, 18, 16, 13, 11. Three weights: 400, 500, 700. No 600 anywhere, because the
 difference between 500 and 600 is invisible at 13px and produces uniform-weight pages where hierarchy

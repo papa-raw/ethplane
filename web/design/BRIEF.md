@@ -41,7 +41,7 @@ alone.
 | 3 | **Uniform weight** | Everything at 500 reads as a wireframe; hierarchy then has to come from boxes | Exactly **three** weights in the built CSS: 400, 500, 700. No 600 |
 | 4 | **A card on everything** | Cards are for things you can act on; a roadmap is a diagram, not fourteen cards | At most **four** bordered containers on the home page, and the map is not one of them |
 | 5 | **A sidebar whose width follows its content** | Content-driven width makes the page jump between routes | No sidebar on the site at all. Node, docs and deck use the same 1240px content column |
-| 6 | **Serif fallback** | A serif appearing when a webfont fails is the single loudest "this is broken" signal | `grep -rhoE "font-family:[^;]+" web/app web/components web/lib \| grep -vE "(sans-serif\|monospace) *;?$"` prints **nothing**, and `grep -rn "@font-face\|fonts.googleapis\|next/font" web/` is empty. A count is not a verdict, and one file is not the page |
+| 6 | **A font the page has to fetch, and the serif it falls back to** | A webfont that fails on a judge's laptop leaves a serif, and the page reads as broken | Nothing fetches a font at runtime: `grep -rl "fonts.gstatic\|fonts.googleapis" web/out` is empty after a build. Every stack ends in `sans-serif` or `monospace`: `grep -rhoE "font-family:[^;]+" web/app web/components web/lib \| grep -vE "(sans-serif\|monospace) *;?$"` prints nothing. **Geist and Geist Mono stay** — `next/font/google` self-hosts them into the export (11 woff2 files, no runtime request), and they are already installed, so they are not a new font from the network. A count is not a verdict, and one file is not the page |
 
 Two more, from this project's own record:
 
@@ -52,9 +52,10 @@ Two more, from this project's own record:
 
 Not up for variant choice. These come from the constraints and from the research.
 
-- **Type:** system stack only, no network fonts. `ui-sans-serif, -apple-system, "Segoe UI", Roboto,
-  "Helvetica Neue", Arial, sans-serif`; mono is `ui-monospace, SFMono-Regular, "SF Mono", Menlo,
-  monospace` and is used for hashes, addresses and numbers **only**.
+- **Type:** the fonts already installed and self-hosted — **Geist** and **Geist Mono** via
+  `next/font/google`, which writes the files into the export and makes no runtime request. Each stack
+  ends in `sans-serif` / `monospace` so a failure lands on a sans, never a serif. Mono is for hashes,
+  addresses, cycle counts and command output **only**. No font is added, and none is fetched.
 - **Sizes:** 32 / 24 / 18 / 16 / 13 / 11. Body 16px at 1.6. Nothing between, nothing below 11.
 - **Weights:** 400, 500, 700. Three, and the 700 is for h1 and for a chip's label when it is live.
 - **Grid:** 1240px content column, 8px base spacing (4 8 12 16 24 32 48), radius 8px, 1px borders.

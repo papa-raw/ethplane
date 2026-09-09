@@ -26,8 +26,8 @@
   --ep-space-xl: 24px;
   --ep-space-xxl: 32px;
   --ep-space-xxxl: 48px;
-  --ep-font-sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --ep-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  --ep-font-sans: var(--font-geist-sans), ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ep-font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   --ep-size-display: 32px; --ep-size-lg: 24px; --ep-size-md: 18px;
   --ep-size-body: 16px; --ep-size-sm: 13px; --ep-size-label: 11px;
   --ep-weight-regular: 400; --ep-weight-medium: 500; --ep-weight-bold: 700;

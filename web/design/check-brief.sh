@@ -17,9 +17,11 @@ n=$(grep -rn "border-l-\|borderLeft" web/app web/components web/lib 2>/dev/null 
 [ "$n" = 0 ] && say "left-border card" "PASS (0)" || { say "left-border card" "FAIL ($n)"; bad; }
 
 # 3 — three weights, no 600.
-css=$(find web/out -name "*.css" 2>/dev/null | head -1)
+# Every stylesheet, not the first: one chunk today, but a route-level stylesheet would take the
+# coverage away silently. Third instance in this file's own history of "one file is not the page".
+css=$(find web/out -name "*.css" 2>/dev/null)
 if [ -z "$css" ]; then say "type weights" "NOT RUN (build first)"; bad; else
-  n=$(grep -o "font-weight:6[0-9][0-9]" "$css" | wc -l | tr -d ' ')
+  n=$(grep -ho "font-weight:6[0-9][0-9]" $css | wc -l | tr -d ' ')
   [ "$n" = 0 ] && say "type weights" "PASS (no 600)" || { say "type weights" "FAIL ($n × 600)"; bad; }
 fi
 
@@ -50,9 +52,18 @@ PY
   [ "$n" = 0 ] && say "session vocabulary" "PASS (0 in rendered text)" || { say "session vocabulary" "FAIL ($n)"; bad; }
 fi
 
-# do-not-say — never in anything a person reads, including placeholders.
-n=$(grep -rniE "workplane-private|/Users/|192\.222|@ecofrontiers\.xyz|slabclaw" web/app web/components web/lib 2>/dev/null | grep -v "ethplane.ecofrontiers.xyz" | wc -l | tr -d ' ')
-[ "$n" = 0 ] && say "do-not-say" "PASS (0)" || { say "do-not-say" "FAIL ($n)"; bad; }
+# do-not-say — shapes, not a list. (The scanner excludes itself: its own pattern line matches every
+# shape it looks for, which it duly reported on the first run.) The authoritative list names clients and partners, and a grep
+# enumerating them inside a public repository would be the leak it is meant to prevent; so this
+# matches the SHAPES (private paths, any host IP, keys, currency, mail) across everything that can
+# reach a page, and the named list is checked by a human against the private evidence pack.
+DNS_SURFACE="web/app web/components web/lib web/public web/design"
+[ -d web/data ] && DNS_SURFACE="$DNS_SURFACE web/data"
+n=$(grep -rniE "workplane-private|/Users/|/home/(ubuntu|verifier)/|\b([0-9]{1,3}\.){3}[0-9]{1,3}\b|PRIVATE_KEY|BEGIN [A-Z ]*PRIVATE KEY|[a-z0-9._%-]+@[a-z0-9.-]+\.[a-z]{2,}|\$[0-9][0-9,.]*|hetzner|lambda ?labs|slabclaw" \
+  $DNS_SURFACE 2>/dev/null \
+  | grep -v "check-brief.sh" \
+  | grep -viE "ethplane\.ecofrontiers\.xyz|0\.0\.0\.0|127\.0\.0\.1|lambda ?\(|=>" | wc -l | tr -d ' ')
+[ "$n" = 0 ] && say "do-not-say (shapes)" "PASS (0 over $(echo $DNS_SURFACE | wc -w | tr -d ' ') dirs)" || { say "do-not-say (shapes)" "FAIL ($n)"; bad; }
 
 # pages — the export must carry all 65 node pages plus the rest.
 if [ ! -d web/out ]; then say "pages built" "NOT RUN (build first)"; bad; else
@@ -62,4 +73,16 @@ fi
 
 echo
 [ "$fails" = 0 ] && echo "brief checks: all PASS" || echo "brief checks: $fails FAILED"
+cat <<'NOTE'
+
+NOT COVERED BY THIS SCRIPT — judge these from the PNGs and the diff:
+  refusal 7  a number rendered from a fallback   needs the API UNREACHABLE at capture; a static
+                                                 export cannot show it. Shoot once with the proxy
+                                                 pointed at a dead host and read the legend.
+  refusal 8  a chip highlighted that is not live  needs the API REACHABLE and compared against it:
+                                                 the highlighted chips must be exactly those whose
+                                                 node_id it returns as open — identity, not a count.
+A PASS above is a statement about refusals 1, 2, 3, 4, 5, 6 and the vocabulary. It says nothing
+about 7 and 8, which are the two this project has already shipped wrong.
+NOTE
 exit "$fails"

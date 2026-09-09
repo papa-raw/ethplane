@@ -319,11 +319,38 @@ def verifier_cores() -> str:
     return os.environ.get("VERIFIER_CORES", os.environ.get("VERIFIER_CPUS", "")).strip()
 
 
-def pinned_command(worktree: str) -> list:
-    """The criterion's command line, run as the built binary, on the cores the host asked for."""
+def run_prefix(extra_env: Optional[Dict[str, str]] = None) -> list:
+    """Run the produced binary as BUILD_USER too, not only build it as BUILD_USER.
+
+    Building as another user closes compile-time execution — build.rs, proc macros. It does not
+    close RUN time: the binary a submitter's compiler produced is still a program they wrote, and
+    executing it as the user holding VERIFIER_PRIVATE_KEY hands them the key a few seconds later
+    than build.rs would have. Both halves or neither.
+
+    sudo clears the environment, so anything the run needs is named here and passed through `env` —
+    ETHPLANE_CORRUPT_INDEX above all: without it the probe's binary would run clean, the reference
+    leg would not fail, and every probe would come back probe-invalid."""
+    user = build_user()
+    if not user:
+        return []
+    prefix = ["sudo", "-n", "-u", user]
+    pairs = [f"{k}={v}" for k, v in sorted((extra_env or {}).items())]
+    return prefix + (["env"] + pairs if pairs else [])
+
+
+def pinned_command(worktree: str, extra_env: Optional[Dict[str, str]] = None) -> list:
+    """The criterion's command line, run as the built binary, on the cores the host asked for.
+
+    Order is sudo, then taskset, then the binary: taskset sets the affinity of the process it
+    starts, and a process may always narrow its own, so it composes either way round — this way the
+    shape matches cargo_prefix's, and there is one place that says who a command runs as.
+
+    The numbers are not affected by the wrapper: cycles, proving time, proof size and verify time all
+    come from the binary's own printed report (parse.py), not from a clock around the subprocess. So
+    sudo's few milliseconds are outside every number the verdict carries."""
     cores = verifier_cores()
-    prefix = ["taskset", "-c", cores] if cores else []
-    return prefix + [
+    taskset = ["taskset", "-c", cores] if cores else []
+    return run_prefix(extra_env) + taskset + [
         binary_path(worktree),
         "aggregate", "--xmss", "900", "--log-inv-rate", "1", "--repeat", "3",
     ]
@@ -543,9 +570,12 @@ def run_with_corrupt_index(worktree: str, index: int) -> Optional[int]:
     cache is warm, which would have made every probe read as probe-invalid."""
     env = dict(os.environ)
     env["ETHPLANE_CORRUPT_INDEX"] = str(index)
+    # Both, on purpose: `env=` carries it when the run is this user's, and the `env K=V` in the
+    # command line carries it across sudo, which discards the caller's environment.
     try:
         r = subprocess.run(
-            pinned_command(worktree), capture_output=True, text=True, timeout=RUN_TIMEOUT_SECONDS, env=env
+            pinned_command(worktree, {"ETHPLANE_CORRUPT_INDEX": str(index)}),
+            capture_output=True, text=True, timeout=RUN_TIMEOUT_SECONDS, env=env
         )
         return r.returncode
     except subprocess.TimeoutExpired:

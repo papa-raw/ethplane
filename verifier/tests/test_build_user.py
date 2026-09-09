@@ -106,9 +106,71 @@ class TestCargoInvocation(BuildUserTestCase):
         self.assertEqual(command[:4], ["sudo", "-n", "-u", "lean-build"])
         self.assertEqual(command[-5:], ["cargo", "build", "--release", "--offline", "--locked"])
 
-    def test_the_measurement_itself_is_never_run_as_the_build_user(self):
+    def test_the_measurement_runs_as_the_build_user_too(self):
+        """This assertion used to say the opposite, and it was wrong: building as another user
+        closes compile-time execution and leaves run time open, and the binary the submitter's
+        compiler produced is still their program."""
         os.environ["BUILD_USER"] = "lean-build"
-        self.assertNotIn("sudo", run.pinned_command("/tmp/wt"))
+        self.assertEqual(run.pinned_command("/tmp/wt")[:4], ["sudo", "-n", "-u", "lean-build"])
+
+
+class TestRunningTheBinary(BuildUserTestCase):
+    """Half a door is not a door. `cargo build` as lean-build stops build.rs and proc macros; the
+    binary it produces is still a program the submitter wrote, and running it as the key holder is
+    the same compromise a few seconds later."""
+
+    def test_no_build_user_leaves_the_command_exactly_as_it_was(self):
+        cmd = run.pinned_command("/tmp/wt")
+        self.assertNotIn("sudo", cmd)
+        self.assertTrue(cmd[0].endswith("leanvm") or cmd[0].endswith("leanvm-b"), cmd)
+
+    def test_the_measurement_command_carries_the_prefix(self):
+        os.environ["BUILD_USER"] = "lean-build"
+        cmd = run.pinned_command("/tmp/wt")
+        self.assertEqual(cmd[:4], ["sudo", "-n", "-u", "lean-build"])
+        self.assertIn("--xmss", cmd)
+
+    def test_the_probe_command_carries_it_and_the_corrupt_index_with_it(self):
+        os.environ["BUILD_USER"] = "lean-build"
+        with patch.object(run.subprocess, "run") as sp:
+            sp.return_value.returncode = 1
+            run.run_with_corrupt_index("/tmp/wt", 42)
+        cmd = sp.call_args[0][0]
+        self.assertEqual(cmd[:4], ["sudo", "-n", "-u", "lean-build"])
+        self.assertIn("env", cmd)
+        self.assertIn("ETHPLANE_CORRUPT_INDEX=42", cmd)
+
+    def test_without_a_build_user_the_probe_passes_the_index_the_ordinary_way(self):
+        with patch.object(run.subprocess, "run") as sp:
+            sp.return_value.returncode = 1
+            run.run_with_corrupt_index("/tmp/wt", 7)
+        self.assertNotIn("sudo", sp.call_args[0][0])
+        self.assertEqual(sp.call_args[1]["env"]["ETHPLANE_CORRUPT_INDEX"], "7")
+
+    def test_the_index_survives_sudo_because_sudo_discards_the_environment(self):
+        """Without `env ETHPLANE_CORRUPT_INDEX=i` in the command line the probe binary would run
+        clean, the reference leg would not fail, and every probe would come back probe-invalid."""
+        os.environ["BUILD_USER"] = "lean-build"
+        cmd = run.pinned_command("/tmp/wt", {"ETHPLANE_CORRUPT_INDEX": "899"})
+        self.assertEqual(cmd[4], "env")
+        self.assertEqual(cmd[5], "ETHPLANE_CORRUPT_INDEX=899")
+
+    def test_sudo_and_taskset_compose_in_that_order(self):
+        os.environ.update({"BUILD_USER": "lean-build", "VERIFIER_CORES": "0-7"})
+        try:
+            cmd = run.pinned_command("/tmp/wt")
+            self.assertEqual(cmd[:4], ["sudo", "-n", "-u", "lean-build"])
+            self.assertEqual(cmd[4:7], ["taskset", "-c", "0-7"])
+        finally:
+            os.environ.pop("VERIFIER_CORES", None)
+
+    def test_reading_the_binary_stays_this_users_job(self):
+        """Reading a file is safe; executing it is not. get_binary_hash is the verifier's own read,
+        and the stale-binary comparison depends on it being the same process that built nothing."""
+        import inspect
+        source = inspect.getsource(run.get_binary_hash)
+        self.assertNotIn("sudo", source)
+        self.assertNotIn("run_prefix", source)
 
 
 class TestVerdictWhenSharingFails(BuildUserTestCase):

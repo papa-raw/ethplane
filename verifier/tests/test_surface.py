@@ -102,11 +102,12 @@ class TestBuildCommand(SurfaceTestCase):
         os.environ["BUILD_USER"] = "builder"
         self.assertEqual(run.cargo_prefix(), ["sudo", "-n", "-u", "builder"])
 
-    def test_the_measurement_binary_is_never_run_through_sudo(self):
-        """Only compilation is another user's job; the measurement stays this process's own, so a
-        timing is not measuring sudo."""
+    def test_the_measurement_runs_as_the_build_user_as_well(self):
+        """Compiling as another user and then executing the result as this one closes half the
+        door. The numbers are unaffected: every one of them is parsed from the binary's own printed
+        report, not from a clock wrapped around the subprocess."""
         os.environ["BUILD_USER"] = "builder"
-        self.assertNotIn("sudo", run.pinned_command("/tmp/wt"))
+        self.assertEqual(run.pinned_command("/tmp/wt")[:4], ["sudo", "-n", "-u", "builder"])
 
 
 class TestBuildIsolation(SurfaceTestCase):

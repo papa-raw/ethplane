@@ -15,7 +15,7 @@ Chain id 11155111. Source of truth: `contracts/deployments/sepolia.json` and `se
 
 | node | id | escrow | editable surface |
 |---|---|---|---|
-| `cl-pq-leanxmss-attestations` | `0x06a4f6e3ff9a3a75afd950c17d954f663b553eb0068b0fbb306e19e4df7d18d8` | 10,000 PLANE | `crates/rec_aggregation/guests/` |
+| `cl-pq-leanxmss-attestations` | `0x8e67c816b1f39fa072094b67f4f74937bd1920a7a9d79e4b98e785ae9aa29d58` | 10,000 PLANE | `crates/rec_aggregation/guests/` |
 | `dl-leanvm` | `0x662b44f5cf418a3e3d4126a187d0154034afbdc8d2536b9076c68f2a4440c37e` | 10,000 PLANE (`0x188306499ff4e106b9d8a35981c1c76bbfec7378247096164a15a64b6d9df2d9`) | `crates/rec_aggregation/guests/`, `crates/lean_compiler/` |
 
 The surface is per node and it is the verifier's `EDITABLE`, not a constant: one watcher per node, each

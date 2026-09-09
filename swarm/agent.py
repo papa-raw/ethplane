@@ -188,7 +188,7 @@ def t_read_board(lines: int = 20): return "\n".join(BOARD.read_text().splitlines
 def t_plan(builder: str, critic: str, done_when: str):
     board_append(f"orchestrator PLAN: builder: {builder} | critic: {critic} | done when: {done_when}"); return "PLAN written", True
 def t_handoff(role: str, task: str, files: str, done_when: str):
-    if role not in ("builder", "critic"): return "role must be builder or critic", False
+    if role not in ("builder", "critic", "designer"): return "role must be builder, critic or designer", False
     msg = f"HANDOFF orchestrator -> {role}: {task} | files: {files} | done when: {done_when}"
     board_append(msg); send_to(role, msg); return f"sent to {role}", True
 SKILLS = SWARM / "skills"; RESOURCES = SWARM / "resources"
@@ -228,6 +228,18 @@ def t_build():
     board_append(f"{ROLE} {kind}: {status} · {pages} pages · accent {ACCENT} in {accent} built files" + (" · " + errs[0][:120] if errs else ""))
     LAST["build"] = status == "ok"
     return (f"build {status} · {pages} html pages in web/out · accent {ACCENT} found in {accent} built files\n" + ("\n".join(errs[:6]) if errs else out[-800:])), status == "ok"
+SHOTS = SWARM / "shots"
+def t_screenshot(target: str, name: str = ""):
+    """Render a standalone HTML file (a design variant) or the built site export to PNG in the swarm's shots/ folder."""
+    SHOTS.mkdir(exist_ok=True); shoot = str(pathlib.Path(__file__).with_name("shoot.cjs")); env = "PLAYWRIGHT_PATH=/usr/local/lib/node_modules/playwright"
+    if target.endswith(".html"):
+        src = target if target.startswith("/") else os.path.join(WORKDIR, target); out = SHOTS / f"{name or pathlib.Path(target).stem}.png"
+        res, ok = run_shell(f"{env} node {shoot} file {src} {out}", 120)
+        return (f"{out} written; it appears on the human's Shelf within two minutes" if ok else "screenshot failed: " + res[-400:]), ok
+    if target in ("site", "export", "web/out"):
+        d = SHOTS / (name or "site"); res, ok = run_shell(f"{env} node {shoot} export {WORKDIR}/web/out {d}", 240)
+        return ((f"{d}/home.png docs.png deck.png node.png written (the API proxied to the live host); on the Shelf within two minutes") if ok else "screenshot failed: " + res[-400:]), ok
+    return "target is an .html file path or the word site (the built export)", False
 def t_wait(seconds: int = 300):
     """Wait for peers; returns early when a message arrives in this pane."""
     for _ in range(min(int(seconds), 900)):
@@ -251,6 +263,7 @@ TOOLS = {
     "handoff": (t_handoff, spec("handoff", "Hand work to builder or critic: lands on the board and in that pane.", {"role": S("builder | critic"), "task": S("one sentence"), "files": S("paths"), "done_when": S("verifiable criterion")}, ["role", "task", "files", "done_when"])),
     "skill": (t_skill, spec("skill", "List the skills available to this role (no name) or load one by name: design, design-research, design-tokens, frontend-design, interface-design, visual-qa, baseline-ui, write, humanizer, pptx and more. Load the relevant skill before starting a page or a document and follow it.", {"name": S("skill name, or empty to list")}, [])),
     "resources": (t_resources, spec("resources", "Search the estate's synced design and writing references (component kits, briefs, style guides) by a word in the path; then read_file the hit.", {"query": S("a word from the file or folder name")}, [])),
+    "screenshot": (t_screenshot, spec("screenshot", "Render an .html file (a design variant) or 'site' (the built export in web/out, API proxied to the live host) to PNG in shots/, which the human sees on the Shelf. The only way to show a design.", {"target": S("path to an .html file, or the word site"), "name": S("file or folder name for the PNG(s)")}, ["target"])),
     "build": (t_build, spec("build", "Run the site build (cd web && pnpm build) and post BUILD ok/FAILED with the page count, the accent check and the first error to the board. Call it after every page edit; a page is built only when this says ok.", {}, [])),
     "wait": (t_wait, spec("wait", "Wait up to N seconds for a peer's report to arrive in this pane.", {"seconds": I("default 300, max 900")}, [])),
     "measure": (t_measure, spec("measure", "Build and run the node's benchmark in the leanVM checkout; posts MEASURED/REVIEW cycles=<n> to the board and says whether it is strictly below the baseline. Refuses while files outside the editable surface are modified.", {}, [])),
@@ -258,12 +271,13 @@ TOOLS = {
     "revert": (t_revert, spec("revert", "Restore the leanVM checkout to the reference commit before the next hypothesis.", {}, [])),
 }
 ROLE_TOOLS = {"orchestrator": ["board_plan", "handoff", "report", "read_board", "wait"],
+              "designer": ["skill", "resources", "read_file", "write_file", "edit_file", "bash", "screenshot", "board", "report", "read_board"],
               "builder": ["bash", "read_file", "write_file", "edit_file", "measure", "submit", "revert", "skill", "resources", "report", "read_board"],
               "critic": ["bash", "read_file", "measure", "skill", "resources", "board", "report", "read_board"]}
 LABELS = {"bash": lambda a: f"Bash({a.get('command', '')[:90]})", "read_file": lambda a: f"Read({a.get('path')})",
           "write_file": lambda a: f"Write({a.get('path')})", "edit_file": lambda a: f"Update({a.get('path')})",
           "board": lambda a: f"Board({a.get('kind')} {a.get('text', '')[:70]})", "report": lambda a: f"Report({a.get('text', '')[:80]})",
-          "read_board": lambda a: "ReadBoard()", "skill": lambda a: f"Skill({a.get('name') or 'list'})", "build": lambda a: "Build(cd web && pnpm build)", "resources": lambda a: f"Resources({a.get('query', '')})", "measure": lambda a: "Measure(cargo run --release -- aggregate)", "submit": lambda a: "Submit()", "revert": lambda a: "Revert(leanVM)", "board_plan": lambda a: f"Plan({a.get('builder', '')[:70]})",
+          "read_board": lambda a: "ReadBoard()", "skill": lambda a: f"Skill({a.get('name') or 'list'})", "screenshot": lambda a: f"Screenshot({a.get('target')})", "build": lambda a: "Build(cd web && pnpm build)", "resources": lambda a: f"Resources({a.get('query', '')})", "measure": lambda a: "Measure(cargo run --release -- aggregate)", "submit": lambda a: "Submit()", "revert": lambda a: "Revert(leanVM)", "board_plan": lambda a: f"Plan({a.get('builder', '')[:70]})",
           "handoff": lambda a: f"Handoff({a.get('role')}: {a.get('task', '')[:70]})", "wait": lambda a: f"Wait({a.get('seconds', 60)}s)"}
 
 # ── prompts ─────────────────────────────────────────────────────────────────────────────────────
@@ -274,6 +288,12 @@ COMMON = ("You are the {role} of a three-model swarm working an Ethplane node. P
 ROLE_PROMPT = {
     "orchestrator": "You never do the work yourself. For each task from the human: board_plan, then ONE handoff to the builder (task, files, done_when with a number), then one handoff to the critic (what to re-measure or re-run, done_when), then wait. Never queue several handoffs to one peer: the next handoff goes out only after that peer's report. While no REPORT has arrived, call wait again; never report that you are waiting and never re-send a handoff. When a REPORT arrives: if the critic's REVIEW is PASS with a number, report the result to the human in three lines; if FAIL, one corrected handoff naming what was missing. Read the board only when a report says to.",
     "builder": f"You edit code in the leanVM checkout {LEAN}; the editable surface is {', '.join(EDITABLE)} and nothing else. The loop for every hypothesis: read the file, make ONE real change with edit_file, call measure, then submit if measure says BELOW, otherwise revert and start the next hypothesis. measure is the only way to measure; never run cargo yourself. The baseline is {BASELINE} cycles; only strictly below counts. Comments and renames are not changes. Never conclude that nothing can be improved: the compiler surface (when editable) changed cycles in past runs.",
+    "designer": (f"You own the look of the site in {WORKDIR}/web; a UI ask never reaches the builder as prose, it reaches it from you as a brief, a picked variant and tokens. The lane, in order: "
+                 "(1) research: skill('design-research') and skill('design'), then resources('') to list the estate's references (2_resources/Design: galleries, landing-page and brand references, the design.md spec for describing identity to agents) and read_file the relevant ones; "
+                 "(2) write web/design/BRIEF.md: who reads the site first (a hackathon judge, ten seconds), what it must say, three candidate directions each with a name, a mood, a type pairing from system or already-installed fonts, a palette with hex values, and what it refuses (the coloured left-border card with a tinted icon chip, badge soup, uniform weight, a card on everything, serif fallback); "
+                 "(3) build three standalone variants web/design/variants/a.html, b.html, c.html of the home page, each a single self-contained file under 250 lines using the real map: copy the <svg> of the strawmap from web/out/index.html (build first if missing) so all three show the true 65 nodes; call screenshot on each; "
+                 "(4) report the three PNG names; the human picks; never pick yourself; "
+                 "(5) after the pick arrives, write web/design/design.md: tokens as CSS custom properties with a one-line rationale each, and report; the builder applies them. Every file you write must be complete: write_file only for files under 250 lines, otherwise build them in parts with edit_file."),
     "critic": f"You verify, you never edit anything (your shell refuses edits). For each MEASURED line the builder posts, call measure yourself on the same tree and compare: REVIEW PASS when both numbers match, REVIEW FAIL with both numbers when they differ or when files outside {', '.join(EDITABLE)} are modified. Then report. Never form or test hypotheses yourself.",
 }
 INBOX: "queue.Queue[str]" = queue.Queue()
@@ -367,7 +387,7 @@ def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--init", help="first message"); ap.add_argument("--init-file"); ap.add_argument("--once", action="store_true", help="run the init message then exit")
     a = ap.parse_args()
     names = ROLE_TOOLS[ROLE]
-    if os.environ.get("DESIGN"): names = [n for n in names if n not in ("measure", "submit", "revert")] + ["build"]
+    if os.environ.get("DESIGN"): names = [n for n in names if n not in ("measure", "submit", "revert")] + (["build", "screenshot"] if ROLE == "builder" else [])
     else: names = [n for n in names if n != "build"]
     tools = [TOOLS[n][1] for n in names]
     system = COMMON.format(role=ROLE, board=BOARD) + " " + ROLE_PROMPT[ROLE]

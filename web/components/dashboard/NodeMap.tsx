@@ -2,15 +2,18 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { usePolling } from '@/lib/usePolling';
-import { NodeRow, STATE_STYLE, stateOf } from '@/lib/api';
+import { NodeRow, STATE_STYLE, STATE_INK, stateOf, apiState } from '@/lib/api';
 import { Panel } from './Panel';
-import { Badge } from '@/components/ui/badge';
 
-/** The map is the strawmap's own grouping — layer, then track — not a layout of our invention. */
+/**
+ * The same nodes as a list, grouped the way the strawmap groups them: layer, then track. The map
+ * above owns the only legend on the page (BRIEF §2, one page one legend), so this view names each
+ * node's state on its own row instead of repeating the key.
+ */
 export function NodeMap() {
   const poll = usePolling<NodeRow[]>('/api/nodes');
   return (
-    <Panel poll={poll} empty="No nodes yet. The indexer writes all 65 the moment it sees StrawmapSeeded.">
+    <Panel poll={poll} empty="No nodes have been indexed. The indexer writes all 65 when it sees StrawmapSeeded.">
       {(nodes) => <MapBody nodes={nodes} />}
     </Panel>
   );
@@ -30,51 +33,68 @@ export function MapBody({ nodes }: { nodes: NodeRow[] }) {
     return groups;
   }, [nodes]);
 
-  const counts = useMemo(() => {
-    const c: Record<string, number> = {};
-    for (const n of nodes) c[stateOf(n)] = (c[stateOf(n)] ?? 0) + 1;
-    return c;
-  }, [nodes]);
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3" data-testid="map-legend">
-        <span className="text-sm text-muted-foreground">{nodes.length} nodes</span>
-        {Object.entries(STATE_STYLE).map(([key, s]) =>
-          counts[key] ? (
-            <span key={key} className="flex items-center gap-1.5 text-sm">
-              <span className={`inline-block h-2.5 w-2.5 rounded-full ${s.dot}`} />
-              {s.label} <span className="text-muted-foreground">{counts[key]}</span>
-            </span>
-          ) : null
-        )}
-      </div>
-
+    <div className="space-y-10">
       {[...byLayer.entries()].map(([layer, tracks]) => (
-        <section key={layer} className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{layer}</h2>
+        <section key={layer} className="space-y-4">
+          <h3
+            className="uppercase"
+            style={{
+              fontSize: 'var(--ep-size-label)', fontWeight: 700,
+              letterSpacing: '0.08em', color: 'var(--ep-on-surface)',
+            }}
+          >
+            {layer}
+          </h3>
           {[...tracks.entries()].map(([track, rows]) => (
-            <div key={track} className="space-y-1.5">
-              <div className="text-xs text-muted-foreground">{track}</div>
-              <div className="flex flex-wrap gap-2">
+            <div key={track} className="grid gap-x-8 md:grid-cols-[140px_1fr]">
+              <div
+                className="pt-[9px]"
+                style={{ fontSize: 'var(--ep-size-label)', color: 'var(--ep-secondary)' }}
+              >
+                {track}
+              </div>
+              <ul className="m-0 list-none border-t p-0" style={{ borderColor: 'var(--ep-border)' }}>
                 {rows.map((n) => {
-                  const s = STATE_STYLE[stateOf(n)] ?? STATE_STYLE.seeded;
+                  const derived = stateOf(n);
+                  const label = STATE_STYLE[derived]?.label ?? derived;
                   return (
-                    <Link
-                      key={n.node_id}
-                      href={`/node/${n.node_id}`}
-                      data-testid="map-node"
-                      className={`group flex items-center gap-2 rounded-md border px-3 py-2 text-sm ring-1 ring-inset transition hover:shadow-sm ${s.ring}`}
-                    >
-                      <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${s.dot}`} />
-                      <span className="truncate max-w-[16rem]">{n.label ?? n.node_id.slice(0, 10)}</span>
-                      {n.tag && n.tag !== 'none' ? (
-                        <Badge variant="secondary" className="ml-1 text-[10px] uppercase">{n.tag}</Badge>
-                      ) : null}
-                    </Link>
+                    <li key={n.node_id} className="border-b" style={{ borderColor: 'var(--ep-border)' }}>
+                      <Link
+                        href={`/node/${n.node_id}`}
+                        data-testid="map-node"
+                        className="flex items-baseline gap-4 py-2 hover:underline"
+                        style={{ fontSize: 'var(--ep-size-sm)', color: 'var(--ep-on-surface)' }}
+                      >
+                        <span className="min-w-0 flex-1 truncate">
+                          {n.label ?? n.node_id.slice(0, 10)}
+                        </span>
+                        <span
+                          className="w-[48px] shrink-0 text-right uppercase"
+                          style={{ fontSize: 'var(--ep-size-label)', letterSpacing: '0.08em', color: 'var(--ep-secondary)' }}
+                        >
+                          {n.tag && n.tag !== 'none' ? n.tag : ''}
+                        </span>
+                        <span
+                          className="w-[96px] shrink-0 text-right"
+                          style={{ fontSize: 'var(--ep-size-label)', color: 'var(--ep-secondary)' }}
+                        >
+                          {n.fork ?? '—'}
+                        </span>
+                        <span
+                          className="w-[84px] shrink-0 text-right"
+                          style={{
+                            fontSize: 'var(--ep-size-label)', fontWeight: apiState(n) === 'open' ? 700 : 500,
+                            color: apiState(n) === 'open' ? 'var(--ep-primary)' : (STATE_INK[derived] ?? 'var(--ep-secondary)'),
+                          }}
+                        >
+                          {label}
+                        </span>
+                      </Link>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             </div>
           ))}
         </section>

@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Ethplane",
   description:
-    "The Ethereum roadmap as a work plane: 65 nodes, each with an acceptance criterion, a lease anyone can claim, and a bounty that pays on a verified improvement.",
+    "The Ethereum roadmap as a work plane. 65 nodes, each with a name under ethplane.eth, an acceptance criterion, a session anyone can start, and an escrow that pays on a verified improvement.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

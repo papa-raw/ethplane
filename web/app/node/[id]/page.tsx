@@ -12,6 +12,7 @@ export function generateStaticParams() {
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const known = strawmapIds().find((n) => n.hash.toLowerCase() === id.toLowerCase());
+  // Every id written by the export is the lower-case keccak hash, so this is an exact match.
+  const known = strawmapIds().find((n) => n.hash === id);
   return <NodePage nodeId={id} slug={known?.id ?? null} label={known?.label ?? null} />;
 }

@@ -30,8 +30,14 @@ export type Layout = {
 export const FORK_ORDER = ['G', 'H', 'H-L (bar)', 'I', 'I-L (bar)', 'J', 'K', 'L', 'longer term', 'north star'];
 export const LAYER_ORDER = ['CL', 'DL', 'EL'];
 
-const COL_W = 132;
-const CHIP_H = 22;
+/**
+ * Spacing constants only. They are sized so the drawing's natural width lands on the 1240px content
+ * column (116 + 10 × 110 + 16 = 1232), which means the SVG is not scaled down to fit and an 11px
+ * label is drawn at 11px. The chip is 28 tall rather than 22 so a long node name sets on two lines
+ * inside its own cell instead of being cut mid-word.
+ */
+const COL_W = 110;
+const CHIP_H = 28;
 const CHIP_GAP = 4;
 const TRACK_PAD = 10;
 const HEADER_H = 34;

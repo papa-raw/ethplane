@@ -1,15 +1,14 @@
 'use client';
 import { useState } from 'react';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { API_BASE } from '@/lib/api';
+import '@/components/site/site.css';
 
 export type JoinResult = { guestName: string; wallet: string; returning?: boolean };
 
 /**
  * Login, then one call to POST /api/join, which verifies the Privy token server-side and hands back
- * a name under ethplane.eth. The page never signs anything and never sees a key: the ENS
+ * a name under guests.ethplane.eth. The page never signs anything and never sees a key: the ENS
  * registration is a job the maintainer runs from the pending_names table.
  */
 export function Join() {
@@ -39,45 +38,62 @@ export function Join() {
     }
   };
 
-  if (!ready) return <p data-testid="join-loading" className="text-muted-foreground">starting…</p>;
+  if (!ready) {
+    return (
+      <div data-testid="join-loading" className="ep-panel">
+        <p>Loading.</p>
+      </div>
+    );
+  }
 
   if (!authenticated) {
     return (
-      <Card data-testid="join-signed-out">
-        <CardHeader><CardTitle className="text-base">Join the plane</CardTitle></CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <p className="text-muted-foreground">
-            Sign in with an email or a wallet. You get a name under ethplane.eth and an embedded
-            wallet if you do not have one, and you can start a session on any open node, exactly like
-            any other contributor.
-          </p>
-          <Button onClick={login}>Sign in</Button>
-        </CardContent>
-      </Card>
+      <div data-testid="join-signed-out" className="ep-panel">
+        <h2>Join the plane</h2>
+        <p>
+          Sign in with an email or a wallet. You get a name under guests.ethplane.eth and an embedded
+          wallet if you do not have one, and you can start a session on any open node, exactly like
+          any other contributor.
+        </p>
+        <button className="ep-btn ep-btn-primary" onClick={login}>
+          Sign in
+        </button>
+      </div>
     );
   }
 
   return (
-    <Card data-testid="join-signed-in">
-      <CardHeader><CardTitle className="text-base">You are in</CardTitle></CardHeader>
-      <CardContent className="space-y-3 text-sm">
-        <p className="font-mono text-xs text-muted-foreground break-all">
-          {wallets[0]?.address ?? user?.wallet?.address ?? 'no wallet yet'}
+    <div data-testid="join-signed-in" className="ep-panel">
+      <h2>You are in</h2>
+      <p className="ep-addr">
+        {wallets[0]?.address ?? user?.wallet?.address ?? 'no wallet yet'}
+      </p>
+      {result ? (
+        <div data-testid="join-result">
+          <p className="ep-name">{result.guestName}.guests.ethplane.eth</p>
+          <p>
+            {result.returning
+              ? 'This name was already reserved for this wallet.'
+              : 'Your name is reserved.'}{' '}
+            It is registered on chain by the maintainer shortly; the dashboard shows it as soon as
+            it is.
+          </p>
+        </div>
+      ) : (
+        <p>
+          <button className="ep-btn ep-btn-primary" onClick={join} disabled={busy}>
+            {busy ? 'Taking…' : 'Take my name'}
+          </button>
         </p>
-        {result ? (
-          <div data-testid="join-result" className="space-y-1">
-            <p className="text-lg font-medium">{result.guestName}.ethplane.eth</p>
-            <p className="text-muted-foreground">
-              {result.returning ? 'Welcome back — the same name as last time.' : 'Your name is reserved.'}{' '}
-              It is registered on chain by the maintainer shortly; the dashboard shows it as soon as it is.
-            </p>
-          </div>
-        ) : (
-          <Button onClick={join} disabled={busy}>{busy ? 'taking…' : 'Take my name'}</Button>
-        )}
-        {error ? <p data-testid="join-error" className="text-sm text-red-600">{error}</p> : null}
-        <button onClick={logout} className="text-xs text-muted-foreground underline">sign out</button>
-      </CardContent>
-    </Card>
+      )}
+      {error ? (
+        <p data-testid="join-error" className="ep-error">
+          {error}
+        </p>
+      ) : null}
+      <button onClick={logout} className="ep-link">
+        sign out
+      </button>
+    </div>
   );
 }

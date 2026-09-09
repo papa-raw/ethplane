@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { deckSlides, availableDocs, renderMarkdown } from '@/lib/docs';
+import { docsRootFiles, DOC_FILES, deckSlides, deckScreens, availableDocs, renderMarkdown } from '@/lib/docs';
 
 describe('docs source', () => {
   it('turns every level-2 heading of DECK.md into a slide', () => {
@@ -19,5 +19,58 @@ describe('docs source', () => {
 
   it('renders markdown to html', () => {
     expect(renderMarkdown('# Title\n\ntext')).toContain('<h1');
+  });
+});
+
+describe('deck screens', () => {
+  const screens = deckScreens();
+
+  it('gives one screen per section, opening on the first section rather than the preamble', () => {
+    expect(screens.length).toBe(deckSlides().length);
+    expect(screens[0].title).toBe('The question');
+  });
+
+  it('takes the point from the first sentence and leaves the rest as body', () => {
+    const plane = screens.find((s) => s.title === 'The plane');
+    expect(plane?.point).toBe('The Ethereum roadmap as a plane of paid work.');
+    expect(plane?.bodyHtml).toContain('nodes from the Foundation');
+  });
+
+  it('keeps a full stop inside a name out of the sentence split', () => {
+    const join = screens.find((s) => s.title === 'Join');
+    expect(join?.bodyHtml).toContain('guests.ethplane.eth');
+  });
+
+  it('marks the numbers a reader could check, and leaves version suffixes alone', () => {
+    const today = screens.find((s) => s.title === 'What happened today');
+    expect(today?.bodyHtml).toContain('<span class="ep-fig">1,541,462</span>');
+    expect(today?.bodyHtml).toContain('Node 2,');
+    const swarm = screens.find((s) => s.title === 'The swarm');
+    expect(swarm?.point).toContain('Qwen3-Coder 30B');
+    expect(swarm?.bodyHtml).not.toContain('ep-fig');
+  });
+
+  it('lifts a figure only where the file labels it in one word', () => {
+    const today = screens.find((s) => s.title === 'What happened today');
+    // Two figures, not three: both of these come from the chain. The sixteen guest-only runs are
+    // real (CRITERION-pq-leanxmss.md) but they are local measurements, and a strip that sets them in
+    // the same type as an on-chain number reads as three facts of one kind. It is spelled in the
+    // deck now, so the parser does not lift it.
+    expect(today?.figures).toEqual([
+      { value: '1,541,462', label: 'cycles' },
+      { value: '1,542,812', label: 'baseline' },
+      { value: '302,182', label: 'bound' },
+    ]);
+    expect(screens.find((s) => s.title === 'The plane')?.figures).toEqual([]);
+  });
+});
+
+describe('DOC_FILES', () => {
+  it('lists every markdown file at the root of docs/, in both directions', () => {
+    const listed = DOC_FILES.map((d) => d.file).sort();
+    // Missing a file is the failure that shipped: JUDGES.md existed and the page written for judges
+    // did not carry it. Listing a file that does not exist is the failure availableDocs() guards.
+    expect(listed).toEqual(docsRootFiles());
+    expect(new Set(listed).size).toBe(listed.length);
   });
 });

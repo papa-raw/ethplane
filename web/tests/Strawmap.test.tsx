@@ -87,15 +87,18 @@ describe('Strawmap', () => {
       ok: true, json: async () => [row('fast-confirmations', { active_lease_count: 1 })],
     });
     render(<Strawmap nodes={nodes} />);
-    await waitFor(() => expect(screen.getByLabelText('fast confirmations (claimed)')).toBeInTheDocument());
-    // the node the API said nothing about stays at its default, it does not inherit a neighbour's colour
-    expect(screen.getByLabelText('BALs (seeded)')).toBeInTheDocument();
+    // `open` with a session running is still open: sessions are not exclusive, so the state column
+    // wins where it is specific and the live columns only fill in a base state.
+    await waitFor(() => expect(screen.getByLabelText('fast confirmations (open)')).toBeInTheDocument());
+    // the node the API said nothing about is `unknown`, not `seeded`: it does not inherit a
+    // neighbour's colour and it does not claim a state the response never gave (design.md, Colors)
+    expect(screen.getByLabelText('BALs (unknown)')).toBeInTheDocument();
   });
 
   it('still draws the roadmap when the API is down, and says the colours are missing', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('offline'));
     render(<Strawmap nodes={nodes} />);
-    await waitFor(() => expect(screen.getByTestId('strawmap')).toHaveTextContent('live state unavailable'));
+    await waitFor(() => expect(screen.getByTestId('strawmap')).toHaveTextContent('Live state unavailable'));
     expect(screen.getAllByTestId('strawmap-chip')).toHaveLength(2);
   });
 });

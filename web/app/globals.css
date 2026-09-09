@@ -1,3 +1,5 @@
+/* Design tokens are generated from web/design/design.md; see web/design/BRIEF.md for the rules. */
+@import "../design/tokens.css";
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";

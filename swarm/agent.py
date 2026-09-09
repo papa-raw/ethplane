@@ -83,10 +83,14 @@ def t_read(path: str, offset: int = 1, limit: int = 200):
     except Exception as e: return f"cannot read {p}: {e}", False
     sel = lines[offset - 1: offset - 1 + limit]
     return "\n".join(f"{offset + i:5d}  {l}" for i, l in enumerate(sel)) + f"\n({len(lines)} lines total)", True
-def t_write(path: str, content: str):
+def t_write(path: str, content: str = None, **alias):
+    content = content if content is not None else alias.get("text", alias.get("file_text", ""))
     p = pathlib.Path(path if path.startswith("/") else os.path.join(WORKDIR, path)); p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(content); return f"wrote {len(content.splitlines())} lines", True
-def t_edit(path: str, old: str, new: str):
+def t_edit(path: str, old: str = None, new: str = None, **alias):
+    old = old if old is not None else alias.get("old_string", alias.get("old_str", alias.get("old_text")))
+    new = new if new is not None else alias.get("new_string", alias.get("new_str", alias.get("new_text")))
+    if old is None or new is None: return "edit_file needs old and new", False
     p = pathlib.Path(path if path.startswith("/") else os.path.join(WORKDIR, path))
     try: s = p.read_text()
     except Exception as e: return f"cannot read {p}: {e}", False
@@ -143,7 +147,7 @@ COMMON = ("You are the {role} of a three-model swarm working an Ethplane node. P
           "Never claim a result without the measured number or the command output that shows it. If a command fails, say what failed and try a different way; "
           "never say you lack access: you have the tools listed. No markdown headers, no bold, no summaries of accomplishments. When your piece is finished, call report once with the number or the output, then stop.")
 ROLE_PROMPT = {
-    "orchestrator": "You never do the work yourself. For each task from the human: board_plan, then handoff to builder (task, files, done_when with a number), then handoff to critic (what to re-measure or re-run, done_when), then wait. When a REPORT arrives: if the critic's REVIEW is PASS with a number, report the result to the human in three lines; if FAIL, one corrected handoff naming what was missing. Read the board only when a report says to.",
+    "orchestrator": "You never do the work yourself. For each task from the human: board_plan, then ONE handoff to the builder (task, files, done_when with a number), then one handoff to the critic (what to re-measure or re-run, done_when), then wait. Never queue several handoffs to one peer: the next handoff goes out only after that peer's report. When a REPORT arrives: if the critic's REVIEW is PASS with a number, report the result to the human in three lines; if FAIL, one corrected handoff naming what was missing. Read the board only when a report says to.",
     "builder": f"You edit and run code in {WORKDIR}; leanVM is at {LEAN} and only crates/rec_aggregation/guests/ there may change. Measure with: cd {LEAN} && cargo run --release -- aggregate --xmss 900 --log-inv-rate 1 --repeat 3 2>&1 | grep -E 'cycles|proving time'. Every measurement goes to the board as MEASURED cycles=<n>. A submission is only for cycles STRICTLY BELOW the baseline; equal is not below. A comment is not a change. Before each measurement run git -C {LEAN} status --short and revert anything outside crates/rec_aggregation/guests/ with git checkout -- <path>; a change outside guests/ is never measured or submitted.",
     "critic": f"You verify, you never edit deliverables. Re-run the builder's command yourself in {WORKDIR} or {LEAN} and compare numbers; a REVIEW PASS quotes your own measured number or test count, a REVIEW FAIL names the path or number that is wrong. Post REVIEW lines with board and then report.",
 }

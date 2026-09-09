@@ -147,6 +147,26 @@ if [ "$SKIP_BUILD_CHECK" = "0" ]; then
   if sudo -n -u "$BUILD_USER" "${BUILD_ENV[@]}" cargo build --release --offline --locked \
        --manifest-path "$WORK/reference/Cargo.toml" >/tmp/lean-build-check.log 2>&1; then
     ok "the reference builds offline as $BUILD_USER"
+    # Building it is half the proof. run.py executes the produced binary as this user too — a
+    # binary the submitter's compiler produced is still their program — so the check has to cover
+    # the exec, not only the compile. Any exit code will do except the two the shell uses for
+    # "cannot execute" (126) and "not found" (127): the binary's own CLI is not this script's
+    # business, and it takes minutes to run the criterion properly.
+    BIN=""
+    for candidate in "$WORK/reference/target/release/leanvm" "$WORK/reference/target/release/leanvm-b"; do
+      [ -x "$candidate" ] && BIN="$candidate"
+    done
+    if [ -z "$BIN" ]; then
+      fail "the build produced no leanvm binary in $WORK/reference/target/release"
+    fi
+    set +e
+    sudo -n -u "$BUILD_USER" "${BUILD_ENV[@]}" "$BIN" --version >/dev/null 2>&1
+    EXEC_RC=$?
+    set -e
+    if [ "$EXEC_RC" = "126" ] || [ "$EXEC_RC" = "127" ]; then
+      fail "$BUILD_USER cannot EXECUTE $BIN (exit $EXEC_RC) — run.py runs the measurement as this user"
+    fi
+    ok "$BUILD_USER can execute the built binary (exit $EXEC_RC from --version, which is not 126/127)"
   else
     echo "   last lines of /tmp/lean-build-check.log:" >&2
     tail -5 /tmp/lean-build-check.log >&2 || true

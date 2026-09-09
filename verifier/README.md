@@ -112,8 +112,10 @@ the `lean-build` system account with no login shell, the sudoers drop-in, and `C
 verifier's rather than installed fresh, so both users compile with the *same* rustc (the
 stale-binary sha256 comparison and the cycle counts depend on that) and the registry is already warm
 with exactly the crates the lockfile pins, which is what `--offline` needs. It finishes by proving
-both halves: that `lean-build` cannot read the key, and that it can build the reference worktree
-offline. The environment it prints for node 2's watcher:
+three things: that `lean-build` cannot read the key, that it can build the reference worktree
+offline, and that it can *execute* what it built — run.py runs the measurement and the probes as
+that user too, because a binary the submitter's compiler produced is still their program, and
+closing build-time execution while leaving run time open closes half a door. The environment it prints for node 2's watcher:
 
 ```bash
 export EDITABLE="crates/rec_aggregation/guests/,crates/lean_compiler/"

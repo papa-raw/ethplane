@@ -52,17 +52,19 @@ PY
   [ "$n" = 0 ] && say "session vocabulary" "PASS (0 in rendered text)" || { say "session vocabulary" "FAIL ($n)"; bad; }
 fi
 
-# do-not-say — shapes, not a list. (The scanner excludes itself: its own pattern line matches every
-# shape it looks for, which it duly reported on the first run.) The authoritative list names clients and partners, and a grep
+# do-not-say — shapes, not a list. Two exclusions that were wrong and are gone: `grep -v
+# check-brief.sh` filtered by CONTENT, so any file could exempt itself by naming the scanner (proved:
+# a component containing "see check-brief.sh — /Users/pat/secret" passed); and `=>` dropped every
+# arrow-function line, 68 of them, which in a React codebase is where a hardcoded value actually
+# lives. The scanner now excludes itself by PATH and excludes no code shape at all. The authoritative list names clients and partners, and a grep
 # enumerating them inside a public repository would be the leak it is meant to prevent; so this
 # matches the SHAPES (private paths, any host IP, keys, currency, mail) across everything that can
 # reach a page, and the named list is checked by a human against the private evidence pack.
 DNS_SURFACE="web/app web/components web/lib web/public web/design"
 [ -d web/data ] && DNS_SURFACE="$DNS_SURFACE web/data"
-n=$(grep -rniE "workplane-private|/Users/|/home/(ubuntu|verifier)/|\b([0-9]{1,3}\.){3}[0-9]{1,3}\b|PRIVATE_KEY|BEGIN [A-Z ]*PRIVATE KEY|[a-z0-9._%-]+@[a-z0-9.-]+\.[a-z]{2,}|\$[0-9][0-9,.]*|hetzner|lambda ?labs|slabclaw" \
+n=$(grep -rniE --exclude=check-brief.sh "workplane-private|/Users/|/home/(ubuntu|verifier)/|\b([0-9]{1,3}\.){3}[0-9]{1,3}\b|PRIVATE_KEY|BEGIN [A-Z ]*PRIVATE KEY|[a-z0-9._%-]+@[a-z0-9.-]+\.[a-z]{2,}|\$[0-9][0-9,.]*|hetzner|lambda ?labs|slabclaw" \
   $DNS_SURFACE 2>/dev/null \
-  | grep -v "check-brief.sh" \
-  | grep -viE "ethplane\.ecofrontiers\.xyz|0\.0\.0\.0|127\.0\.0\.1|lambda ?\(|=>" | wc -l | tr -d ' ')
+  | grep -viE "ethplane\.ecofrontiers\.xyz|0\.0\.0\.0|127\.0\.0\.1" | wc -l | tr -d ' ')
 [ "$n" = 0 ] && say "do-not-say (shapes)" "PASS (0 over $(echo $DNS_SURFACE | wc -w | tr -d ' ') dirs)" || { say "do-not-say (shapes)" "FAIL ($n)"; bad; }
 
 # pages — the export must carry all 65 node pages plus the rest.
@@ -76,13 +78,17 @@ echo
 cat <<'NOTE'
 
 NOT COVERED BY THIS SCRIPT — judge these from the PNGs and the diff:
+  refusal 2  badge soup                          a DOM count could cover it; not written yet
+  refusal 4  a card on everything                 a DOM count could cover it; not written yet
+  refusal 5  no sidebar                           a DOM count could cover it; not written yet
   refusal 7  a number rendered from a fallback   needs the API UNREACHABLE at capture; a static
                                                  export cannot show it. Shoot once with the proxy
                                                  pointed at a dead host and read the legend.
   refusal 8  a chip highlighted that is not live  needs the API REACHABLE and compared against it:
                                                  the highlighted chips must be exactly those whose
                                                  node_id it returns as open — identity, not a count.
-A PASS above is a statement about refusals 1, 2, 3, 4, 5, 6 and the vocabulary. It says nothing
-about 7 and 8, which are the two this project has already shipped wrong.
+A PASS above is a statement about refusals **1, 3 and 6** and the vocabulary, the do-not-say shapes
+and the page count — and nothing else. Naming what you do not cover and getting the list wrong is
+worse than saying nothing, because it converts an absence into a specific false assurance.
 NOTE
 exit "$fails"

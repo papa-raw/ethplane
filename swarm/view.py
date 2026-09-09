@@ -61,8 +61,9 @@ def keys():
         elif ch == b"g": OFF["n"] = 0; OFF["dirty"] = True
         elif ch == b"G": OFF["n"] = 10**6; OFF["dirty"] = True
         elif ch == b"q": os.kill(os.getpid(), 2)
+ROWS = {"n": 20}
 def render():
-    data, err = fetch(); w = width(); out = []
+    data, err = fetch(); w = width(); out = []; k = ROWS["n"]
     n = (data or {}).get("node", {}) or {}
     state = n.get("state", "?"); bounty = pick(n, "bounty")
     bounty_s = f"{int(bounty) // 10**18:,} PLANE" if bounty and str(bounty).isdigit() else "unfunded"
@@ -75,7 +76,7 @@ def render():
     leases = [l for l in (data or {}).get("leases", []) if l.get("active")]
     out.append(f"  {B}SESSIONS{X} {D}({len(leases)} active · working on this node, from head H){X}")
     out.append(D + row(["worker", "operator", "since", "heartbeat", "from"], [8, 12, 6, 11, 10]) + X)
-    for l in leases[:6]:
+    for l in leases[:max(2, k // 4)]:
         fh = l.get("from_hash", ""); frm = "head" if not fh or set(fh[2:]) == {"0"} else short(fh)
         out.append(row([who(l.get("lineage")), short(l.get("operator")), hhmm(l.get("start")), ago(l.get("last_heartbeat")), frm], [8, 12, 6, 11, 10]))
     if not leases: out.append(f"  {D}none{X}")
@@ -83,7 +84,7 @@ def render():
     subs = (data or {}).get("submissions", []) or []; verdicts = {v.get("artifact_hash") or v.get("artifact"): v for v in (data or {}).get("verdicts", []) or []}
     out.append(f"  {B}SUBMISSIONS{X} {D}({len(subs)} · verdicts by the verifier, on Sepolia){X}")
     out.append(D + row(["artifact", "by", "cycles", "verdict", "reason"], [12, 8, 10, 7, 20]) + X)
-    for s in sorted(subs, key=lambda s: s.get("ts") or s.get("block") or 0, reverse=True)[:20]:
+    for s in sorted(subs, key=lambda s: s.get("ts") or s.get("block") or 0, reverse=True)[:max(2, k // 3)]:
         h = s.get("artifact_hash") or s.get("artifact") or ""; v = verdicts.get(h, {})
         cyc = pick(v, "cycles", "metric") or pick(s, "cycles", "metric"); status = v.get("status") or ("PASS" if v.get("verifier_accepted") else ("FAIL" if v else "pending"))
         col = OK if str(status).upper() == "PASS" else (BAD if str(status).upper() == "FAIL" else D)
@@ -91,7 +92,7 @@ def render():
     if not subs: out.append(f"  {D}none yet{X}")
     out.append("")
     out.append(f"  {B}SWARM{X} {D}(the workers' own board, last lines){X}")
-    try: lines = BOARD.read_text().splitlines()[-30:]
+    try: lines = BOARD.read_text().splitlines()[-max(3, k // 3):]
     except Exception: lines = []
     for l in lines: out.append(f"  {D}{l[:w - 4]}{X}")
     out.append("")
@@ -105,6 +106,10 @@ def draw(out, foot):
     sys.stdout.write("\033[H" + "\n".join(l + "\033[K" for l in win) + "\033[K\n" * max(0, body - len(win)) + f"\033[{h - 1};1H\033[K{hint}\033[{h};1H\033[K{foot}"); sys.stdout.flush()
 
 if __name__ == "__main__":
+    if "--once" in sys.argv:
+        if "--rows" in sys.argv: ROWS["n"] = int(sys.argv[sys.argv.index("--rows") + 1])
+        out, foot = render(); print("\n".join(out)); print(foot); raise SystemExit(0)
+    ROWS["n"] = 60
     print("\033[?25l\033[2J", end=""); threading.Thread(target=keys, daemon=True).start()
     try:
         out, foot = render(); last = time.time()

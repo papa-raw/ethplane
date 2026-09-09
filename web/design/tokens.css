@@ -1,0 +1,35 @@
+/* Generated from web/design/design.md — do not hand-edit; change the tokens and regenerate.
+ * The design system is the source, this file is its CSS projection (design-md workflow). */
+:root {
+  --ep-primary: #2E5BFF;
+  --ep-secondary: #6B7280;
+  --ep-tertiary: #0B7A5A;
+  --ep-neutral: #FFFFFF;
+  --ep-surface: #FFFFFF;
+  --ep-on-surface: #111111;
+  --ep-border: #E5E7EB;
+  --ep-error: #B4471F;
+  --ep-state-seeded: #9CA3AF;
+  --ep-state-defined: #2E5BFF;
+  --ep-state-open: #0B7A5A;
+  --ep-state-claimed: #B45309;
+  --ep-state-passed: #065F46;
+  --ep-state-unknown: #D4D4D8;
+  --ep-radius-none: 0px;
+  --ep-radius-sm: 4px;
+  --ep-radius-md: 8px;
+  --ep-radius-full: 9999px;
+  --ep-space-xs: 4px;
+  --ep-space-sm: 8px;
+  --ep-space-md: 12px;
+  --ep-space-lg: 16px;
+  --ep-space-xl: 24px;
+  --ep-space-xxl: 32px;
+  --ep-space-xxxl: 48px;
+  --ep-font-sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ep-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  --ep-size-display: 32px; --ep-size-lg: 24px; --ep-size-md: 18px;
+  --ep-size-body: 16px; --ep-size-sm: 13px; --ep-size-label: 11px;
+  --ep-weight-regular: 400; --ep-weight-medium: 500; --ep-weight-bold: 700;
+  --ep-content-max: 1240px;
+}

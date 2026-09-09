@@ -25,7 +25,9 @@ In the first ten seconds, above the fold at 1440×900, they must be able to say:
 If a judge has to scroll to learn any of those three, the page has failed regardless of how it looks.
 
 **Measurable:** at 1440×900, the map's top edge is within 220px of the viewport top; the three-number
-strip's baseline is above 900px; the grouped list starts below 900px.
+strip's baseline is above 900px; and **the grouped list** — the secondary view under the map, headed
+"The same 65 nodes, as a list", rendered by `web/components/dashboard/NodeMap.tsx` — starts below
+900px, so nothing competes with the map above the fold.
 
 ## 2. The refusals, each named and each checkable
 
@@ -34,12 +36,12 @@ alone.
 
 | # | Refused | Why it is refused here | How a reviewer checks it |
 |---|---|---|---|
-| 1 | **Coloured left-border card with a tinted icon chip** | "Default Claude UI": it is what a model reaches for when it has no direction, and it has appeared in three of Pat's projects | No element has a `border-left` wider than 1px in a colour other than the border token. `grep -n "border-l-\|borderLeft" web/**/*.tsx` returns nothing outside the map's own rules |
+| 1 | **Coloured left-border card with a tinted icon chip** | "Default Claude UI": it is what a model reaches for when it has no direction, and it has appeared in three of Pat's projects | `grep -rn "border-l-\|borderLeft" web/app web/components web/lib` returns **nothing**. Baseline today: 0 hits, so any hit is the variant's. (`web/**/*.tsx` was the earlier check and it fails open — bash without globstar reads 9 files, zsh 26.) |
 | 2 | **Badge soup** | Pills of every colour turn state into decoration and make the two live nodes invisible among 63 | No more than **one** pill-shaped element per row and **at most three** distinct pill colours on the whole page |
 | 3 | **Uniform weight** | Everything at 500 reads as a wireframe; hierarchy then has to come from boxes | Exactly **three** weights in the built CSS: 400, 500, 700. No 600 |
 | 4 | **A card on everything** | Cards are for things you can act on; a roadmap is a diagram, not fourteen cards | At most **four** bordered containers on the home page, and the map is not one of them |
 | 5 | **A sidebar whose width follows its content** | Content-driven width makes the page jump between routes | No sidebar on the site at all. Node, docs and deck use the same 1240px content column |
-| 6 | **Serif fallback** | A serif appearing when a webfont fails is the single loudest "this is broken" signal | Every `font-family` ends in `sans-serif` or `monospace`. `grep -c "serif" web/app/globals.css` counts only those. No `@font-face`, no network font |
+| 6 | **Serif fallback** | A serif appearing when a webfont fails is the single loudest "this is broken" signal | `grep -rhoE "font-family:[^;]+" web/app web/components web/lib \| grep -vE "(sans-serif\|monospace) *;?$"` prints **nothing**, and `grep -rn "@font-face\|fonts.googleapis\|next/font" web/` is empty. A count is not a verdict, and one file is not the page |
 
 Two more, from this project's own record:
 
@@ -91,11 +93,14 @@ display line, and a halftone dot field behind the masthead only.
 
 - **Palette:** ground `#FAFAF8`, ink `#141414`, muted `#6E6E6E`, rule `#DCDCD6`, accent `#0B7A5A`
   (green, reading as verified rather than as "brand"), alert `#B4471F` for a recorded FAIL.
-- **Chips:** filled `#FFFFFF` with a 1px rule and a 3px left **edge tick** in state colour — a tick,
-  not a border-left card (refusal 1 is about a coloured border plus an icon chip on a card; this is a
-  4px mark on a cell in a diagram, and there are no icons anywhere).
+- **Chips:** filled `#FFFFFF` with a 1px rule. **Only a live node carries the 3px left edge tick**, in
+  `#0B7A5A`; the other 63 carry none. Every chip having one would put colour on all 65 and make the
+  two live ones invisible, which is what §1.2 and refusal 2 forbid — the tick is the direction's way
+  of marking the two, not a texture for the map. (It is not refusal 1: that tell is a coloured border
+  **plus** a tinted icon chip **on a card**, and this direction has no icons and no cards in the map.)
 - **Hero composition:** a 96px masthead band carrying a 4px dot-matrix texture at 8% opacity, the map
-  immediately under it, the three numbers set as a printed table with rules above and below.
+  immediately under it, the three numbers set as a printed table with rules above and below. Every measurement in this
+  direction is 3px or 1px; there is no 4px mark anywhere.
 - **Mood:** an audit report you would sign.
 
 ### C — Terminal
@@ -116,7 +121,7 @@ developer and rewards them for it.
 
 - Home, node and deck pages, building with `cd web && pnpm build` and **72 pages**.
 - The map drawn from the real 65 with the two live nodes visibly distinct and clickable by id.
-- Screenshots at 1440px via `scratchpad/shoot.cjs`, copied to the run dir root as
+- Screenshots at 1440px via **`swarm/shoot.cjs`** (verified present; there is no `scratchpad/shoot.cjs`), copied to the run dir root as
   `variant-<a|b|c>-<home|node|deck>.png`.
 - No change under `api/`, `contracts/`, `verifier/`, `swarm/`.
 

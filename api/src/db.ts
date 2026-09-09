@@ -10,8 +10,9 @@ const dbPath = process.env.DB_PATH ?? path.join(process.cwd(), 'data', 'ethplane
 fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 export const db: DatabaseType = new Database(dbPath);
 
-// Create tables with the exact schema from the spec
-export function initializeDatabase() {
+// Create tables with the exact schema from the spec. Returns how many duplicate event rows the
+// one-time migration removed, per table, so a redeploy can say what it changed instead of implying.
+export function initializeDatabase(): Record<string, number> {
   // Nodes table
   db.exec(`
     CREATE TABLE IF NOT EXISTS nodes(
@@ -94,7 +95,8 @@ export function initializeDatabase() {
       spread TEXT, 
       block INTEGER, 
       ts INTEGER, 
-      tx TEXT
+      tx TEXT, 
+      log_index INTEGER
     )
   `);
 
@@ -110,7 +112,8 @@ export function initializeDatabase() {
       artifact_hash TEXT, 
       block INTEGER, 
       ts INTEGER, 
-      tx TEXT
+      tx TEXT, 
+      log_index INTEGER
     )
   `);
 
@@ -124,7 +127,8 @@ export function initializeDatabase() {
       lease_seq INTEGER, 
       block INTEGER, 
       ts INTEGER, 
-      tx TEXT
+      tx TEXT, 
+      log_index INTEGER
     )
   `);
 
@@ -205,6 +209,82 @@ export function initializeDatabase() {
   // Create indexes
   db.exec(`CREATE INDEX IF NOT EXISTS idx_events_node ON lease_events(node_id, block)`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_attr_op ON attribution(operator)`);
+
+  addMissingColumns();
+  const removed = dedupeEvents();
+  enforceEventUniqueness();
+  return removed;
+}
+
+/**
+ * An event row's identity is the log it came from: (tx, log_index). Everything below exists because
+ * the poller can legitimately read the same log twice — a rescan, an overlapping range, a restart —
+ * and until 2026-09-09 every one of those re-reads appended another row. The live node page showed
+ * one session started three times and one heartbeat twice, which is a lie about the chain told by
+ * the reader, not the chain.
+ */
+export const EVENT_TABLES = ['lease_events', 'verdicts', 'attribution', 'releases'] as const;
+
+/** The columns that make a legacy row (one written before log_index existed) distinguishable. */
+const CONTENT_COLUMNS: Record<string, string[]> = {
+  lease_events: ['node_id', 'lineage', 'lease_seq', 'kind', 'block', 'ts', 'tx'],
+  verdicts: ['node_id', 'artifact_hash', 'lease_seq', 'passed', 'metric', 'metric_hash', 'spread', 'block', 'ts', 'tx'],
+  attribution: ['node_id', 'operator', 'kind', 'weight', 'artifact_hash', 'block', 'ts', 'tx'],
+  releases: ['node_id', 'to_addr', 'amount', 'lease_seq', 'block', 'ts', 'tx'],
+};
+
+function columnsOf(table: string): string[] {
+  return (db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>).map((c) => c.name);
+}
+
+function addMissingColumns(): void {
+  for (const table of EVENT_TABLES) {
+    if (!columnsOf(table).includes('log_index')) {
+      db.exec(`ALTER TABLE ${table} ADD COLUMN log_index INTEGER`);
+    }
+  }
+}
+
+/**
+ * Drop the repeats, keeping the lowest rowid of each — one pass, on startup, before the unique
+ * index goes on (the index cannot be created while duplicates are still there).
+ *
+ * Two passes per table, and the second one matters: rows written before log_index existed have NULL
+ * there, and NULLs are distinct to a unique index, so grouping them by (tx, log_index) would either
+ * keep every duplicate or — if NULL were coalesced to a constant — delete genuinely different rows
+ * that share a transaction. One `_release` emits up to four Payout logs in a single tx. So legacy
+ * rows are grouped by their whole content instead, which collapses exact repeats and keeps
+ * everything else.
+ */
+export function dedupeEvents(): Record<string, number> {
+  const removed: Record<string, number> = {};
+  for (const table of EVENT_TABLES) {
+    const before = (db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get() as { n: number }).n;
+    db.exec(
+      `DELETE FROM ${table} WHERE log_index IS NOT NULL AND rowid NOT IN (
+         SELECT MIN(rowid) FROM ${table} WHERE log_index IS NOT NULL GROUP BY tx, log_index)`
+    );
+    const content = CONTENT_COLUMNS[table].filter((c) => columnsOf(table).includes(c)).join(', ');
+    db.exec(
+      `DELETE FROM ${table} WHERE log_index IS NULL AND rowid NOT IN (
+         SELECT MIN(rowid) FROM ${table} WHERE log_index IS NULL GROUP BY ${content})`
+    );
+    const after = (db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get() as { n: number }).n;
+    removed[table] = before - after;
+  }
+  return removed;
+}
+
+/**
+ * The index is partial — `WHERE log_index IS NOT NULL` — so it binds every row the poller writes
+ * from now on without pretending the legacy rows have an identity they never carried.
+ */
+function enforceEventUniqueness(): void {
+  for (const table of EVENT_TABLES) {
+    db.exec(
+      `CREATE UNIQUE INDEX IF NOT EXISTS ux_${table}_log ON ${table}(tx, log_index) WHERE log_index IS NOT NULL`
+    );
+  }
 }
 
 /**

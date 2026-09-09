@@ -6,8 +6,11 @@ import joinRoutes from './routes/join';
 import artifactRoutes from './routes/artifacts';
 import { runIndexer } from './indexer';
 
-// Initialize database
-initializeDatabase();
+// Initialize database. The migration collapses event rows the poller wrote twice before
+// (tx, log_index) was unique; a redeploy that removes nothing says so by staying quiet.
+const deduped = initializeDatabase();
+const dedupedTotal = Object.values(deduped).reduce((a, b) => a + b, 0);
+if (dedupedTotal > 0) console.warn(`removed ${dedupedTotal} duplicate event row(s):`, deduped);
 const seeded = seedStrawmapMetadata();
 if (seeded === 0) console.warn('strawmap metadata not found: nodes will have no labels (set STRAWMAP_JSON)');
 

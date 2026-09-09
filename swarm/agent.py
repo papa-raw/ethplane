@@ -231,7 +231,7 @@ def t_build():
 SHOTS = SWARM / "shots"
 def t_screenshot(target: str, name: str = ""):
     """Render a standalone HTML file (a design variant) or the built site export to PNG in the swarm's shots/ folder."""
-    SHOTS.mkdir(exist_ok=True); shoot = str(pathlib.Path(__file__).with_name("shoot.cjs")); env = "PLAYWRIGHT_PATH=/usr/local/lib/node_modules/playwright"
+    SHOTS.mkdir(exist_ok=True); shoot = str(pathlib.Path(__file__).with_name("shoot.cjs")); env = "PLAYWRIGHT_PATH=$(npm root -g)/playwright"
     if target.endswith(".html"):
         src = target if target.startswith("/") else os.path.join(WORKDIR, target); out = SHOTS / f"{name or pathlib.Path(target).stem}.png"
         res, ok = run_shell(f"{env} node {shoot} file {src} {out}", 120)

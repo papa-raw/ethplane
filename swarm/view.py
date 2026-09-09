@@ -5,7 +5,7 @@ Reads the public API (node, sessions, submissions, verdicts) and the swarm's boa
 library only. Env: NODE_ID, NODE_NAME (ENS name), API_BASE, SWARM_DIR (board.md), BASELINE, LINEAGES
 ("qwen-a=0x…,fast-b=0x…"), JOIN_URL.
 """
-import datetime, json, os, pathlib, shutil, time, urllib.request
+import datetime, json, os, pathlib, select, shutil, sys, threading, time, urllib.request
 
 NODE = os.environ.get("NODE_ID", ""); NAME = os.environ.get("NODE_NAME", "node"); API = os.environ.get("API_BASE", "https://ethplane.ecofrontiers.xyz")
 BOARD = pathlib.Path(os.environ.get("SWARM_DIR", os.path.expanduser("~/swarm"))) / "board.md"
@@ -40,6 +40,27 @@ def bar(left, right):
 def row(cols, widths):
     return "  " + "  ".join(str(c)[:w].ljust(w) for c, w in zip(cols, widths))
 
+OFF = {"n": 0, "dirty": True}
+def height():
+    try: return shutil.get_terminal_size().lines
+    except Exception: return 40
+def keys():
+    """Arrow keys, j/k, PageUp/PageDown, g/G scroll the view; q quits."""
+    fd = sys.stdin.fileno()
+    try:
+        import tty; tty.setcbreak(fd)
+    except Exception: return
+    while True:
+        ch = os.read(fd, 1)
+        if ch == b"\x1b":
+            seq = b""
+            while select.select([fd], [], [], 0.02)[0]: seq += os.read(fd, 1)
+            ch = {b"[A": b"k", b"[B": b"j", b"[5~": b"K", b"[6~": b"J"}.get(seq, b"")
+        step = {b"k": -1, b"j": 1, b"K": -10, b"J": 10}.get(ch)
+        if step is not None: OFF["n"] = max(0, OFF["n"] + step); OFF["dirty"] = True
+        elif ch == b"g": OFF["n"] = 0; OFF["dirty"] = True
+        elif ch == b"G": OFF["n"] = 10**6; OFF["dirty"] = True
+        elif ch == b"q": os.kill(os.getpid(), 2)
 def render():
     data, err = fetch(); w = width(); out = []
     n = (data or {}).get("node", {}) or {}
@@ -62,7 +83,7 @@ def render():
     subs = (data or {}).get("submissions", []) or []; verdicts = {v.get("artifact_hash") or v.get("artifact"): v for v in (data or {}).get("verdicts", []) or []}
     out.append(f"  {B}SUBMISSIONS{X} {D}({len(subs)} · verdicts by the verifier, on Sepolia){X}")
     out.append(D + row(["artifact", "by", "cycles", "verdict", "reason"], [12, 8, 10, 7, 20]) + X)
-    for s in sorted(subs, key=lambda s: s.get("ts") or s.get("block") or 0, reverse=True)[:6]:
+    for s in sorted(subs, key=lambda s: s.get("ts") or s.get("block") or 0, reverse=True)[:20]:
         h = s.get("artifact_hash") or s.get("artifact") or ""; v = verdicts.get(h, {})
         cyc = pick(v, "cycles", "metric") or pick(s, "cycles", "metric"); status = v.get("status") or ("PASS" if v.get("verifier_accepted") else ("FAIL" if v else "pending"))
         col = OK if str(status).upper() == "PASS" else (BAD if str(status).upper() == "FAIL" else D)
@@ -70,18 +91,26 @@ def render():
     if not subs: out.append(f"  {D}none yet{X}")
     out.append("")
     out.append(f"  {B}SWARM{X} {D}(the workers' own board, last lines){X}")
-    try: lines = BOARD.read_text().splitlines()[-8:]
+    try: lines = BOARD.read_text().splitlines()[-30:]
     except Exception: lines = []
     for l in lines: out.append(f"  {D}{l[:w - 4]}{X}")
     out.append("")
     stamp = datetime.datetime.now().strftime("%H:%M:%S")
-    out.append(f"  {D}join {X}{AC}{JOIN}{X}{D}  ·  anyone may join  ·  {stamp}{'  ·  api: ' + err if err else ''}{X}")
-    return "\n".join(out)
+    foot = f"  {D}join {X}{AC}{JOIN}{X}{D}  ·  {stamp}{'  ·  api: ' + err if err else ''}{X}"
+    return out, foot
+def draw(out, foot):
+    h = height(); body = max(3, h - 3); OFF["n"] = max(0, min(OFF["n"], max(0, len(out) - body)))
+    win = out[OFF["n"]:OFF["n"] + body]; more = len(out) - OFF["n"] - len(win)
+    hint = f"{D}  ↑/↓ or j/k scroll · {OFF['n']}/{len(out)} lines{'  · ' + str(more) + ' more below' if more > 0 else ''}{X}"
+    sys.stdout.write("\033[H" + "\n".join(l + "\033[K" for l in win) + "\033[K\n" * max(0, body - len(win)) + f"\033[{h - 1};1H\033[K{hint}\033[{h};1H\033[K{foot}"); sys.stdout.flush()
 
 if __name__ == "__main__":
-    print("\033[?25l", end="")
+    print("\033[?25l\033[2J", end=""); threading.Thread(target=keys, daemon=True).start()
     try:
+        out, foot = render(); last = time.time()
         while True:
-            print("\033[H\033[2J" + render(), flush=True); time.sleep(10)
+            if time.time() - last >= 10: out, foot = render(); last = time.time(); OFF["dirty"] = True
+            if OFF["dirty"]: draw(out, foot); OFF["dirty"] = False
+            time.sleep(0.1)
     except KeyboardInterrupt: pass
     finally: print("\033[?25h", end="")

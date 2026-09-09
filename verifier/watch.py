@@ -37,6 +37,9 @@ import urllib.request
 from pathlib import Path
 
 CAST_TIMEOUT_SECONDS = 300
+# keccak256("BaselineRecorded(bytes32,uint256,uint256,uint256,uint256,uint16)") — the event whose
+# arguments ARE the node's baseline. nodeId is the only indexed field, so it is topic1.
+BASELINE_TOPIC = "0x0aaefddf300c4fa17fe67a8d6fb5599da80f206d145d3e91ba6acf529091466e"
 # Reasons that describe this host rather than the submission. Recording one of them puts a FAIL on
 # chain against an artifact that did nothing wrong, and the submission can never be judged again
 # (recordMeasurement refuses anything that is not PENDING). It happened on 2026-09-09: watch.py was
@@ -158,23 +161,71 @@ def fetch_artifact(api_base: str, artifact_hash: str) -> str:
     return handle.name
 
 
+def node_baseline(env: dict) -> dict:
+    """The baseline THIS node recorded on chain, as run.py's baseline file wants it.
+
+    run.py carries node 1's numbers as constants, and watch.py used to invoke it with the tarball
+    alone — so on 2026-09-09 node 2 was judged against node 1's 1,433,000 µs and spreadBps 190
+    (a 1.46 s bound) instead of its own 7,158,000 µs and 2367 (8.85 s). Artifact 0x1336adaf… was
+    recorded FAIL with reason regression-provingMicros at 1.709 s, which under its node's real
+    baseline is not a regression at all. A verdict measured against another node's baseline is not
+    a verdict about this submission.
+
+    BASELINE_JSON short-circuits this for a host with no RPC; otherwise the numbers come from the
+    node's own BaselineRecorded log."""
+    override = os.environ.get("BASELINE_JSON", "").strip()
+    if override:
+        with open(override) as f:
+            return json.load(f)
+    r = subprocess.run(["cast", "logs", "--from-block", os.environ.get("BASELINE_FROM_BLOCK", "0"),
+                        "--address", env["ETHPLANE_ADDRESS"], BASELINE_TOPIC, env["NODE_ID"],
+                        "--rpc-url", env["SEPOLIA_RPC_URL"]],
+                       capture_output=True, text=True, timeout=CAST_TIMEOUT_SECONDS)
+    if r.returncode != 0:
+        raise RuntimeError(f"cannot read the node's baseline: {r.stderr.strip()[:200]}")
+    data = [l.split(":", 1)[1].strip() for l in r.stdout.splitlines() if l.strip().startswith("data:")]
+    if not data:
+        raise RuntimeError(f"no BaselineRecorded log for node {env['NODE_ID']}: nothing to judge against")
+    body = data[-1][2:]                                  # the latest, though recordBaseline is once-only
+    words = [int(body[i:i + 64], 16) for i in range(0, len(body), 64)]
+    if len(words) < 5:
+        raise RuntimeError(f"BaselineRecorded log is {len(words)} words, expected 5")
+    cycles, proving, proof, verify, spread = words[:5]
+    return {"cycles": cycles, "provingMicros": proving, "proofSizeBytes": proof,
+            "verifyMicros": verify, "spreadBps": spread, "originalMetric": cycles}
+
+
 def run_verifier(tarball_path: str) -> dict:
     """run.py always answers with a verdict; a non-zero exit or unparseable output is an outage on
-    this host, not a verdict about the submission, and it is raised rather than recorded."""
+    this host, not a verdict about the submission, and it is raised rather than recorded.
+
+    The node's own baseline is fetched first and handed to run.py as its baseline file. Failing to
+    fetch it raises: judging against another node's numbers is worse than not judging, because the
+    wrong verdict is permanent (recordMeasurement refuses a second measurement)."""
     env = get_env_vars()
     run_py = os.path.join(os.path.dirname(os.path.abspath(__file__)), "run.py")
     child_env = os.environ.copy()
     child_env["LEANVM_REF"] = env["LEANVM_REF"]
     child_env["LEANVM_COMMIT"] = env["REFERENCE_COMMIT"]
     child_env["REFERENCE_COMMIT"] = env["REFERENCE_COMMIT"]
-    result = subprocess.run([sys.executable, run_py, tarball_path],
-                            capture_output=True, text=True, env=child_env)
-    if result.returncode != 0:
-        raise RuntimeError(f"Verifier failed: {result.stderr.strip()[:500]}")
+    baseline = node_baseline(env)
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as bf:
+        json.dump(baseline, bf)
+        baseline_path = bf.name
+    print(f"judging against this node's own baseline: cycles={baseline['cycles']} "
+          f"provingMicros={baseline['provingMicros']} spreadBps={baseline['spreadBps']}")
     try:
-        return json.loads(result.stdout.strip())
-    except json.JSONDecodeError as e:
-        raise RuntimeError(f"Failed to parse verdict JSON: {e}; output was {result.stdout[:200]!r}")
+        result = subprocess.run([sys.executable, run_py, tarball_path, env["LEANVM_REF"], baseline_path],
+                                capture_output=True, text=True, env=child_env)
+        if result.returncode != 0:
+            raise RuntimeError(f"Verifier failed: {result.stderr.strip()[:500]}")
+        try:
+            return json.loads(result.stdout.strip())
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Failed to parse verdict JSON: {e}; output was {result.stdout[:200]!r}")
+    finally:
+        try: os.unlink(baseline_path)
+        except OSError: pass
 
 
 def evidence_hash(verdict: dict) -> str:

@@ -9,6 +9,8 @@ Chain id 11155111. Source of truth: `contracts/deployments/sepolia.json` and `se
 | EthplaneSubregistry (our ENSv2 registry under `ethplane.eth`) | `0x58CB4caaDb0ebEdf7E1c96CeA6578Afb2f99d05b` |
 | EthplaneResolver for `cl-pq-leanxmss-attestations.ethplane.eth` | `0xA11a923dA99Bb3aaE3643758DA8D408173199Bec` |
 | EthplaneResolver for `dl-leanvm.ethplane.eth` | `0xaFE89fc8d99950B7F4c61BAE2602A80BC31De872` |
+| Ethplane maintainer / registrant / reviewer | `0x3D70eA482c25e203bb650a86d6FDbe291E59b6b8` |
+| Verifier (records measurements, writes head and status) | `0x0A6Ad2a627F8736E0f34849a0B5B80a109F81759` |
 | EthplaneResolver for operator, lineage and guest names | `0x47572265f1795F26A3e657DA154577904aAA57Ed` |
 
 ## Nodes
@@ -22,12 +24,116 @@ The surface is per node and it is the verifier's `EDITABLE`, not a constant: one
 with its own value. Node 2 admits Rust, which is why its watcher also needs `BUILD_USER` — see
 `verifier/README.md`, "Whole numbers only" and the criterion's Editable paragraph.
 
+Every field in this table and the two below was read from the chain on 2026-09-09, not carried from a
+plan: `nodeParties`, `nodeMetrics` and `nodeMoney` give registrant `0x3D70eA48…`, verifier
+`0x0A6Ad2a6…`, reviewer `0x3D70eA48…`, originalMetric 1,542,812, no head yet, bounty 10,000 PLANE and
+open true for both nodes.
+
+### The recorded baselines, and which criterion decides
+
+`recordBaseline` is once-only, so both of these are final. They are quoted here because the second one
+looks wrong until you know how it was measured.
+
+| node | cycles | provingMicros | spreadBps | the bound that follows | block |
+|---|---:|---:|---:|---:|---:|
+| `cl-pq-leanxmss-attestations` | 1,542,812 | 1,433,000 (1.43 s) | 190 | 1,460,227 µs ≈ 1.46 s | 11662947 |
+| `dl-leanvm` | 1,542,812 | 7,158,000 (7.16 s) | 2367 | 8,852,298 µs ≈ 8.85 s | 11668042 |
+
+Decoded from the `BaselineRecorded` logs, not from a note. Node 2's was recorded while both swarms
+were working the host, so its proving time is five times node 1's and its spread is 23.67 % rather
+than 1.9 %.
+
+Time is the only field that gets an allowance. Proof size has none at all — a submission must not
+exceed the recorded bytes by one — and node 2's recorded proof size, **302,182 B, is 410 bytes
+tighter than node 1's 302,592 B**, because the baseline it was measured from was already smaller.
+So node 2 is lenient on time and stricter on size than node 1, and size is what its three
+submissions failed on.
+
+What the chain actually shows, rather than what the parameters suggest: all seven
+`MeasurementRecorded` events on both nodes carry `verifierAccepted = false`, so **not one reached the
+contract's cycles comparison** — `_judge` returns FAIL on that flag before it looks at the number.
+The cycles criterion is what would decide a submission the verifier accepted; no submission has been
+accepted yet. `docs/JUDGES.md` §8 has every row.
+
+Node 1's time bound is worth stating plainly for the opposite reason: 1.46 s against roughly 1.5 s in
+a local run on the same host today (a local measurement, not an on-chain figure) is tight enough to
+fail a correct submission on time alone.
+
+### Verdicts recorded so far
+
+| artifact | node | recorded | reason as recorded | what it means |
+|---|---|---|---|---|
+| `0x7d958feb…` (`0x46a9e099…`) | dl-leanvm | FAIL | see below | judged against node 1's constants |
+| `0x1336adaf…` (`0x55a14b41…`) | dl-leanvm | FAIL | `regression-provingMicros` | judged against node 1's constants |
+
+Both are honest records of what the verifier measured and dishonest about why. `watch.py` invoked
+`run.py` with the tarball alone, and `run.py` carries node 1's baseline as constants — 1,433,000 µs
+and spreadBps 190, a bound of 1.46 s — so node 2's submissions were judged against another node's
+yardstick. `0x1336adaf…` measured cycles **1,541,462** (below the 1,542,812 baseline), proving
+**1.709 s**, proof **302,489 B**, verify **47.5 ms**. Under node 2's own recorded baseline the 1.709 s
+is well inside the 8.85 s bound and no regression at all; what actually fails it is proof size,
+302,489 against 302,182 recorded, which has no allowance. The verdict on chain stands — a measurement
+cannot be recorded twice — and this row is the correction beside it.
+
+Fixed on `submission-sweep`: `watch.py` reads the node's own `BaselineRecorded` log (or `BASELINE_JSON`)
+and hands it to `run.py` as its baseline file, and refuses to judge at all when it cannot read one,
+because a verdict against the wrong baseline is permanent.
+
 ## Names (ENSv2, hackathon deployment on Sepolia)
 
-`ethplane.eth` is registered on the hackathon ETHRegistry `0x1D78834d97c1D7b1A38c1deDBD1a287cFEd3971e`; its subregistry is ours. Resolution runs through ENS's Universal Resolver `0xd26f2040d083af1cd2962ba303f4bea0c4faf142`: root → `.eth` → `ethplane` → our subregistry → our per-node resolver. Registered so far: `cl-pq-leanxmss-attestations.ethplane.eth` (record `ethplane.status` = `open`), `ecofrontiers.ethplane.eth`, `qwen-a`, `fast-b`, `verifier` under it, `guests.ethplane.eth`. Any of the 65 roadmap ids can be registered once by anyone (`EthplaneSubregistry.register`).
+`ethplane.eth` is registered on the hackathon ETHRegistry `0x1D78834d97c1D7b1A38c1deDBD1a287cFEd3971e`; its subregistry is ours. Resolution runs through ENS's Universal Resolver `0xd26f2040d083af1cd2962ba303f4bea0c4faf142`: root → `.eth` → `ethplane` → our subregistry → our per-node resolver. Registered so far: `cl-pq-leanxmss-attestations.ethplane.eth` and `dl-leanvm.ethplane.eth` (both resolve `ethplane.status` = `open` and an `ethplane.criterion` sentence), `ecofrontiers.ethplane.eth`, `qwen-a`, `fast-b`, `verifier` under it, `guests.ethplane.eth`. Every address in this file was resolved or read on 2026-09-09; the commands and their outputs are in `docs/ENS-PROBES.md`. Any of the 65 roadmap ids can be registered once by anyone (`EthplaneSubregistry.register`).
 
 Why our own subregistry and resolvers: the hackathon deployment's registry and resolver implementations expose no initializer, so proxies from its factory hold no roles and cannot register names or write records; and the deployed resolver scopes record roles per key rather than per name. Probes and transaction hashes are in `research/` and the repository history. Everything above the name (root, `.eth`, the Universal Resolver, hierarchical registries) is ENSv2's.
 
 ## Treasury (Privy)
 
-The PLANE supply sits in a Privy server wallet bound to a policy that allows only: `approve(PLANE → Ethplane)`, `fundNode` with amount ≤ 100,000 PLANE, and `defineNode` whose split gives the verifier at least 10 %. Every other transaction is refused at signing.
+The PLANE supply sits in a Privy server wallet, `0x41fE93C269277E7fE87FA28489A9eb846d79A168`
+(wallet id `eezbtlnxyfgntb2hvz1cfaqh`), bound to policy `c8io5x5g08igo85ljedozu2k`
+(`ethplane-treasury-full`, chain type ethereum, version 1.0). A Privy policy is an allowlist: what no
+rule allows is refused before anything is signed. Listed from the Privy API on 2026-09-09, six rules —
+the same three permissions once for sending and once for signing, because a policy rule matches one
+RPC method:
+
+| # | rule | method | action | conditions |
+|---|---|---|---|---|
+| 1 | `approve-plane-eth_sendTransaction` | `eth_sendTransaction` | ALLOW | `to` = PLANE `0x814817A2…` AND `approve.spender` = Ethplane `0xB9569968…` |
+| 2 | `fund-cap-eth_sendTransaction` | `eth_sendTransaction` | ALLOW | `to` = Ethplane AND `fundNode.amount` ≤ 100,000e18 |
+| 3 | `define-floor-eth_sendTransaction` | `eth_sendTransaction` | ALLOW | `to` = Ethplane AND `defineNode.split.verifierBps` ≥ 1000 |
+| 4 | `approve-plane-eth_signTransaction` | `eth_signTransaction` | ALLOW | as rule 1 |
+| 5 | `fund-cap-eth_signTransaction` | `eth_signTransaction` | ALLOW | as rule 2 |
+| 6 | `define-floor-eth_signTransaction` | `eth_signTransaction` | ALLOW | as rule 3 |
+
+So the treasury can approve PLANE to the Ethplane contract, fund a node up to 100,000 PLANE, and
+define a node whose split gives the verifier at least 10 % — and nothing else, including sending
+PLANE to a person.
+
+Refused, re-run for this submission at **2026-09-09 14:52:33 UTC**: a `transfer(0x…dEaD, 1)` of PLANE
+from the treasury wallet, which matches none of the six rules.
+
+```
+POST https://api.privy.io/v1/wallets/eezbtlnxyfgntb2hvz1cfaqh/rpc
+  eth_sendTransaction  to PLANE  data transfer(0x…dead, 1)
+→ HTTP 400
+  {"error":"RPC request denied due to policy violation","code":"policy_violation"}
+```
+
+Nothing was signed: the refusal happens before the wallet is asked.
+
+### Join, and the embedded wallet
+
+The join route verifies rather than trusts. `api/src/routes/join.ts:47` calls
+`PrivyClient.verifyAuthToken(token)` and uses the claims' user id; with `PRIVY_APP_ID` or
+`PRIVY_APP_SECRET` unset the route answers 503 rather than falling back to an unverified identity.
+Live, on 2026-09-09:
+
+```
+POST /api/join                                     → 401 {"error":"missing bearer token"}
+POST /api/join  Authorization: Bearer <not a token> → 401 {"error":"token rejected"}
+```
+
+The app's own configuration, as the Privy API exposes it (app `EthPlane`
+`cmtsrijzf005e0dl5jv3yi8yw`): `embedded_wallet_config.create_on_login = "users-without-wallets"` for
+ethereum (solana off), recovery `user-passcode`, `mode: user-controlled-server-wallets-only`,
+`wallet_auth: true`, `external_wallets_for_signup_enabled: true`, and `allowed_domains` exactly
+`https://ethplane.ecofrontiers.xyz` and `http://localhost`. So a guest who signs in with an email and
+has no wallet is given one, and a guest who brings a wallet uses it.

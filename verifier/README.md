@@ -65,7 +65,7 @@ The verifier reads these environment variables:
   A baseline and the submissions judged against it must be measured the same way. run.py used to
   pin `taskset -c 0-7` unconditionally while the PoC node's baseline had been recorded on all 26
   cores of the host — so on 2026-09-09 a correct submission came back `regression-provingMicros`
-  at 3,737,000 µs against a 1,433,000 µs bound, with nothing wrong but the number of cores. Set
+  at 3,737,000 µs (a local run on the judging host, not an on-chain figure) against a 1,433,000 µs bound, with nothing wrong but the number of cores. Set
   this only when a host needs isolation, and set it for the baseline as well.
   (`VERIFIER_CPUS` is the old name; it still works when set explicitly, never as a default.)
 - `ETHPLANE_CORRUPT_INDEX`: Used internally for statement checks (not exposed to users)

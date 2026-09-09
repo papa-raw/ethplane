@@ -1,5 +1,22 @@
 # Criterion: post-quantum signature aggregation (leanVM)
 
+> **Superseded, and the chain says so.** The `criterionHash` recorded on chain for this node is
+> `0xa2e71ccbc9418b24f27d6a222f5ec1119815d964b3b1968a4451196c22da4c54`, which is
+> `keccak256` of the bytes frozen at **[docs/CRITERION-pq-leanxmss@a2e71ccb.md](CRITERION-pq-leanxmss@a2e71ccb.md)**
+> (this file at commit `faafa54c`). Reproduce it with
+> `cast keccak "$(cat docs/CRITERION-pq-leanxmss@a2e71ccb.md)"`.
+>
+> That version's **Editable** clause admitted `crates/lean_compiler/` on this node. On **2026-09-08**
+> the surface was narrowed to `crates/rec_aggregation/guests/` after review: `cargo build` and the
+> reference harness's `cargo test` run `build.rs` and procedural macros as the invoking user, and on
+> the judging host that user holds the verifier's key, so a submitter-controlled Rust crate is code
+> execution as the key holder. The narrower surface is what the verifier enforces today
+> (`verifier/run.py`, `EDITABLE`), and it is *stricter* than the hashed text — a submission that the
+> frozen criterion would have allowed can only be rejected by the live one, never the other way round.
+>
+> The hash was not re-recorded because `defineNode` sets it once. Node 2 (`dl-leanvm`) carries the
+> wider surface deliberately, with the build isolation that makes it safe (below).
+
 The node is `cl-pq-leanxmss-attestations` on the Ethereum roadmap. The task is the pinned command
 `cargo run --release -- aggregate --xmss 900 --log-inv-rate 1 --repeat 3` in leanEthereum/leanVM at the pinned commit.
 
@@ -19,6 +36,17 @@ the verifier's key — the verifier refuses the surface (`host-config`, no verdi
 submission) unless `BUILD_USER` is set to such a user, or the risk is accepted deliberately with
 `ALLOW_UNSANDBOXED_BUILD=1`. Node 1 is unchanged: guests only, no Rust from a submitter, nothing to
 isolate.
+
+**Node 2's recorded band, and which criterion decides.** `recordBaseline` is once-only, and node 2's
+was recorded while both swarms were working the host: cycles 1,542,812, provingMicros **7,158,000**
+(7.16 s), spreadBps **2367** — decoded from the `BaselineRecorded` log at block 11668042, not from a
+note. The non-regression bound that follows is 8.85 s against roughly 1.43 s in a local run on a quiet host (not an on-chain figure), so the
+time bound on that node is lenient. That is the safe direction: a lenient bound cannot wrongly reject
+a good submission, only fail to catch a slow one. The decision on both nodes is the cycles criterion
+— strictly below 1,542,812, thresholdBps 0, measured by the verifier's own `measure` and re-measured
+by the critic. Node 1 is the opposite case and is stated in `docs/DEPLOYMENTS.md`: its bound of 1.46 s
+against ~1.5 s measured on the same host today is tight enough to fail a correct submission on time
+alone.
 
 **Statement.** The verifier builds the submission and runs it on inputs it generates itself with the reference build: fresh keys, messages and 900 signatures, plus negative vectors (a flipped signature, a wrong message, a wrong key). The proof must verify with the reference `python-verifier/verifier.py` on the positive inputs and the run must fail on every negative vector. The Python verifier binds the bytecode hash into the transcript and fixes the proof-system parameters, so a proof of a weaker statement does not verify.
 

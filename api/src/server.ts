@@ -1,5 +1,5 @@
 import fastify from 'fastify';
-import { db, initializeDatabase, seedStrawmapMetadata } from './db';
+import { db, initializeDatabase, seedStrawmapMetadata, seedLiveNodeMetadata } from './db';
 import nodesRoutes from './routes/nodes';
 import boardRoutes from './routes/board';
 import joinRoutes from './routes/join';
@@ -13,6 +13,10 @@ const dedupedTotal = Object.values(deduped).reduce((a, b) => a + b, 0);
 if (dedupedTotal > 0) console.warn(`removed ${dedupedTotal} duplicate event row(s):`, deduped);
 const seeded = seedStrawmapMetadata();
 if (seeded === 0) console.warn('strawmap metadata not found: nodes will have no labels (set STRAWMAP_JSON)');
+// After the strawmap, so a live node's ENS name and criterion sentence win over the roadmap's
+// generic line rather than being overwritten by it.
+const live = seedLiveNodeMetadata();
+if (live === 0) console.warn('live-nodes.json not found: live nodes will read as spec-only on the map');
 
 // Create Fastify instance
 const server = fastify({

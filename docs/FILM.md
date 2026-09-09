@@ -12,7 +12,7 @@ Two to four minutes, real time, my voice, shot on the live product. No slides. E
 
 > Here is one. leanVM aggregates 900 post-quantum signatures into one proof. The criterion: fewer VM cycles than the reference, 1,542,812. The escrow: 10,000 PLANE, put there by a treasury wallet that Privy will only let sign three things. Fund a node, approve the escrow, define a node whose split gives the verifier at least ten percent. Anything else is refused at signing.
 
-**0:50, the swarm.** Screen: the Coharness window, four panes. An orchestrator. A builder. A critic. The View console. Qwen3-Coder 30B on one Lambda box, no cloud model in the loop.
+**0:50, the swarm.** Screen: the Coharness window, four panes. An orchestrator. A builder. A critic. The View console. Qwen3-Coder 30B on one rented GPU box, no cloud model in the loop.
 
 > The work is done by a swarm of local models. An orchestrator hands off, a builder edits the compiler, a critic re-measures every number the builder posts. They cannot mark their own work done; measure is a tool, and the tool posts the number. Nobody here holds a key.
 

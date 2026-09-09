@@ -305,10 +305,15 @@ def stdin_reader():
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--init", help="first message"); ap.add_argument("--init-file"); ap.add_argument("--once", action="store_true", help="run the init message then exit")
     a = ap.parse_args()
-    tools = [TOOLS[n][1] for n in ROLE_TOOLS[ROLE]]
+    names = ROLE_TOOLS[ROLE]
+    if os.environ.get("DESIGN"): names = [n for n in names if n not in ("measure", "submit", "revert")]
+    tools = [TOOLS[n][1] for n in names]
     system = COMMON.format(role=ROLE, board=BOARD) + " " + ROLE_PROMPT[ROLE]
     brief = SWARM / "node.md"
-    if brief.exists(): system += "\n\nNODE BRIEF:\n" + brief.read_text()[:6000]
+    if os.environ.get("DESIGN"):
+        system += (f"\n\nTHIS SWARM WORKS ON THE ETHPLANE WEBSITE AND DOCS in {WORKDIR}/web (Next.js static export, shadcn, Tailwind), never on leanVM or the node benchmark. "
+                   "The builder edits pages and runs cd web && pnpm build; the critic re-runs the build and reads web/out. Direction and page order come from the human's task.")
+    elif brief.exists(): system += "\n\nNODE BRIEF:\n" + brief.read_text()[:6000]
     messages = [{"role": "system", "content": system}]
     board_append(f"{ROLE} READY (agent.py, {MODEL.split('/')[-1]})")
     set_region(); signal.signal(signal.SIGWINCH, lambda *_: set_region())

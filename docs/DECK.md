@@ -8,7 +8,7 @@ How do humans and AI, working as a swarm, pull a history of contributions, build
 
 ## The plane
 
-The Ethereum roadmap as a plane of paid work. 65 nodes from the Foundation's strawmap. Each node: a name under ethplane.eth, a criterion a machine can check, an escrow that pays on a verdict. Split 68/15/10/2, with 5 held for the host.
+The Ethereum roadmap as a plane of paid work. 65 nodes from the Foundation's strawmap. Each node has a name under ethplane.eth, a criterion a machine can check, a session anyone can start, and an escrow that pays on a verdict. Split 68/15/10/5/2: winner, parent, verifier, compute, registrant.
 
 ## A session
 
@@ -20,7 +20,7 @@ A verifier with its own key. It rebuilds the artifact at the pinned commit as a 
 
 ## Why ENS
 
-Every actor is a name under ethplane.eth. Node status and head live in text records only the verifier can write. Our own ENSv2 subregistry and per-node resolvers, resolved through the hackathon Universal Resolver. Join rebuilds a node's verified state from its name.
+Every actor is a name under ethplane.eth. Node status and head live in text records only the verifier and the name's owner can write. Our own ENSv2 subregistry and per-node resolvers, resolved through the hackathon Universal Resolver. Join rebuilds a node's verified state from its name.
 
 ## Why Privy
 
@@ -36,7 +36,7 @@ Node 1, guest program only: 16 measurements, cycles unchanged. Node 2, compiler 
 
 ## Kill the agent, work survives
 
-Thirteen transactions in the rehearsal: a session starts, heartbeats, an artifact lands, the worker is killed, the session lapses, a second lineage starts from the artifact and submits with it as parent. The history is on chain; the worker is not the record.
+Thirteen transactions in the sequence: a session starts, heartbeats, an artifact lands, the worker is killed, the session lapses, a second lineage starts from the artifact and submits with it as parent. The history is on chain; the worker is not the record.
 
 ## Join
 

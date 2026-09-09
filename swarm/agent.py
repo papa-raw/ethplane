@@ -18,6 +18,10 @@ PREFIX = os.environ.get("SESSION_PREFIX", "qwen-")
 WORKDIR = os.environ.get("WORKDIR", str(SWARM / "ethplane"))
 LEAN = os.environ.get("LEAN", str(SWARM / "leanVM"))
 MAX_TURNS = int(os.environ.get("MAX_TURNS", "300"))
+EDITABLE = [e.strip() for e in os.environ.get("EDITABLE", "crates/rec_aggregation/guests/").split(",") if e.strip()]
+BASELINE = int(os.environ.get("BASELINE", "1542812"))
+MEASURE_CMD = os.environ.get("MEASURE_CMD", "cargo run --release -- aggregate --xmss 900 --log-inv-rate 1 --repeat 3")
+LAST = {"cycles": None}; TOK = {"n": 0}
 BOARD = SWARM / "board.md"
 LOG = SWARM / ROLE / "transcript.jsonl"
 
@@ -54,12 +58,15 @@ class Spinner:
         def run():
             frames = "✻✼✽✾✿❀"; i = 0
             while not self.stop.is_set():
-                sys.stdout.write(f"\r{D}{frames[i % len(frames)]} Thinking… ({int(time.time() - self.t0)}s){X}\033[K"); sys.stdout.flush()
+                sys.stdout.write(f"\r{D}{frames[i % len(frames)]} Thinking… ({int(time.time() - self.t0)}s · ↓ {TOK['n'] / 1000:.1f}k tokens){X}\033[K"); sys.stdout.flush()
                 i += 1; self.stop.wait(0.25)
             sys.stdout.write("\r\033[K"); sys.stdout.flush()
         self.th = threading.Thread(target=run, daemon=True); self.th.start(); return self
     def __exit__(self, *a): self.stop.set(); self.th.join()
-def prompt_line(): print(f"{D}{'─' * width()}{X}\n{B}>{X} ", end="", flush=True)
+def prompt_line():
+    print(f"{D}{'─' * width()}{X}\n{B}›{X} ", end="", flush=True)
+def footer(t0):
+    dur = int(time.time() - t0); print(f"{D}✻ Worked for {dur // 60}m {dur % 60:02d}s · ↓ {TOK['n'] / 1000:.1f}k tokens · {ROLE} · {MODEL.split('/')[-1]}{X}")
 
 # ── swarm plumbing ──────────────────────────────────────────────────────────────────────────────
 def stamp(): return datetime.datetime.now().strftime("%H:%M")
@@ -76,7 +83,31 @@ def run_shell(cmd, timeout=900):
     except subprocess.TimeoutExpired: return f"timed out after {timeout}s", False
 
 # ── tools ───────────────────────────────────────────────────────────────────────────────────────
-def t_bash(command: str, timeout: int = 900): return run_shell(command, timeout)
+MUTATING = re.compile(r"sed\s+-i|\btee\b|\brm\b|\bmv\b|\bcp\b|git\s+(checkout|reset|apply|stash|commit|clean)|python3?\s+-c|(?<![0-9&])>(?!&)")
+def t_bash(command: str, timeout: int = 900):
+    if ROLE == "critic" and MUTATING.search(command.replace("2>&1", "")): return "the critic never edits: re-run and measure only (use measure)", False
+    return run_shell(command, timeout)
+def _outside():
+    st, _ = run_shell(f"git -C {LEAN} status --short")
+    return [l for l in st.splitlines() if l.strip() and not any(e in l for e in EDITABLE)]
+def t_measure():
+    out_ = _outside()
+    if out_: return "changes outside the editable surface (" + ", ".join(EDITABLE) + "); revert them first:\n" + "\n".join(out_), False
+    out, ok = run_shell(f"cd {LEAN} && {MEASURE_CMD} 2>&1 | grep -E 'cycles|proving time|error'", 1500)
+    m = re.search(r"cycles \(VM steps\)\s*:\s*([\d,]+)", out); cycles = int(m.group(1).replace(",", "")) if m else None
+    LAST["cycles"] = cycles
+    if cycles is None: board_append(f"{ROLE} {'MEASURED' if ROLE == 'builder' else 'REVIEW'}: build or run failed"); return "no cycles number; build or run failed:\n" + out[-1500:], False
+    verdict = "BELOW baseline" if cycles < BASELINE else "not below baseline"
+    board_append(f"{ROLE} {'MEASURED' if ROLE == 'builder' else 'REVIEW'}: cycles={cycles} baseline={BASELINE} {verdict}")
+    return f"cycles={cycles} baseline={BASELINE} {verdict}\n{out}", True
+def t_submit():
+    if LAST["cycles"] is None or LAST["cycles"] >= BASELINE: return f"refused: last measured cycles {LAST['cycles']} is not strictly below {BASELINE}", False
+    if _outside(): return "refused: changes outside the editable surface", False
+    (SWARM / "outbox").mkdir(exist_ok=True); (SWARM / "outbox" / "SUBMIT").touch()
+    board_append(f"builder SUBMIT: cycles={LAST['cycles']} < {BASELINE}"); return "submission flagged; the submitter loop sends it within a minute", True
+def t_revert():
+    out, ok = run_shell(f"git -C {LEAN} checkout -- . && git -C {LEAN} status --short | wc -l"); LAST["cycles"] = None
+    return f"reverted to the reference; {out.strip()} files still modified", ok
 def t_read(path: str, offset: int = 1, limit: int = 200):
     p = pathlib.Path(path if path.startswith("/") else os.path.join(WORKDIR, path))
     try: lines = p.read_text().splitlines()
@@ -109,12 +140,12 @@ def t_handoff(role: str, task: str, files: str, done_when: str):
     if role not in ("builder", "critic"): return "role must be builder or critic", False
     msg = f"HANDOFF orchestrator -> {role}: {task} | files: {files} | done when: {done_when}"
     board_append(msg); send_to(role, msg); return f"sent to {role}", True
-def t_wait(seconds: int = 60):
+def t_wait(seconds: int = 300):
     """Wait for peers; returns early when a message arrives in this pane."""
-    for _ in range(min(int(seconds), 300)):
+    for _ in range(min(int(seconds), 900)):
         if not INBOX.empty(): return "a message arrived", True
         time.sleep(1)
-    return f"waited {min(int(seconds), 300)}s, nothing arrived", True
+    return f"waited {min(int(seconds), 900)}s, nothing arrived; call wait again", True
 
 def spec(name, desc, props, req):
     props = {"why": {"type": "string", "description": "one short line, present tense, under 100 characters: what this step does and why"}, **props}
@@ -130,15 +161,18 @@ TOOLS = {
     "read_board": (t_read_board, spec("read_board", "Read the last N lines of the shared board.", {"lines": I("default 20")}, [])),
     "board_plan": (t_plan, spec("board_plan", "Write the PLAN: what the builder makes, what the critic checks, done-when.", {"builder": S("builder's job"), "critic": S("critic's check"), "done_when": S("completion criterion with a number or a path")}, ["builder", "critic", "done_when"])),
     "handoff": (t_handoff, spec("handoff", "Hand work to builder or critic: lands on the board and in that pane.", {"role": S("builder | critic"), "task": S("one sentence"), "files": S("paths"), "done_when": S("verifiable criterion")}, ["role", "task", "files", "done_when"])),
-    "wait": (t_wait, spec("wait", "Wait up to N seconds for a peer's report to arrive in this pane.", {"seconds": I("default 60, max 300")}, [])),
+    "wait": (t_wait, spec("wait", "Wait up to N seconds for a peer's report to arrive in this pane.", {"seconds": I("default 300, max 900")}, [])),
+    "measure": (t_measure, spec("measure", "Build and run the node's benchmark in the leanVM checkout; posts MEASURED/REVIEW cycles=<n> to the board and says whether it is strictly below the baseline. Refuses while files outside the editable surface are modified.", {}, [])),
+    "submit": (t_submit, spec("submit", "Flag the current tree for submission. Only works when the last measure was strictly below the baseline.", {}, [])),
+    "revert": (t_revert, spec("revert", "Restore the leanVM checkout to the reference commit before the next hypothesis.", {}, [])),
 }
 ROLE_TOOLS = {"orchestrator": ["board_plan", "handoff", "report", "read_board", "wait"],
-              "builder": ["bash", "read_file", "write_file", "edit_file", "board", "report", "read_board"],
-              "critic": ["bash", "read_file", "board", "report", "read_board"]}
+              "builder": ["bash", "read_file", "write_file", "edit_file", "measure", "submit", "revert", "board", "report", "read_board"],
+              "critic": ["bash", "read_file", "measure", "board", "report", "read_board"]}
 LABELS = {"bash": lambda a: f"Bash({a.get('command', '')[:90]})", "read_file": lambda a: f"Read({a.get('path')})",
           "write_file": lambda a: f"Write({a.get('path')})", "edit_file": lambda a: f"Update({a.get('path')})",
           "board": lambda a: f"Board({a.get('kind')} {a.get('text', '')[:70]})", "report": lambda a: f"Report({a.get('text', '')[:80]})",
-          "read_board": lambda a: "ReadBoard()", "board_plan": lambda a: f"Plan({a.get('builder', '')[:70]})",
+          "read_board": lambda a: "ReadBoard()", "measure": lambda a: "Measure(cargo run --release -- aggregate)", "submit": lambda a: "Submit()", "revert": lambda a: "Revert(leanVM)", "board_plan": lambda a: f"Plan({a.get('builder', '')[:70]})",
           "handoff": lambda a: f"Handoff({a.get('role')}: {a.get('task', '')[:70]})", "wait": lambda a: f"Wait({a.get('seconds', 60)}s)"}
 
 # ── prompts ─────────────────────────────────────────────────────────────────────────────────────
@@ -147,9 +181,9 @@ COMMON = ("You are the {role} of a three-model swarm working an Ethplane node. P
           "Never claim a result without the measured number or the command output that shows it. If a command fails, say what failed and try a different way; "
           "never say you lack access: you have the tools listed. No markdown headers, no bold, no summaries of accomplishments. When your piece is finished, call report once with the number or the output, then stop.")
 ROLE_PROMPT = {
-    "orchestrator": "You never do the work yourself. For each task from the human: board_plan, then ONE handoff to the builder (task, files, done_when with a number), then one handoff to the critic (what to re-measure or re-run, done_when), then wait. Never queue several handoffs to one peer: the next handoff goes out only after that peer's report. When a REPORT arrives: if the critic's REVIEW is PASS with a number, report the result to the human in three lines; if FAIL, one corrected handoff naming what was missing. Read the board only when a report says to.",
-    "builder": f"You edit and run code in {WORKDIR}; leanVM is at {LEAN} and only crates/rec_aggregation/guests/ there may change. Measure with: cd {LEAN} && cargo run --release -- aggregate --xmss 900 --log-inv-rate 1 --repeat 3 2>&1 | grep -E 'cycles|proving time'. Every measurement goes to the board as MEASURED cycles=<n>. A submission is only for cycles STRICTLY BELOW the baseline; equal is not below. A comment is not a change. Before each measurement run git -C {LEAN} status --short and revert anything outside crates/rec_aggregation/guests/ with git checkout -- <path>; a change outside guests/ is never measured or submitted.",
-    "critic": f"You verify, you never edit deliverables. Re-run the builder's command yourself in {WORKDIR} or {LEAN} and compare numbers; a REVIEW PASS quotes your own measured number or test count, a REVIEW FAIL names the path or number that is wrong. Post REVIEW lines with board and then report.",
+    "orchestrator": "You never do the work yourself. For each task from the human: board_plan, then ONE handoff to the builder (task, files, done_when with a number), then one handoff to the critic (what to re-measure or re-run, done_when), then wait. Never queue several handoffs to one peer: the next handoff goes out only after that peer's report. While no REPORT has arrived, call wait again; never report that you are waiting and never re-send a handoff. When a REPORT arrives: if the critic's REVIEW is PASS with a number, report the result to the human in three lines; if FAIL, one corrected handoff naming what was missing. Read the board only when a report says to.",
+    "builder": f"You edit code in the leanVM checkout {LEAN}; the editable surface is {', '.join(EDITABLE)} and nothing else. The loop for every hypothesis: read the file, make ONE real change with edit_file, call measure, then submit if measure says BELOW, otherwise revert and start the next hypothesis. measure is the only way to measure; never run cargo yourself. The baseline is {BASELINE} cycles; only strictly below counts. Comments and renames are not changes. Never conclude that nothing can be improved: the compiler surface (when editable) changed cycles in past runs.",
+    "critic": f"You verify, you never edit anything (your shell refuses edits). For each MEASURED line the builder posts, call measure yourself on the same tree and compare: REVIEW PASS when both numbers match, REVIEW FAIL with both numbers when they differ or when files outside {', '.join(EDITABLE)} are modified. Then report. Never form or test hypotheses yourself.",
 }
 INBOX: "queue.Queue[str]" = queue.Queue()
 
@@ -158,7 +192,8 @@ def call_model(messages, tools):
     for attempt in range(4):
         try:
             req = urllib.request.Request(f"{BASE}/chat/completions", body, {"Content-Type": "application/json", "Authorization": "Bearer local"})
-            with urllib.request.urlopen(req, timeout=600) as r: return json.load(r)["choices"][0]["message"]
+            with urllib.request.urlopen(req, timeout=600) as r:
+                d = json.load(r); TOK["n"] += int(d.get("usage", {}).get("total_tokens", 0) or 0); return d["choices"][0]["message"]
         except Exception as e:
             err = e; time.sleep(3 * (attempt + 1))
     raise RuntimeError(f"model unreachable: {err}")
@@ -176,7 +211,10 @@ def log(entry):
     with LOG.open("a") as f: f.write(json.dumps({"ts": datetime.datetime.now().isoformat(timespec="seconds"), **entry}) + "\n")
 
 def run_task(messages, text, tools):
-    messages.append({"role": "user", "content": text}); log({"role": "user", "content": text})
+    t0 = time.time(); messages.append({"role": "user", "content": text}); log({"role": "user", "content": text})
+    try: _run(messages, tools)
+    finally: footer(t0)
+def _run(messages, tools):
     for turn in range(MAX_TURNS):
         trim(messages)
         try:

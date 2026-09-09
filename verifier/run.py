@@ -38,12 +38,25 @@ BASELINE_PROVING_MICROS = 1433000
 BASELINE_PROOF_SIZE_BYTES = 302592
 BASELINE_VERIFY_MICROS = 30100
 BASELINE_SPREAD_BPS = 190
+# The live node's release parameters, as defined on chain (defineNode: targetGainBps 1000,
+# thresholdBps 100). They are constants here for the same reason the baseline numbers are: the
+# verifier must be able to price a release without asking the caller. --baseline-json or the
+# environment overrides them for a node with different parameters.
+TARGET_GAIN_BPS = int(os.environ.get("ETHPLANE_TARGET_GAIN_BPS", "1000"))
+PAID_GAIN_BPS = int(os.environ.get("ETHPLANE_PAID_GAIN_BPS", "0"))
 
 RUN_TIMEOUT_SECONDS = 600
 BUILD_TIMEOUT_SECONDS = 1800
 TASKSET_CPUS = os.environ.get("VERIFIER_CPUS", "0-7")
-EDITABLE_PREFIXES = ("crates/rec_aggregation/guests/", "crates/lean_compiler/")
-FROZEN_HINT = "only crates/rec_aggregation/guests/ and crates/lean_compiler/ may change"
+# R6. The editable surface is the guest program and nothing else. `cargo build --release` runs in
+# the submission's worktree as the verifier user, and Rust executes build.rs and proc macros at
+# compile time — so any Rust crate the submitter can write is arbitrary code execution as the user
+# holding VERIFIER_PRIVATE_KEY. guests/aggregate.py is zkDSL compiled by the FROZEN compiler, so
+# nothing a submitter writes is compiled as Rust and the class disappears. The cost of this is
+# stated rather than hidden: the reachable space is smaller, and an honest rejection is a likelier
+# outcome than it was with the compiler editable.
+EDITABLE_PREFIXES = ("crates/rec_aggregation/guests/",)
+FROZEN_HINT = "only crates/rec_aggregation/guests/ may change"
 
 VERDICT_KEYS = (
     "cycles", "provingMicros", "proofSizeBytes", "verifyMicros", "verifierAccepted", "reason", "binarySha256",
@@ -73,7 +86,7 @@ def verdict(
 
 
 def validate_paths(diff_files) -> Tuple[bool, str]:
-    """The frozen-path check: a submission may only touch the guest program and the compiler.
+    """The frozen-path check: a submission may only touch the guest program (R6).
 
     Archive safety is NOT this function's job — extract_tarball's filter='data' refuses absolute
     paths, escapes and symlinks before anything reaches here. So a path that normalises outside the
@@ -194,6 +207,26 @@ def check_non_regression(measured: Dict[str, int], baseline: Dict[str, int], spr
     return ""
 
 
+def python312_prefix() -> Tuple[bool, str]:
+    """R2. verifier.py uses PEP 695 `type` aliases and needs 3.12+; hawk's default python3 is 3.10.
+    The version this replaces ran the harness anyway and the SyntaxError came back as
+    `verifier-rejected` — blaming the submission for the host's configuration. A missing interpreter
+    is now `host-config`, which is nobody's verdict and everybody's signal to fix the box.
+
+    Returns (ok, directory to put first on PATH). An empty directory means the default python3 is
+    already 3.12+, so nothing needs prepending."""
+    py312 = shutil.which("python3.12")
+    if py312:
+        return True, os.path.dirname(py312)
+    default = shutil.which("python3")
+    if default:
+        r = subprocess.run([default, "-c", "import sys; print(sys.version_info >= (3, 12))"],
+                           capture_output=True, text=True)
+        if r.returncode == 0 and r.stdout.strip() == "True":
+            return True, ""
+    return False, ""
+
+
 def run_reference_verifier(worktree: str) -> Tuple[bool, str]:
     """(a)+(g) The independent check. The pinned command does not write the four files
     python-verifier/verifier.py takes (bytecode, public_input, stream, merkle_openings) — the only
@@ -206,11 +239,12 @@ def run_reference_verifier(worktree: str) -> Tuple[bool, str]:
     function: the version it replaces returned True when it could not find the file."""
     if not os.path.exists(os.path.join(worktree, "python-verifier", "verifier.py")):
         return False, "verifier-missing"
+    ok, prefix = python312_prefix()
+    if not ok:
+        return False, "host-config"
     env = dict(os.environ)
-    # verifier.py uses PEP 695 `type` aliases and needs 3.12+; the box's default python3 is 3.10.
-    py312 = shutil.which("python3.12")
-    if py312:
-        env["PATH"] = os.path.dirname(py312) + os.pathsep + env.get("PATH", "")
+    if prefix:
+        env["PATH"] = prefix + os.pathsep + env.get("PATH", "")
     try:
         r = subprocess.run(
             ["cargo", "test", "--release", "-p", "lean_vm", "--test", "verifiers", "--",
@@ -222,9 +256,16 @@ def run_reference_verifier(worktree: str) -> Tuple[bool, str]:
     return (True, "") if r.returncode == 0 else (False, "verifier-rejected")
 
 
-def run_with_corrupt_index(worktree: str, index: int) -> int:
-    """Run the pinned command with one signature corrupted. Returns the exit code; non-zero means
-    the aggregation refused the bad signature, which is what a correct build must do.
+def run_with_corrupt_index(worktree: str, index: int) -> Optional[int]:
+    """Run the pinned command with one signature corrupted. Returns the exit code, or None if the
+    run timed out. Non-zero means the aggregation refused the bad signature, which is what a correct
+    build must do.
+
+    R1. None, not 124: the version this replaces returned 124 on timeout and the caller tested only
+    `== 0`, so a submission that HUNG on corrupted input read as "correctly rejected" on every probe
+    including the full sweep — and a reference leg that hung read as "the probe is valid". A timeout
+    is the absence of an answer, and it must not share a value with an answer, because 124 is also
+    an exit code a process can return on its own.
 
     Measured at a210ef1b with the patch applied: clean run exits 0, ETHPLANE_CORRUPT_INDEX=0 and
     =899 both exit 101. The patch corrupts on the way OUT of get_signers rather than at generation,
@@ -239,7 +280,33 @@ def run_with_corrupt_index(worktree: str, index: int) -> int:
         )
         return r.returncode
     except subprocess.TimeoutExpired:
-        return 124
+        return None
+
+
+def releases_full_target(
+    cycles: Optional[int], original_metric: int, target_gain_bps: int, paid_gain_bps: int
+) -> bool:
+    """R4. The probe budget follows the money, and it is computed HERE from the measurement rather
+    than passed in by whoever invoked the verifier — a `--reaches-target` flag makes the strength of
+    the check depend on the orchestration layer remembering to set it.
+
+    The arithmetic is the contract's own (Ethplane.sol `_release`): cumulative gain against the
+    ORIGINAL baseline, capped at the target, paid only for the part beyond what has already been
+    paid. A submission is swept at all 900 indices when it both pays and takes the node all the way
+    to its target gain — the point at which the last of the escrow is released. Everything else gets
+    the three fixed probes.
+
+    Unknown parameters mean the release cannot be priced, and an unpriced release is swept: the
+    expensive direction is the safe one."""
+    if original_metric <= 0 or target_gain_bps <= 0:
+        return True
+    if cycles is None or cycles >= original_metric:
+        return False
+    gain_bps = (original_metric - cycles) * 10000 // original_metric
+    capped = min(gain_bps, target_gain_bps)
+    if capped <= paid_gain_bps:
+        return False
+    return capped >= target_gain_bps
 
 
 def probe_indices(reaches_target: bool, total: int = 900) -> list:
@@ -253,10 +320,20 @@ def probe_indices(reaches_target: bool, total: int = 900) -> list:
 
 def statement_probe(reference_wt: str, submission_wt: str, index: int) -> Tuple[bool, str]:
     """Differential: the REFERENCE must reject the corrupted signature (or the probe itself is
-    broken and proves nothing), and then the SUBMISSION must reject it too."""
-    if run_with_corrupt_index(reference_wt, index) == 0:
+    broken and proves nothing), and then the SUBMISSION must reject it too.
+
+    R1. A timeout on either leg is `probe-timeout` and the verdict is not accepted — never
+    `statement-skip`, because a slow submission is not a cheating one, and never a pass, because a
+    run that did not finish established nothing."""
+    reference_code = run_with_corrupt_index(reference_wt, index)
+    if reference_code is None:
+        return False, "probe-timeout"
+    if reference_code == 0:
         return False, "probe-invalid"
-    if run_with_corrupt_index(submission_wt, index) == 0:
+    submission_code = run_with_corrupt_index(submission_wt, index)
+    if submission_code is None:
+        return False, "probe-timeout"
+    if submission_code == 0:
         return False, "statement-skip"
     return True, ""
 
@@ -277,7 +354,6 @@ def run_self_test() -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Verify a leanVM submission against the pinned criterion")
     parser.add_argument("--self-test", action="store_true")
-    parser.add_argument("--reaches-target", action="store_true", help="run the full 900-probe sweep")
     parser.add_argument("artifact_tarball", nargs="?")
     parser.add_argument("reference_leanvm", nargs="?", default=REFERENCE_LEANVM_PATH)
     parser.add_argument("baseline_json", nargs="?")
@@ -297,11 +373,19 @@ def main() -> None:
         "verifyMicros": BASELINE_VERIFY_MICROS,
     }
     spread = BASELINE_SPREAD_BPS
+    # The node's release parameters. originalMetric is the baseline recorded on chain, which for
+    # this node is the same number the criterion pins.
+    original_metric = BASELINE_CYCLES
+    target_gain_bps = TARGET_GAIN_BPS
+    paid_gain_bps = PAID_GAIN_BPS
     if args.baseline_json and os.path.exists(args.baseline_json):
         with open(args.baseline_json) as f:
             loaded = json.load(f)
         baseline.update({k: loaded[k] for k in baseline if k in loaded})
         spread = loaded.get("spreadBps", spread)
+        original_metric = loaded.get("originalMetric", loaded.get("cycles", original_metric))
+        target_gain_bps = loaded.get("targetGainBps", target_gain_bps)
+        paid_gain_bps = loaded.get("paidGainBps", paid_gain_bps)
 
     reference = args.reference_leanvm
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -332,9 +416,18 @@ def main() -> None:
                     return
                 created.append(wt)
 
-            reference_hash = None
-            if build(reference_wt)[0]:
-                reference_hash = get_binary_hash(reference_wt)
+            # R3. A reference build that fails aborts the verification. The version this replaces
+            # left reference_hash = None and the stale-binary comparison below guarded on it, so the
+            # one check whose whole purpose is catching a build that did not take was silently
+            # disabled by a build that did not take.
+            ok, _ = build(reference_wt)
+            if not ok:
+                emit(verdict(reason="reference-build"))
+                return
+            reference_hash = get_binary_hash(reference_wt)
+            if reference_hash is None:
+                emit(verdict(reason="reference-build"))
+                return
 
             for rel in files:
                 dest = os.path.join(submission_wt, rel)
@@ -347,7 +440,12 @@ def main() -> None:
                 return
 
             binary_hash = get_binary_hash(submission_wt)
-            if files and reference_hash and binary_hash == reference_hash:
+            if binary_hash is None:
+                emit(verdict(reason="binary-missing"))
+                return
+            # No `if files` guard: an artifact that changed nothing produces the reference binary,
+            # and stale-binary is the honest reason for it.
+            if binary_hash == reference_hash:
                 emit(verdict(reason="stale-binary", binary_sha256=binary_hash))
                 return
 
@@ -374,7 +472,10 @@ def main() -> None:
             if not apply_corrupt_patch(submission_wt)[0] or not build(reference_wt)[0] or not build(submission_wt)[0]:
                 emit(verdict(**measured, verifier_accepted=False, reason="probe-build", binary_sha256=binary_hash))
                 return
-            for index in probe_indices(args.reaches_target):
+            sweep = releases_full_target(
+                measured.get("cycles"), original_metric, target_gain_bps, paid_gain_bps
+            )
+            for index in probe_indices(sweep):
                 ok, reason = statement_probe(reference_wt, submission_wt, index)
                 if not ok:
                     emit(verdict(**measured, verifier_accepted=False, reason=reason, binary_sha256=binary_hash))

@@ -15,6 +15,6 @@ ETHGlobal requires that submissions document which code, files or assets were ge
 | docs/SPEC.md | Claude builder day 1 (as-built sections after each review round); Qwen swarm for the first draft. |
 | docs/JOIN.md, docs/ROLES.md | Qwen builder day 1; Claude builder for the session vocabulary and the join flow as shipped. |
 | scripts/ | check-submission.sh and rehearsal.sh: Claude builder. |
-| docs/planning/ | the redacted private PRD, specs and swarm boards. |
+| docs/planning/ | the redacted private PRD and the day-one specs: the Claude orchestrator session; the boards: the two Qwen swarms' own sessions. |
 | research/ | Claude researcher and builder sessions. |
 | Direction and every decision | Pat. |

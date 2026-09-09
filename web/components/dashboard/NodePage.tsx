@@ -16,6 +16,8 @@ import { Panel } from './Panel';
  */
 const KIND = ['winner', 'parents', 'verifier', 'compute', 'registrant'];
 const PRIVY_POLICY = 'c8io5x5g08igo85ljedozu2k';
+const SUBREGISTRY = '0x58CB4caaDb0ebEdf7E1c96CeA6578Afb2f99d05b';
+const UNIVERSAL_RESOLVER = '0xd26f2040d083af1cd2962ba303f4bea0c4faf142';
 const SESSION_WORD: Record<string, string> = {
   claimed: 'started',
   heartbeat: 'heartbeat',
@@ -148,25 +150,40 @@ function Escrow({ node }: { node: NodeRow }) {
       </p>
       <div className="space-y-2" style={MUTED}>
         <p className="m-0">
-          The contract holds the escrow. It pays on a verified improvement, in proportion to
-          cumulative progress.
+          The contract holds the escrow. When a submission passes, it pays out: 68% to the lineage
+          that submitted it, 15% to the parent it built on, 10% to the verifier, 5% held for compute,
+          2% to whoever registered the worknode. The attribution split is set at definition under the
+          Privy policy, which refuses any definition that gives the verifier less than 10%.
         </p>
+      </div>
+
+      <div
+        data-testid="privy-policy"
+        className="mt-5 space-y-2 border-t pt-4"
+        style={{ ...MUTED, borderColor: 'var(--ep-border)' }}
+      >
+        <h3 className="m-0" style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, color: 'var(--ep-on-surface)' }}>
+          Treasury under a Privy policy
+        </h3>
         <p className="m-0">
-          Treasury wallet policy <span style={MONO}>{PRIVY_POLICY}</span> allows three operations and
-          nothing else:
+          The treasury is a Privy server wallet bound to policy <span style={MONO}>{PRIVY_POLICY}</span>.
+          A policy is an allowlist, so what no rule allows is refused before anything is signed. Read
+          from the Privy API on 2026-09-09:
         </p>
         <ul className="m-0 list-disc space-y-1 pl-5">
           <li>approve PLANE, and only to the Ethplane contract</li>
-          <li>fundNode, capped at 100,000e18 per call</li>
-          <li>defineNode, only where the split gives the verifier at least 10 percent</li>
+          <li>fundNode, capped at 100,000 PLANE per call</li>
+          <li>defineNode, only where the split gives the verifier at least 10%</li>
         </ul>
         <p className="m-0">
-          Each one is two rules, one for sending and one for signing, because a policy rule matches a
-          single RPC method. Six rules in total.
+          Each is two rules, one for sending and one for signing, because a rule matches a single RPC
+          method. Six in total.
         </p>
         <p className="m-0">
-          Anything else is refused by Privy before it is signed:{' '}
-          <span style={MONO}>RPC request denied due to policy violation</span>.
+          We tried a fourth shape. A <span style={MONO}>transfer(0x…dEaD, 1)</span> of PLANE was
+          refused at 2026-09-09 14:52:33 UTC:{' '}
+          <span style={MONO}>RPC request denied due to policy violation</span>.{' '}
+          <a href="/docs#privy" style={{ color: 'var(--ep-primary)' }}>The rules and the refusal in full</a>.
         </p>
       </div>
     </section>
@@ -190,19 +207,32 @@ function Ens({ slug }: { slug: string | null }) {
   }, [name]);
   return (
     <section className="space-y-4" data-testid="ens-card">
-      <SectionLabel>ENS</SectionLabel>
+      <SectionLabel>Name on ENS v2</SectionLabel>
       <p className="m-0 break-all" style={{ ...MONO, fontSize: 'var(--ep-size-md)' }}>{name ?? '—'}</p>
       <div className="space-y-1" style={MUTED}>
         {state.loading ? <p className="m-0">Reading through the Universal Resolver.</p> : null}
         {state.error ? <p className="m-0" title={state.detail}>no record yet: {state.error}</p> : null}
         {state.value ? (
-          <>
-            <p className="m-0">
-              <span style={MONO}>ethplane.status</span> {state.value}
-            </p>
-            <p className="m-0 break-all" style={MONO}>resolver {state.resolver}</p>
-          </>
+          <p className="m-0">
+            <span style={MONO}>ethplane.status</span> {state.value}
+          </p>
         ) : null}
+        <p className="m-0 break-all" style={MONO}>subregistry {SUBREGISTRY}</p>
+        {state.resolver ? <p className="m-0 break-all" style={MONO}>resolver {state.resolver}</p> : null}
+        <p className="m-0">
+          The resolver holds <span style={MONO}>ethplane.status</span>,{' '}
+          <span style={MONO}>ethplane.head</span>, <span style={MONO}>ethplane.criterion</span> and{' '}
+          <span style={MONO}>ethplane.node</span>. Status and head are written by the verifier,
+          which holds the writer role for those keys. The resolver&apos;s owner can also write
+          them.
+        </p>
+        <p className="m-0">Resolve it yourself through the hackathon Universal Resolver:</p>
+        <p className="m-0 break-all" style={MONO}>
+          cast call {UNIVERSAL_RESOLVER} &quot;resolve(bytes,bytes)&quot; $(cast namehash-bytes {name ?? 'NAME'}) $(cast calldata &quot;text(bytes32,string)&quot; $(cast namehash {name ?? 'NAME'}) &quot;ethplane.status&quot;) --rpc-url $SEPOLIA_RPC_URL
+        </p>
+        <p className="m-0">
+          <a href="/docs#ens" style={{ color: 'var(--ep-primary)' }}>Why we run our own subregistry and one resolver per worknode</a>.
+        </p>
       </div>
     </section>
   );

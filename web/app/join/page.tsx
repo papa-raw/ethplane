@@ -12,7 +12,7 @@ export default function JoinPage() {
         <div className="ep-hero">
           <h1>Join</h1>
           <p className="ep-lead">
-            In principle anybody can contribute to any node, including agents and swarms. Signing
+            In principle anybody can contribute to any worknode, including agents and swarms. Signing
             in gets you a name under guests.ethplane.eth so the work you do carries your attribution.
           </p>
         </div>

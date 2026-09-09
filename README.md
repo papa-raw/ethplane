@@ -1,12 +1,16 @@
 # Ethplane
 
-**The question:** how can we design a collaborative plane that lets humans and AI, working as a swarm, pull and rebuild a history of contributions, build on it, and receive attribution for their own contributions?
+Ethplane turns the Ethereum Foundation's strawmap into a plane of paid work. Each of the 65 roadmap items is a Roadmap Worknode: an ENS name, an acceptance criterion a machine can check, and an escrow that pays when a verifier confirms an improvement.
 
-Ethplane is a task registry and verification system for research and engineering work. It holds a roadmap as a set of nodes, lets many independent agent groups and people work on those nodes in parallel, verifies results with code the contributors cannot modify, records every contribution as a content-addressed checkpoint addressable by an ENS name, and pays out on verified results under an organisation's policy.
+Anyone can start a session on an open worknode, submit an artifact naming the parent it built on, and get paid on a verdict. Sessions are not locks, several run at once, and a worker that dies loses nothing that was already submitted.
 
-Its first history is the Ethereum protocol roadmap: the 65 nodes of the EF strawmap, classified by criterion type and routed by task shape, with the EF's own maturity pipeline as the node lifecycle and the Hegotá tier list as priority. The proof of concept runs one node.
+**Live:** https://ethplane.ecofrontiers.xyz, with the 65-worknode map, the worknode pages, how it works and the docs. Two worknodes are open with 10,000 PLANE each. Seven measurements are recorded on Sepolia and the verifier accepted none of them; the numbers and the transactions are on the docs page.
 
-**Live:** https://ethplane.ecofrontiers.xyz — the 65-node map, the node pages, the deck and the docs. Contracts, names and treasury on Sepolia: `docs/DEPLOYMENTS.md`. The first node, `cl-pq-leanxmss-attestations.ethplane.eth`, is open with a funded bounty and a recorded baseline; its acceptance criterion is `docs/CRITERION-pq-leanxmss.md`.
+**ENS:** every worknode, operator, lineage and guest is a name under `ethplane.eth` on our own ENSv2 subregistry, with one resolver per worknode holding the status, the criterion and the head. Status and head are written by the verifier, which holds the writer role for those keys; the resolver's owner can also write them.
+
+**Privy:** the treasury is a server wallet that signs only under a policy. It can approve PLANE to the Ethplane contract, fund a worknode up to 100,000 PLANE, and define a worknode whose split gives the verifier at least 10%. A plain transfer was refused before signing.
+
+**Video:** <!-- Pat: demo link -->
 
 Built for ETHOnline 2026. The design is in `docs/SPEC.md`; the research it rests on is in `research/`; who wrote what is in `ATTRIBUTION.md`.
 
@@ -39,14 +43,14 @@ LEANVM_REF=/path/to/leanVM python3.12 verifier/run.py <artifact.tar> --self-test
 ```
 
 ## Repository layout
-- `contracts/`, `script/`, `test/` — Ethplane, PlaneToken, EthplaneResolver, EthplaneSubregistry and their tests and deploy scripts.
-- `api/` — indexer (viem `getLogs` poller) + REST + SQLite; `web/` — the dashboard (Next.js static export); `cli/` — `ethplane resolve|join`; `verifier/` — the measurement runner; `swarm/` — the role scripts for a local-model swarm.
-- `docs/` — SPEC, CRITERION, DEPLOYMENTS, ENS-PROBES, DECK, FILM, JOIN, ROLES.
-- `research/strawmap-nodes.json` — every node of the EF strawmap (2026-08-04 image), with layer, track, fork, tag and EF Hegotá tier where one exists.
-- `research/coverage.json`, `research/coverage-table-v2.md` — one row per node: what a group produces, how it is judged, whether the judgement data exists (confirmed by opening the test repositories, not by search: FOCIL, ePBS and BALs vectors and the leanVM verifier were checked directly), compute class, routing mode, priority.
-- `research/eth-governance.md` — EIP-1, fork inclusion, All Core Devs, the strawmap's ownership, with quotes and URLs.
-- `research/identity-checks.md` — ERC-8004 status, ENSv2 Enhanced Access Control, Protocol Guild's formula, Optimism Retro Funding, attestation schemas.
-- `research/eth-roadmap-*.md` — the six roadmap tracks from Vitalik's "Possible futures" series, node lists quoted.
+- `contracts/`, `script/`, `test/`: Ethplane, PlaneToken, EthplaneResolver, EthplaneSubregistry and their tests and deploy scripts.
+- `api/`: indexer (viem `getLogs` poller) + REST + SQLite; `web/`: the dashboard (Next.js static export); `cli/`: `ethplane resolve|join`; `verifier/`: the measurement runner; `swarm/`: the role scripts for a local-model swarm.
+- `docs/`: SPEC, CRITERION, DEPLOYMENTS, ENS-PROBES, DECK, FILM, JOIN, ROLES.
+- `research/strawmap-nodes.json`: every node of the EF strawmap (2026-08-04 image), with layer, track, fork, tag and EF Hegotá tier where one exists.
+- `research/coverage.json`, `research/coverage-table-v2.md`: one row per node: what a group produces, how it is judged, whether the judgement data exists (confirmed by opening the test repositories, not by search: FOCIL, ePBS and BALs vectors and the leanVM verifier were checked directly), compute class, routing mode, priority.
+- `research/eth-governance.md`: EIP-1, fork inclusion, All Core Devs, the strawmap's ownership, with quotes and URLs.
+- `research/identity-checks.md`: ERC-8004 status, ENSv2 Enhanced Access Control, Protocol Guild's formula, Optimism Retro Funding, attestation schemas.
+- `research/eth-roadmap-*.md`: the six roadmap tracks from Vitalik's "Possible futures" series, node lists quoted.
 
 ## AI attribution
 AI-assisted files are listed in `ATTRIBUTION.md`, as ETHGlobal's rules require.

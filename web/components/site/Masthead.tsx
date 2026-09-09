@@ -1,4 +1,5 @@
 import './site.css';
+import { GitHubMark } from '@/components/site/GitHubMark';
 
 /**
  * One masthead for every page: the name, five links, one hairline under them. Written once so the
@@ -6,7 +7,7 @@ import './site.css';
  */
 const LINKS = [
   { key: 'map', href: '/' },
-  { key: 'nodes', href: '/#nodes' },
+  { key: 'worknodes', href: '/#nodes' },
   { key: 'deck', href: '/deck' },
   { key: 'docs', href: '/docs' },
   { key: 'join', href: '/join' },
@@ -26,7 +27,9 @@ export function Masthead({ current }: { current?: MastheadPage }) {
             </a>
           ))}
         </nav>
-        <a className="ep-source" href="https://github.com/papa-raw/ethplane">source</a>
+        <a className="ep-source" href="https://github.com/papa-raw/ethplane" aria-label="Source on GitHub">
+          <GitHubMark />
+        </a>
       </div>
     </header>
   );

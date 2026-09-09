@@ -13,7 +13,7 @@ import { Panel } from './Panel';
 export function NodeMap() {
   const poll = usePolling<NodeRow[]>('/api/nodes');
   return (
-    <Panel poll={poll} empty="No nodes have been indexed. The indexer writes all 65 when it sees StrawmapSeeded.">
+    <Panel poll={poll} empty="No worknodes have been indexed. The indexer writes all 65 when it sees StrawmapSeeded.">
       {(nodes) => <MapBody nodes={nodes} />}
     </Panel>
   );

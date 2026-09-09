@@ -19,7 +19,7 @@ WORKDIR = os.environ.get("WORKDIR", str(SWARM / "ethplane"))
 LEAN = os.environ.get("LEAN", str(SWARM / "leanVM"))
 MAX_TURNS = int(os.environ.get("MAX_TURNS", "300"))
 EDITABLE = [e.strip() for e in os.environ.get("EDITABLE", "crates/rec_aggregation/guests/").split(",") if e.strip()]
-BASELINE = int(os.environ.get("BASELINE", "1542812"))
+BASELINE = int(os.environ.get("BASELINE", "1542812")); PROOF_MAX = int(os.environ.get("PROOF_MAX", "0"))
 MEASURE_CMD = os.environ.get("MEASURE_CMD", "cargo run --release -- aggregate --xmss 900 --log-inv-rate 1 --repeat 3")
 LAST = {"cycles": None}; TOK = {"n": 0, "task": 0}
 VERBS = ["Thinking", "Working", "Measuring", "Reading", "Building", "Checking", "Composing", "Weighing"]
@@ -134,15 +134,21 @@ def t_measure():
     if out_: return "changes outside the editable surface (" + ", ".join(EDITABLE) + "); revert them first:\n" + "\n".join(out_), False
     diff, _ = run_shell(f"git -C {LEAN} diff --stat -- " + " ".join(EDITABLE) + " | tail -1")
     if ROLE == "builder" and not diff.strip(): return "refused: nothing is changed inside the editable surface since the reference; make one real change with edit_file first (check the exact old text with read_file)", False
-    out, ok = run_shell(f"cd {LEAN} && {MEASURE_CMD} 2>&1 | grep -E 'cycles|proving time|error'", 1500)
+    out, ok = run_shell(f"cd {LEAN} && {MEASURE_CMD} 2>&1 | grep -E 'cycles|proving time|proof size|error'", 1500)
     m = re.search(r"cycles \(VM steps\)\s*:\s*([\d,]+)", out); cycles = int(m.group(1).replace(",", "")) if m else None
-    LAST["cycles"] = cycles
+    pm = re.search(r"proof size\s*:\s*([\d,.]+)\s*(KiB|bytes|B)", out); proof = None
+    if pm: proof = int(float(pm.group(1).replace(",", "")) * (1024 if pm.group(2) == "KiB" else 1))
+    LAST["cycles"] = cycles; LAST["proof"] = proof
     if cycles is None: board_append(f"{ROLE} {'MEASURED' if ROLE == 'builder' else 'REVIEW'}: build or run failed"); return "no cycles number; build or run failed:\n" + out[-1500:], False
     verdict = "BELOW baseline" if cycles < BASELINE else "not below baseline"
+    if PROOF_MAX and proof is not None:
+        verdict += f" · proof {proof} B " + ("within" if proof <= PROOF_MAX else "OVER") + f" the {PROOF_MAX} B bound"
+        if proof > PROOF_MAX: verdict = verdict.replace("BELOW baseline", "cycles below but proof OVER the bound: not submittable")
     board_append(f"{ROLE} {'MEASURED' if ROLE == 'builder' else 'REVIEW'}: cycles={cycles} baseline={BASELINE} {verdict} · {diff.strip() or 'no diff'}")
     return f"cycles={cycles} baseline={BASELINE} {verdict}\nchanged: {diff.strip() or 'nothing'}\n{out}", True
 def t_submit():
     if LAST["cycles"] is None or LAST["cycles"] >= BASELINE: return f"refused: last measured cycles {LAST['cycles']} is not strictly below {BASELINE}", False
+    if PROOF_MAX and LAST.get("proof") is not None and LAST["proof"] > PROOF_MAX: return f"refused: proof size {LAST['proof']} B is over the {PROOF_MAX} B bound; the verifier would reject it", False
     if _outside(): return "refused: changes outside the editable surface", False
     (SWARM / "outbox").mkdir(exist_ok=True); (SWARM / "outbox" / "SUBMIT").touch()
     board_append(f"builder SUBMIT: cycles={LAST['cycles']} < {BASELINE}"); return "submission flagged; the submitter loop sends it within a minute", True

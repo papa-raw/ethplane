@@ -93,13 +93,15 @@ def _outside():
 def t_measure():
     out_ = _outside()
     if out_: return "changes outside the editable surface (" + ", ".join(EDITABLE) + "); revert them first:\n" + "\n".join(out_), False
+    diff, _ = run_shell(f"git -C {LEAN} diff --stat -- " + " ".join(EDITABLE) + " | tail -1")
+    if ROLE == "builder" and not diff.strip(): return "refused: nothing is changed inside the editable surface since the reference; make one real change with edit_file first (check the exact old text with read_file)", False
     out, ok = run_shell(f"cd {LEAN} && {MEASURE_CMD} 2>&1 | grep -E 'cycles|proving time|error'", 1500)
     m = re.search(r"cycles \(VM steps\)\s*:\s*([\d,]+)", out); cycles = int(m.group(1).replace(",", "")) if m else None
     LAST["cycles"] = cycles
     if cycles is None: board_append(f"{ROLE} {'MEASURED' if ROLE == 'builder' else 'REVIEW'}: build or run failed"); return "no cycles number; build or run failed:\n" + out[-1500:], False
     verdict = "BELOW baseline" if cycles < BASELINE else "not below baseline"
-    board_append(f"{ROLE} {'MEASURED' if ROLE == 'builder' else 'REVIEW'}: cycles={cycles} baseline={BASELINE} {verdict}")
-    return f"cycles={cycles} baseline={BASELINE} {verdict}\n{out}", True
+    board_append(f"{ROLE} {'MEASURED' if ROLE == 'builder' else 'REVIEW'}: cycles={cycles} baseline={BASELINE} {verdict} · {diff.strip() or 'no diff'}")
+    return f"cycles={cycles} baseline={BASELINE} {verdict}\nchanged: {diff.strip() or 'nothing'}\n{out}", True
 def t_submit():
     if LAST["cycles"] is None or LAST["cycles"] >= BASELINE: return f"refused: last measured cycles {LAST['cycles']} is not strictly below {BASELINE}", False
     if _outside(): return "refused: changes outside the editable surface", False
@@ -260,8 +262,12 @@ def main():
     if first:
         print(f"{D}> {first[:width() - 2]}{X}"); run_task(messages, first, tools)
         if a.once: return
+    nudge = os.environ.get("IDLE_NUDGE"); idle = int(os.environ.get("IDLE_SECONDS", "240"))
     while True:
-        prompt_line(); text = INBOX.get(); print(text if len(text) < 2 * width() else text[: 2 * width()] + " …")
+        prompt_line()
+        try: text = INBOX.get(timeout=idle if nudge else None)
+        except queue.Empty: text = nudge
+        print(text if len(text) < 2 * width() else text[: 2 * width()] + " …")
         if text.strip() in ("/quit", "exit"): return
         run_task(messages, text, tools)
 

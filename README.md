@@ -25,13 +25,15 @@ Built for ETHOnline 2026. The design is in `docs/SPEC.md`; the research it rests
 ## How to run
 
 ```
-# contracts (Foundry 1.8)
-forge build && forge test                        # 56 tests
+# contracts (Foundry 1.5 or later)
+forge build && forge test                        # 55 passed, 1 skipped (the ENS fork test needs SEPOLIA_RPC_URL)
 # api (Node 22, pnpm)
 cd api && pnpm install && pnpm build && ETHPLANE_ADDRESS=… PLANE_ADDRESS=… SEPOLIA_RPC_URL=… PORT=4100 node dist/src/server.js
 # web (static export)
 cd web && pnpm install && pnpm build             # → web/out
-# verifier (Python 3.12, a leanVM checkout at the pinned commit)
+# verifier tests (Python 3.12; run.py itself needs only the standard library)
+pip install -r verifier/requirements-dev.txt && python3.12 -m pytest verifier/tests swarm/tests -q
+# verifier against a real artifact (optional: needs a leanVM checkout at the pinned commit)
 LEANVM_REF=/path/to/leanVM python3.12 verifier/run.py <artifact.tar> --self-test
 # swarm (three local-model role sessions in tmux; see swarm/README.md)
 ```

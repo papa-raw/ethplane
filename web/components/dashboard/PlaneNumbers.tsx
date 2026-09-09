@@ -27,8 +27,9 @@ export function PlaneNumbers() {
   const openIds = open.map((n) => n.node_id).join(',');
 
   const [verdicts, setVerdicts] = useState<number | null>(null);
+  const [passedCount, setPassedCount] = useState<number | null>(null);
   useEffect(() => {
-    if (!rows) { setVerdicts(null); return; }
+    if (!rows) { setVerdicts(null); setPassedCount(null); return; }
     const ids = openIds ? openIds.split(',') : [];
     if (ids.length === 0) { setVerdicts(0); return; }
     let alive = true;
@@ -36,6 +37,7 @@ export function PlaneNumbers() {
       .then((details) => {
         if (!alive) return;
         setVerdicts(details.reduce((sum, d) => sum + (d.verdicts?.length ?? 0), 0));
+        setPassedCount(details.reduce((sum, d) => sum + (d.verdicts ?? []).filter((v) => v.passed).length, 0));
       })
       .catch(() => { if (alive) setVerdicts(null); });
     return () => { alive = false; };
@@ -49,10 +51,10 @@ export function PlaneNumbers() {
   const cells: Array<{ value: number | null; label: string }> = [
     {
       value: measured ? open.length : null,
-      label: each && open.length > 0 ? `nodes open · ${each} PLANE each` : 'nodes open',
+      label: each && open.length > 0 ? `open worknodes, ${each} PLANE escrow each` : 'open worknodes',
     },
-    { value: sessionsLive, label: 'sessions live' },
-    { value: verdicts, label: 'verdicts on Sepolia' },
+    { value: sessionsLive, label: 'workers active now' },
+    { value: verdicts, label: verdicts === null ? 'submissions judged' : `submissions judged, ${passedCount ?? 0} passed` },
   ];
 
   return (
@@ -78,7 +80,7 @@ export function PlaneNumbers() {
               {c.value === null ? '—' : c.value.toLocaleString('en-US')}
             </b>
             <span
-              className="mt-1 block uppercase"
+              className="mt-1 block"
               style={{ fontSize: 'var(--ep-size-label)', fontWeight: 500, letterSpacing: '0.08em', color: 'var(--ep-secondary)' }}
             >
               {c.label}

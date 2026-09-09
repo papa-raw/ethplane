@@ -45,7 +45,9 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function NodePage({ nodeId, slug, label }: { nodeId: string; slug: string | null; label: string | null }) {
+export function NodePage({ nodeId, slug, label, summary }: {
+  nodeId: string; slug: string | null; label: string | null; summary?: string | null;
+}) {
   const poll = usePolling<RawNodeDetail>(`/api/nodes/${nodeId}`);
   return (
     <main
@@ -70,8 +72,8 @@ export function NodePage({ nodeId, slug, label }: { nodeId: string; slug: string
         </p>
       </header>
 
-      <Panel poll={poll} empty="This node is not in the indexer." isEmpty={(d) => !d?.node}>
-        {(raw) => <Detail d={toNodeDetail(raw)} slug={slug} />}
+      <Panel poll={poll} empty="This worknode is not in the indexer." isEmpty={(d) => !d?.node}>
+        {(raw) => <Detail d={toNodeDetail(raw)} slug={slug} summary={summary ?? null} />}
       </Panel>
     </main>
   );
@@ -94,10 +96,12 @@ function StatusWord({ node }: { node: NodeRow | null }) {
   );
 }
 
-function Detail({ d, slug }: { d: NodeDetail; slug: string | null }) {
+function Detail({ d, slug, summary }: { d: NodeDetail; slug: string | null; summary: string | null }) {
   const unregistered = stateOf(d.node) === 'seeded';
   return (
     <div className="space-y-12">
+      <Plain d={d} summary={summary} />
+      <Divider />
       <Summary d={d} />
       <Criterion d={d} />
 
@@ -115,6 +119,67 @@ function Detail({ d, slug }: { d: NodeDetail; slug: string | null }) {
     </div>
   );
 }
+
+/** Three short blocks for a reader who has not read the criterion: what the item is, what counts as
+ *  done, and what has happened. Everything here is on the page below as well, in numbers. */
+function Plain({ d, summary }: { d: NodeDetail; summary: string | null }) {
+  const b = baselineFor(d.node.node_id);
+  const sessions = d.sessions.length;
+  const submissions = d.submissions.length;
+  const verdicts = d.verdicts.length;
+  const passed = d.verdicts.filter((v) => v.passed).length;
+  const below = d.verdicts.filter((v) => b && v.metric && Number(String(v.metric).replace(/[^0-9]/g, '')) > 0).length;
+  return (
+    <section data-testid="node-plain" className="grid gap-8 md:grid-cols-3">
+      <div className="space-y-2">
+        <SectionLabel>What this is</SectionLabel>
+        <p className="m-0" style={{ fontSize: 'var(--ep-size-md)', lineHeight: 1.55 }}>
+          {summary ?? 'This roadmap item has no summary recorded yet.'}
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <SectionLabel>What counts as done</SectionLabel>
+        <p className="m-0" style={{ fontSize: 'var(--ep-size-md)', lineHeight: 1.55 }}>
+          {b
+            ? `A submission has to run the benchmark in fewer VM cycles than the recorded baseline of ${b.cycles.toLocaleString('en-US')}, without making proving time, verification time or proof size worse.`
+            : 'This worknode has no criterion yet, so nothing can be submitted against it.'}
+          {' '}
+          {b ? "The judge is this worknode's verifier, a separate machine account with its own key." : ''}
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <SectionLabel>What has happened</SectionLabel>
+        <p className="m-0" style={{ fontSize: 'var(--ep-size-md)', lineHeight: 1.55 }}>
+          {verdicts === 0
+            ? `${sessions === 0 ? 'No sessions have started' : `${sessions} session${sessions === 1 ? ' has' : 's have'} started`} and nothing has been submitted yet.`
+            : `${sessions} session${sessions === 1 ? '' : 's'}, ${submissions} submission${submissions === 1 ? '' : 's'}, and ${verdicts} verdict${verdicts === 1 ? '' : 's'} recorded. ${PLAIN_REASON[d.node.node_id.toLowerCase()] ?? 'Every verdict so far is a fail.'} ${passed > 0 ? '' : 'No payout yet.'}`}
+        </p>
+      </div>
+    </section>
+  );
+}
+
+/** Where the plain account ends and the record begins. */
+function Divider() {
+  return (
+    <div className="flex items-center gap-3" aria-hidden="true">
+      <span className="uppercase" style={{ fontSize: 'var(--ep-size-label)', letterSpacing: '0.08em', color: 'var(--ep-secondary)' }}>
+        Details
+      </span>
+      <span className="h-px flex-1" style={{ background: 'var(--ep-border)' }} />
+    </div>
+  );
+}
+
+/** The one-line story of each open worknode's verdicts, from the chain. */
+const PLAIN_REASON: Record<string, string> = {
+  '0x8e67c816b1f39fa072094b67f4f74937bd1920a7a9d79e4b98e785ae9aa29d58':
+    'Two attempts ran and produced exactly the baseline cycle count, so nothing changed; two more could not be built.',
+  '0x662b44f5cf418a3e3d4126a187d0154034afbdc8d2536b9076c68f2a4440c37e':
+    'Three attempts cut cycles by 1,350, and the same change made the proof 307 bytes larger than the bound allows, so all three failed.',
+};
 
 /** The worknode id, shortened, with the whole of it a click away. */
 function CopyId({ nodeId }: { nodeId: string }) {
@@ -144,11 +209,13 @@ function Summary({ d }: { d: NodeDetail }) {
     ? `${(Number(d.node.bounty) / 1e18).toLocaleString('en-US')} PLANE`
     : 'unfunded';
   const cells = [
-    { value: escrow, label: 'escrow' },
-    { value: b ? `${b.cycles.toLocaleString('en-US')}` : 'not recorded', label: b ? 'baseline cycles' : 'baseline' },
+    { value: escrow, label: 'escrow held by the contract' },
+    { value: b ? `${b.cycles.toLocaleString('en-US')}` : 'not recorded', label: b ? 'baseline cycles to beat' : 'no baseline recorded' },
     {
       value: d.verdicts.length > 0 ? String(d.verdicts.length) : 'none',
-      label: d.verdicts.length > 0 ? 'verdicts recorded' : 'no submissions yet',
+      label: d.verdicts.length > 0
+        ? `submissions judged, ${d.verdicts.filter((v) => v.passed).length} passed`
+        : 'submissions judged',
     },
   ];
   return (
@@ -159,7 +226,7 @@ function Summary({ d }: { d: NodeDetail }) {
             <b className="block" style={{ fontSize: 'var(--ep-size-display)', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
               {c.value}
             </b>
-            <span className="mt-1 block uppercase" style={{ fontSize: 'var(--ep-size-label)', fontWeight: 500, letterSpacing: '0.08em', color: 'var(--ep-secondary)' }}>
+            <span className="mt-1 block" style={{ fontSize: 'var(--ep-size-label)', fontWeight: 500, letterSpacing: '0.04em', color: 'var(--ep-secondary)' }}>
               {c.label}
             </span>
           </div>

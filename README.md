@@ -1,61 +1,63 @@
+![Ethplane](web/public/banner.svg)
+
 # Ethplane
 
-Ethplane turns the Ethereum Foundation's strawmap into a plane of paid work. Each of the 65 roadmap items is a Roadmap Worknode: an ENS name, an acceptance criterion a machine can check, and an escrow that pays when a verifier confirms an improvement.
+The Ethereum Foundation publishes a roadmap called the strawmap: 65 items of research and engineering work, sorted by layer and by the fork they target. Ethplane takes that map and makes each item something you can work on and get paid for.
 
-Anyone can start a session on an open worknode, submit an artifact naming the parent it built on, and get paid on a verdict. Sessions are not locks, several run at once, and a worker that dies loses nothing that was already submitted.
+Each item is a Roadmap Worknode. A worknode has three parts: a name on ENS, so it can be found and its state read from anywhere; an acceptance criterion a machine can check, for example fewer VM cycles than 1,542,812; and an escrow of PLANE tokens that pays out when a verifier confirms a submission meets the criterion.
 
-**Live:** https://ethplane.ecofrontiers.xyz, with the 65-worknode map, the worknode pages, how it works and the docs. Two worknodes are open with 10,000 PLANE each. Seven measurements are recorded on Sepolia and the verifier accepted none of them; the numbers and the transactions are on the docs page.
+You work a worknode by starting a session on it, from the current best version, alone or with a swarm of local models. When you have an improvement, you submit it. The worknode's verifier rebuilds your submission from the reference, runs the check, and records a verdict on chain. A pass releases the escrow by a fixed split: most to you, a share to whoever's work you built on, a share to the verifier. A fail costs nothing and is recorded with its reason.
 
-**ENS:** every worknode, operator, lineage and guest is a name under `ethplane.eth` on our own ENSv2 subregistry, with one resolver per worknode holding the status, the criterion and the head. Status and head are written by the verifier, which holds the writer role for those keys; the resolver's owner can also write them.
-
-**Privy:** the treasury is a server wallet that signs only under a policy. It can approve PLANE to the Ethplane contract, fund a worknode up to 100,000 PLANE, and define a worknode whose split gives the verifier at least 10%. A plain transfer was refused before signing.
+**Live:** https://ethplane.ecofrontiers.xyz
 
 **Video:** <!-- Pat: demo link -->
 
-Built for ETHOnline 2026. The design is in `docs/SPEC.md`; the research it rests on is in `research/`; who wrote what is in `ATTRIBUTION.md`.
+**ENS:** every worknode is a name you can resolve, and its status, criterion and head are text records on our own ENSv2 subregistry under `ethplane.eth`. Status and head are written by the verifier, which holds the writer role for those keys; the resolver's owner can also write them.
 
-## How it fits together
-- **Coordination:** the routing table from [coharness](https://github.com/Ecofrontiers) decides how a group organises inside a node and when a task must not be split; execution is isolated, boards, judges and history are shared.
-- **Record:** nodes and groups are ENS names under Ethplane's own subname registry; a custom resolver rebuilds any node's verified state from its name; checkpoints form a DAG whose edges are the reuse declarations, so the attribution graph and the history are one object.
-- **Verification:** a verifier operator scores every submission on its own compute against held-out data; only the verifier's key advances a node's head or triggers a release.
-- **Money:** an organisation wallet funds a node's bounty under policy and quorum; release is an event-driven transaction on the verifier's verdict; attribution rows accrue to operator identities.
+**Privy:** the treasury signs only under a policy, so it can fund and define worknodes and nothing else, and joining needs no wallet of your own: sign in with an email and Privy creates one.
 
-## Sponsors: what each layer does here
+## Live on Sepolia
 
-**ENS (ENSv2, Sepolia).** Every actor is a name under `ethplane.eth`: the 65 roadmap nodes, operators, their lineages (the agents), the verifier and guests. `ethplane.eth` is registered on the hackathon ENSv2 deployment; its subregistry is `EthplaneSubregistry`, our own contract implementing ENSv2's `IRegistry`, because hierarchical registries are the point of ENSv2, and each node has its own `EthplaneResolver` holding the node's records (`ethplane.status`, `ethplane.criterion`, `ethplane.head`, `ethplane.session`). Only the verifier's key may write `head` and `status`: a lineage key that tries is refused by the resolver, on chain. Lineage names expire with their session and guest names after fourteen days. Resolution runs through ENS's own Universal Resolver, so `ethplane join <name>` works from any machine. Why the resolvers and the subregistry are ours rather than the deployment's own: `docs/ENS-PROBES.md`.
+Two worknodes are open, each funded with 10,000 PLANE, both carrying the same task: make leanVM aggregate 900 signatures in fewer VM cycles than the reference, which takes 1,542,812.
 
-**Privy.** The bounty treasury is a Privy server wallet bound to a policy that allows exactly three things, `approve(PLANE → Ethplane)`, `fundNode` under a cap, and `defineNode` whose split gives the verifier at least ten percent, for signing as well as sending; everything else is refused before a signature exists (`RPC request denied due to policy violation`, recorded on the node page). Guests log in with email or a wallet, receive an embedded wallet, and get a guest name under `guests.ethplane.eth`; their sessions and submissions go through a relay with EIP-712 signatures. The contract, not the wallet, decides pass or fail and the split.
+Seven submissions have been judged and none passed. Two could not be built. Two ran and produced exactly the baseline count. Three cut cycles by 1,350 and made the proof 307 bytes larger, and proof size is allowed no growth at all.
 
-## How to run
+The table with every transaction is on [the docs page](https://ethplane.ecofrontiers.xyz/docs#sepolia) and in `docs/JUDGES.md`. Addresses are in `docs/DEPLOYMENTS.md`.
+
+## Run it yourself
 
 ```
-# contracts (Foundry 1.5 or later)
-forge build && forge test                        # 55 passed, 1 skipped (the ENS fork test needs SEPOLIA_RPC_URL)
-# api (Node 22, pnpm)
-cd api && pnpm install && pnpm build && ETHPLANE_ADDRESS=… PLANE_ADDRESS=… SEPOLIA_RPC_URL=… PORT=4100 node dist/src/server.js
-# web (static export)
-cd web && pnpm install && pnpm build             # → web/out
-# verifier tests (Python 3.12; run.py itself needs only the standard library)
-python3.12 -m venv .venv && .venv/bin/pip install -r verifier/requirements-dev.txt && .venv/bin/python -m pytest verifier/tests swarm/tests -q
-# verifier against a real artifact (optional: needs a leanVM checkout at the pinned commit)
+git clone https://github.com/papa-raw/ethplane && cd ethplane
+
+# the site: writes web/out
+cd web && pnpm install && pnpm build
+
+# the read API
+cd api && pnpm install && pnpm build && node dist/src/server.js
+
+# the verifier, on one artifact
 LEANVM_REF=/path/to/leanVM python3.12 verifier/run.py <artifact.tar> --self-test
-# swarm (three local-model role sessions in tmux; see swarm/README.md)
 ```
+
+Tests are `pnpm vitest run` in `web/`, and `python3.12 -m pytest verifier/tests swarm/tests -q` at the root.
+
+## Join
+
+Sign in with an email at https://ethplane.ecofrontiers.xyz/join. Privy creates a wallet and you get a name under `guests.ethplane.eth`.
+
+`ethplane join <your-name>` rebuilds a worknode's verified state from its name.
+
+Then start a session on either open worknode and submit; the page you start from lists the criterion and the current head.
 
 ## Repository layout
-- `contracts/`, `script/`, `test/`: Ethplane, PlaneToken, EthplaneResolver, EthplaneSubregistry and their tests and deploy scripts.
-- `api/`: indexer (viem `getLogs` poller) + REST + SQLite; `web/`: the dashboard (Next.js static export); `cli/`: `ethplane resolve|join`; `verifier/`: the measurement runner; `swarm/`: the role scripts for a local-model swarm.
-- `docs/`: SPEC, CRITERION, DEPLOYMENTS, ENS-PROBES, DECK, FILM, JOIN, ROLES.
-- `research/strawmap-nodes.json`: every node of the EF strawmap (2026-08-04 image), with layer, track, fork, tag and EF Hegotá tier where one exists.
-- `research/coverage.json`, `research/coverage-table-v2.md`: one row per node: what a group produces, how it is judged, whether the judgement data exists (confirmed by opening the test repositories, not by search: FOCIL, ePBS and BALs vectors and the leanVM verifier were checked directly), compute class, routing mode, priority.
-- `research/eth-governance.md`: EIP-1, fork inclusion, All Core Devs, the strawmap's ownership, with quotes and URLs.
-- `research/identity-checks.md`: ERC-8004 status, ENSv2 Enhanced Access Control, Protocol Guild's formula, Optimism Retro Funding, attestation schemas.
-- `research/eth-roadmap-*.md`: the six roadmap tracks from Vitalik's "Possible futures" series, node lists quoted.
 
-## AI attribution
-AI-assisted files are listed in `ATTRIBUTION.md`, as ETHGlobal's rules require.
+- `contracts/`, `script/`, `test/`: Ethplane, PlaneToken, EthplaneSubregistry, EthplaneResolver, and their Foundry tests.
+- `api/`: the indexer, a viem log poller, over SQLite, with the read API the site polls.
+- `web/`: the site, a Next.js static export.
+- `cli/`: `ethplane resolve|join`.
+- `verifier/`: the measurement runner and the watcher that records verdicts.
+- `swarm/`: the role scripts for a local-model swarm.
+- `docs/`: SPEC, CRITERION, DEPLOYMENTS, ENS-PROBES, JUDGES and the rest.
+- `research/`: the strawmap and the tables behind it.
 
-## License
-MIT. See `LICENSE`.
-
-A session is not permission or exclusivity: it says you are working on the node from a known head, heartbeats keep it live, it lapses when they stop, and many sessions run on one node at once.
+Planning artifacts, redacted, are in `docs/planning/`. Who wrote what is in `ATTRIBUTION.md`. Built for ETHOnline 2026.

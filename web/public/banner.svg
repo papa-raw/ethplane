@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320" role="img" aria-label="Ethplane: the Ethereum roadmap as a plane of paid work">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#E5E7EB" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1280" height="320" fill="#FFFFFF"/>
+  <rect width="1280" height="320" fill="url(#grid)" opacity="0.55"/>
+  <rect x="0.5" y="0.5" width="1279" height="319" fill="none" stroke="#E5E7EB"/>
+
+  <!-- Wordmark and thesis, on the 1240 column's left edge. -->
+  <text x="80" y="150" font-family="Geist, ui-sans-serif, system-ui, sans-serif" font-size="64" font-weight="700" letter-spacing="-1.2" fill="#111111">Ethplane</text>
+  <text x="80" y="192" font-family="Geist, ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="400" fill="#6B7280">The Ethereum roadmap as a plane of paid work.</text>
+  <text x="80" y="222" font-family="Geist, ui-sans-serif, system-ui, sans-serif" font-size="20" font-weight="400" fill="#6B7280">65 worknodes, each with a criterion a machine can check.</text>
+
+  <!-- The map's chips as a motif: two filled are the two open worknodes. -->
+  <g>
+    <rect x="80" y="250" width="96" height="22" rx="4" fill="#2E5BFF"/>
+    <rect x="184" y="250" width="72" height="22" rx="4" fill="none" stroke="#E5E7EB"/>
+    <rect x="264" y="250" width="110" height="22" rx="4" fill="none" stroke="#E5E7EB"/>
+    <rect x="382" y="250" width="64" height="22" rx="4" fill="#2E5BFF"/>
+    <rect x="454" y="250" width="88" height="22" rx="4" fill="none" stroke="#E5E7EB"/>
+    <rect x="550" y="250" width="76" height="22" rx="4" fill="none" stroke="#E5E7EB"/>
+    <rect x="634" y="250" width="104" height="22" rx="4" fill="none" stroke="#E5E7EB"/>
+  </g>
+
+  <!-- The Ethereum mark, outline only, in the accent. -->
+  <g transform="translate(1060 160)" fill="none" stroke="#2E5BFF" stroke-width="3" stroke-linejoin="round">
+    <path d="M0 -110 L62 -8 L0 30 L-62 -8 Z"/>
+    <path d="M0 -110 L0 30"/>
+    <path d="M0 48 L62 8 L0 110 L-62 8 Z"/>
+  </g>
+</svg>

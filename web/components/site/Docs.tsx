@@ -10,7 +10,7 @@ const BLUE = 'var(--ep-primary)';
 const WHY = {
   unbuilt: 'could not be built or run',
   unchanged: 'cycles unchanged from the baseline',
-  oversize: 'cycles 1,350 below the baseline; proof 307 bytes over the bound, and proof size has no allowance',
+  oversize: 'cycles 1,350 below; proof 307 B over the bound',
 } as const;
 const mono = { fontFamily: 'var(--ep-font-mono)', fontSize: 'var(--ep-size-sm)' } as const;
 
@@ -22,7 +22,7 @@ const SECTIONS = [
   { id: 'ens', title: 'ENS' },
   { id: 'privy', title: 'Privy' },
   { id: 'verifier', title: 'The verifier' },
-  { id: 'swarms', title: 'The swarms' },
+  { id: 'swarms', title: 'Swarms' },
   { id: 'run', title: 'Run it yourself' },
   { id: 'join', title: 'Join' },
 ];
@@ -72,11 +72,6 @@ export function Docs() {
     <div className="ep-wrap" style={{ paddingBottom: 64 }}>
       <div className="ep-hero">
         <h1>Docs</h1>
-        <p className="ep-lead">
-          What a judge needs, on one page, with the addresses and the numbers. Every figure here was
-          read from Sepolia on {READ_ON}. The long-form documents are in the repository and linked at
-          the end.
-        </p>
       </div>
 
       <div className="ep-docs-grid">
@@ -102,14 +97,27 @@ export function Docs() {
           <section>
             <H id="what">What this is</H>
             <Row>
-              Ethplane turns the Ethereum Foundation&apos;s strawmap into a plane of paid work. Each
-              of the 65 roadmap items is a Roadmap Worknode: an ENS name, an acceptance criterion a
-              machine can check, and an escrow that pays when a verifier confirms an improvement.
+              The Ethereum Foundation publishes a roadmap called the strawmap: 65 items of research
+              and engineering work, sorted by layer and by the fork they target. Ethplane takes that
+              map and makes each item something you can work on and get paid for.
             </Row>
             <Row>
-              Two worknodes are open and funded with 10,000 PLANE each. Seven measurements are
-              recorded onchain and the verifier accepted none of them, which is the honest state of
-              the plane today.
+              Each item is a Roadmap Worknode. A worknode has three parts: a name on ENS, so it can
+              be found and its state read from anywhere; an acceptance criterion a machine can check,
+              for example fewer VM cycles than 1,542,812; and an escrow of PLANE tokens that pays out
+              when a verifier confirms a submission meets the criterion.
+            </Row>
+            <Row>
+              You work a worknode by starting a session on it, from the current best version, alone
+              or with a swarm of local models. When you have an improvement, you submit it. The
+              worknode&apos;s verifier rebuilds your submission from the reference, runs the check,
+              and records a verdict on chain. A pass releases the escrow by a fixed split: most to
+              you, a share to whoever&apos;s work you built on, a share to the verifier. A fail costs
+              nothing and is recorded with its reason.
+            </Row>
+            <Row>
+              Today two worknodes are open, each funded with 10,000 PLANE. Seven submissions have
+              been judged. None has passed. The results are further down, with the reasons.
             </Row>
           </section>
 
@@ -171,11 +179,28 @@ export function Docs() {
               </table>
             </div>
             <Row>
-              A submission is an artifact a worker sent. The verifier rebuilds it at the pinned
-              commit, runs it, and records a verdict on chain. A verdict passes only if cycles come in
-              below the baseline and proving time, verify time and proof size do not regress. Seven
-              submissions have been measured.
+              Two worknodes are open. Both carry the same task: make leanVM aggregate 900 signatures
+              in fewer VM cycles than the reference, which takes 1,542,812. A submission is a set of
+              changed files a worker sends in. The verifier, a separate machine account with its own
+              key, rebuilds the reference with those changes, runs the benchmark, and writes the
+              result on chain. To pass, a submission must cut cycles below 1,542,812 and must not
+              make three other things worse: proving time, verification time, and the size of the
+              proof.
             </Row>
+            <Row>Seven submissions have been judged. None passed.</Row>
+            <ul style={{ margin: '0 0 12px', paddingLeft: 20, maxWidth: '84ch' }}>
+              <li style={{ marginBottom: 4 }}>
+                Two on node 1 could not be built or run by the verifier. They were rejected before
+                any measurement.
+              </li>
+              <li style={{ marginBottom: 4 }}>
+                Two on node 1 ran and produced exactly the baseline count. Nothing changed.
+              </li>
+              <li style={{ marginBottom: 4 }}>
+                Three on node 2 cut cycles by 1,350, about 0.09%. The same change made the proof 307
+                bytes larger. Proof size is allowed no growth at all, so all three were rejected.
+              </li>
+            </ul>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 'var(--ep-size-sm)' }}>
                 <thead>
@@ -207,8 +232,8 @@ export function Docs() {
               </table>
             </div>
             <Row>
-              No submission has passed yet. The three node-2 submissions show a real cycles cut that
-              cost proof size; the criterion holds both.
+              What this shows: the swarm found a real optimisation in the compiler and paid for it in
+              proof size. The rule caught the trade. No money moved; the escrow pays only on a pass.
             </Row>
           </section>
 
@@ -243,71 +268,110 @@ export function Docs() {
 
           <section>
             <H id="privy">Privy</H>
+            <h3 style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, margin: '0 0 8px' }}>Money</h3>
             <Row>
-              The treasury is a Privy server wallet, id <span style={mono}>{PRIVY.wallet}</span>,
-              bound to policy <span style={mono}>{PRIVY.policy}</span>. A policy is an allowlist, so
-              what no rule allows is refused before anything is signed. Read from the Privy API on{' '}
-              {READ_ON}:
+              Every worknode has an escrow: PLANE tokens locked in the contract until a submission
+              passes. The tokens come from the plane&apos;s treasury. The treasury is a Privy server
+              wallet, and it can only sign three kinds of transaction: approve PLANE for the contract,
+              fund a worknode (at most 100,000 PLANE per call), and define a worknode whose payout
+              split gives the verifier at least 10%. Anything else is refused before it is signed. So
+              the treasury cannot pay a person, cannot move funds anywhere but the contract, and
+              cannot create a worknode that starves the judge. Payouts are made by the contract on a
+              verdict, not by anyone&apos;s hand.
             </Row>
-            <ul style={{ margin: '0 0 12px', paddingLeft: 20 }}>
-              {PRIVY.rules.map((r) => <li key={r} style={{ marginBottom: 4 }}>{r}</li>)}
-            </ul>
+            <h3 style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, margin: '16px 0 8px' }}>Your wallet</h3>
             <Row>
-              Each is two rules, one for <span style={mono}>eth_sendTransaction</span> and one for{' '}
-              <span style={mono}>eth_signTransaction</span>, because a rule matches a single RPC
-              method. Six in total.
+              Joining needs no wallet and no tokens. You sign in with an email; Privy creates an
+              embedded wallet for you and the plane gives you a name under{' '}
+              <span style={mono}>guests.ethplane.eth</span>. Sessions you start and submissions you
+              send are recorded against that name, so what you built on and who built on you stays
+              attributable. If a submission of yours passes, the contract pays your lineage&apos;s
+              share into that wallet.
             </Row>
+            <h3 style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, margin: '16px 0 8px' }}>
+              For the record (read from the Privy API on {READ_ON})
+            </h3>
             <Row>
-              We tried a fourth shape: a <span style={mono}>transfer</span> of 1 PLANE to a burn
-              address. Privy refused it at {PRIVY.refusedAt}, before signing:{' '}
-              <span style={mono}>{PRIVY.refusal}</span>. That refusal is why the attribution split
-              cannot be set to something that starves the verifier: the policy will not sign a{' '}
-              <span style={mono}>defineNode</span> whose verifier share is under 10%.
-            </Row>
-            <Row>
-              Guests use Privy too. Signing in with an email creates an embedded wallet and issues a
-              name under <span style={mono}>guests.ethplane.eth</span>.
+              Treasury wallet id <span style={mono}>{PRIVY.wallet}</span>, policy{' '}
+              <span style={mono}>{PRIVY.policy}</span>. Six rules: the three permissions above, each
+              once for <span style={mono}>eth_sendTransaction</span> and once for{' '}
+              <span style={mono}>eth_signTransaction</span>. Test of the refusal: a transfer of 1
+              PLANE to a burn address was refused at {PRIVY.refusedAt} with{' '}
+              <span style={mono}>&quot;{PRIVY.refusal}&quot;</span>. Embedded wallets are created on
+              login for users without one; the API verifies Privy&apos;s auth token before issuing a
+              name.
             </Row>
           </section>
 
           <section>
             <H id="verifier">The verifier</H>
+            <h3 style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, margin: '0 0 8px' }}>What happens when you submit</h3>
+            <ol style={{ margin: '0 0 12px', paddingLeft: 20, maxWidth: '84ch' }}>
+              <li style={{ marginBottom: 6 }}>
+                You send your changed files. The submission is recorded on chain against your name,
+                with the parents you built on.
+              </li>
+              <li style={{ marginBottom: 6 }}>
+                The verifier sees it. The verifier is a separate account on its own machine, with its
+                own key. No worker and no model can read that key.
+              </li>
+              <li style={{ marginBottom: 6 }}>
+                It rebuilds your submission from the reference commit, in a sandbox user that cannot
+                read the key either, and runs the benchmark itself. Your own measurements are never
+                used.
+              </li>
+              <li style={{ marginBottom: 6 }}>
+                It compares the result with the worknode&apos;s baseline: cycles must be lower;
+                proving time, verification time and proof size must not get worse.
+              </li>
+              <li style={{ marginBottom: 6 }}>
+                It runs three probes: it corrupts one signature at a time and checks that your build
+                rejects it. A submission that skips signatures fails here. A pass that would release
+                the full payout is probed on all 900 signatures first.
+              </li>
+              <li style={{ marginBottom: 6 }}>
+                It writes the verdict on chain, pass or fail, with the numbers and the reason. A fail
+                costs you nothing.
+              </li>
+            </ol>
+            <h3 style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, margin: '16px 0 8px' }}>What you may change</h3>
             <Row>
-              The verifier is a Unix user of its own on the host, with its own key that no model can
-              read. It watches the chain for submissions, fetches the artifact, and rebuilds it at
-              the pinned reference commit.
+              Each worknode says which files you may edit.{' '}
+              <span style={mono}>cl-pq-leanxmss-attestations</span> admits the guest program only,{' '}
+              <span style={mono}>crates/rec_aggregation/guests/</span>: nothing you write is compiled
+              as Rust. <span style={mono}>dl-leanvm</span> also admits the compiler,{' '}
+              <span style={mono}>crates/lean_compiler/</span>. Its builds run as a separate sandbox
+              user for that reason. Changes outside the surface are rejected before measurement.
             </Row>
+            <h3 style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, margin: '16px 0 8px' }}>What the baseline is</h3>
             <Row>
-              The editable surface is per worknode.{' '}
-              <span style={mono}>{WORKNODES[0].name}</span> admits{' '}
-              <span style={mono}>{WORKNODES[0].editable}</span> only, so nothing a submission writes
-              is compiled as Rust and no build script runs on the verifier&apos;s host.{' '}
-              <span style={mono}>{WORKNODES[1].name}</span> also admits{' '}
-              <span style={mono}>crates/lean_compiler/</span>, which is a larger surface and a larger
-              risk, and it is stated as such rather than hidden.
+              The verifier measured the reference itself, once, and recorded the numbers on chain.
+              They cannot be changed. For <span style={mono}>cl-pq-leanxmss-attestations</span>:
+              1,542,812 cycles, 1.43 s proving, 302,592 bytes of proof. For{' '}
+              <span style={mono}>dl-leanvm</span>: 1,542,812 cycles, 7.16 s proving, 302,182 bytes.
+              Proving time is allowed the spread measured at the time; proof size is allowed no
+              growth at all. That is why the three node-2 submissions failed: 1,350 fewer cycles, 307
+              more bytes.
             </Row>
+            <h3 style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, margin: '16px 0 8px' }}>For the record</h3>
             <Row>
-              The baseline is recorded once and cannot be reset: {WORKNODES[0].baseline} for the
-              first worknode, {WORKNODES[1].baseline} for the second. Time gets a spread fixed at
-              that moment. Proof size gets none. A measurement is written for a failure as well as a
-              pass, with the numbers that produced it.
+              <span style={mono}>verifier/run.py</span> measures,{' '}
+              <span style={mono}>verifier/watch.py</span> watches; the build user and the probes are
+              documented in <span style={mono}>docs/CRITERION-pq-leanxmss.md</span>; every verdict is
+              a <span style={mono}>MeasurementRecorded</span> event, listed under Live on Sepolia.
             </Row>
           </section>
 
           <section>
-            <H id="swarms">The swarms</H>
+            <H id="swarms">Swarms</H>
             <Row>
-              Two swarms worked the two worknodes overnight. Each is four panes on one host running
-              one program with different tools: an orchestrator that can only plan and hand off, a
-              designer, a builder that can edit and measure, and a critic whose shell refuses any
-              command that mutates.
-            </Row>
-            <Row>
-              The first worknode admits the guest program only, and its cycle count did not move:
-              1,542,812 on both recorded attempts, the baseline exactly. The second admits the
-              compiler, and a local model editing <span style={mono}>crates/lean_compiler/</span>{' '}
-              found 1,541,462 cycles, 1,350 below the baseline, on three attempts. All three failed
-              on size: 302,489 bytes against a bound of 302,182.
+              You can work a worknode by hand, or run a swarm. A swarm is a few local-model sessions
+              on your own machine, each with a different set of tools: an orchestrator that can only
+              plan and hand off, a builder that can edit, measure and submit, and a critic whose shell
+              refuses any command that changes a file. The tools carry the rules: a measurement posts
+              its own number, a submission is refused unless the number beats the baseline, and a
+              report without evidence is refused. The harness is in <span style={mono}>swarm/</span>{' '}
+              with a README; the two swarms in the results above ran on it.
             </Row>
           </section>
 

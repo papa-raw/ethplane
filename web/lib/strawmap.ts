@@ -33,8 +33,10 @@ function readParsed(): Array<Record<string, string>> {
   return parsed.nodes ?? parsed;
 }
 
-/** Build-time only: the 65 ids, so every node page is exported and a deep link 200s. */
-export function strawmapIds(): { id: string; label: string; hash: string }[] {
+/** Build-time only: the 65 ids, so every node page is exported and a deep link 200s. Each carries
+ *  the summary written into research/strawmap-nodes.json: a plain sentence for a reader who does not
+ *  know what the roadmap item is. */
+export function strawmapIds(): { id: string; label: string; hash: string; summary: string | null }[] {
   const candidates = [
     path.join(process.cwd(), '..', 'research', 'strawmap-nodes.json'),
     path.join(process.cwd(), 'research', 'strawmap-nodes.json'),
@@ -42,6 +44,8 @@ export function strawmapIds(): { id: string; label: string; hash: string }[] {
   const file = candidates.find((c) => fs.existsSync(c));
   if (!file) return [];
   const parsed = JSON.parse(fs.readFileSync(file, 'utf-8'));
-  const nodes: Array<{ id: string; label?: string }> = parsed.nodes ?? parsed;
-  return nodes.map((n) => ({ id: n.id, label: n.label ?? n.id, hash: keccak256(toBytes(n.id)) }));
+  const nodes: Array<{ id: string; label?: string; summary?: string }> = parsed.nodes ?? parsed;
+  return nodes.map((n) => ({
+    id: n.id, label: n.label ?? n.id, hash: keccak256(toBytes(n.id)), summary: n.summary ?? null,
+  }));
 }

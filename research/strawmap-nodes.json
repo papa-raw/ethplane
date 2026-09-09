@@ -1,1154 +1,1219 @@
 {
- "source_image": "sources/ethereum-strawmap-2026-08-04.png",
- "source_updated_date": "2026-08-04",
- "source_page": "https://strawmap.org/ (live page as of 2026-09-08; may differ from the 2026-08-04 image snapshot -- strawmap updates at least quarterly)",
- "extraction_date": "2026-09-08",
- "node_count": 65,
- "count_breakdown": {
-  "CL": 22,
-  "DL": 12,
-  "EL": 31,
-  "note": "counts include the 3 named trend bars (slot-duration-decreases, data-availability-increases, gas-limit-increases) and the 5 north stars (fast L1, teragas L2, gigagas L1, post quantum L1, private L1) as nodes, per the task instruction."
- },
- "legend": {
-  "tags": {
-   "EIP": "underlined text links to a specific EIP or write-up (strawmap.org FAQ)",
-   "SFI": "Scheduled for Inclusion",
-   "CFI": "Considered for Inclusion",
-   "none": "no tag shown on the box"
-  },
-  "color_class": [
-   "CL/DL/EL headliner (dark, saturated)",
-   "CL/DL/EL onchain (light pastel)",
-   "CL/DL/EL offchain (gray)",
-   "CL/DL/EL north star (dark, black box)",
-   "cross-layer north star / cross-layer offchain (gray, spans layers)"
-  ],
-  "uncertain": "true = the yellow/orange worried-face emoji is attached to the box, meaning (per legend) 'uncertainty about ever shipping upgrade'"
- },
- "nodes": [
-  {
-   "id": "cl-fast-confirmation",
-   "label": "fast confirmation",
-   "layer": "CL",
-   "track": "latency",
-   "subtrack": "finality",
-   "fork_target": "G",
-   "tag": "none",
-   "color_class": "CL offchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "cl-decoupled-consensus"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Box drawn wide, visually spanning G-H columns; single node, fork_target read as G (2026) per label position under Glamsterdam column start."
-  },
-  {
-   "id": "cl-decoupled-consensus",
-   "label": "decoupled consensus",
-   "layer": "CL",
-   "track": "latency",
-   "subtrack": "finality",
-   "fork_target": "I",
-   "tag": "none",
-   "color_class": "CL headliner",
-   "uncertain": true,
-   "throughlines_to": [
-    "cl-quick-slots",
-    "cl-1-round-finality"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "cl-1-round-finality",
-   "label": "1-round finality",
-   "layer": "CL",
-   "track": "latency",
-   "subtrack": "finality",
-   "fork_target": "L",
-   "tag": "none",
-   "color_class": "CL headliner",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Underlined (links to EIP/write-up per strawmap FAQ) though no EIP tag box shown."
-  },
-  {
-   "id": "cl-return-to-1m-attesters",
-   "label": "return to 1M attesters",
-   "layer": "CL",
-   "track": "latency",
-   "subtrack": "finality",
-   "fork_target": "longer term",
-   "tag": "none",
-   "color_class": "CL onchain",
-   "uncertain": true,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "cl-quick-slots",
-   "label": "quick slots",
-   "layer": "CL",
-   "track": "latency",
-   "subtrack": "slots",
-   "fork_target": "I",
-   "tag": "EIP",
-   "color_class": "CL onchain",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [
-    "EIP-8198"
-   ],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "",
-   "ef_tier": "B",
-   "ef_eips": [
-    "EIP-8198"
-   ],
-   "ef_fork": "H",
-   "ef_note": "Four requirements before A: full specification, prototype, downstream assessment, sign-off vs decoupled consensus."
-  },
-  {
-   "id": "cl-slot-duration-decreases",
-   "label": "slot duration decreases",
-   "layer": "CL",
-   "track": "latency",
-   "subtrack": "slots",
-   "fork_target": "I-L (bar)",
-   "tag": "none",
-   "color_class": "CL onchain (bar)",
-   "uncertain": false,
-   "throughlines_to": [
-    "cl-fast-l1"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "One of the 3 named trend bars on the diagram; spans from ~I through L to the fast L1 north star."
-  },
-  {
-   "id": "cl-fast-l1",
-   "label": "fast L1",
-   "layer": "CL",
-   "track": "latency",
-   "subtrack": "slots/finality (north star)",
-   "fork_target": "north star",
-   "tag": "none",
-   "color_class": "CL north star",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "North star italic subtitle: 'finality in seconds'."
-  },
-  {
-   "id": "cl-epbs",
-   "label": "ePBS",
-   "layer": "CL",
-   "track": "accessibility",
-   "subtrack": "roles",
-   "fork_target": "G",
-   "tag": "SFI",
-   "color_class": "CL headliner",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [
-    "EIP-7732"
-   ],
-   "has_public_tests_or_benchmark": "yes",
-   "notes": "Enshrined Proposer-Builder Separation. Glamsterdam CL headliner (strawmap.org FAQ: 'in Glamsterdam, these are ePBS and BALs'). Multi-client devnet-tested (Geth/Nethermind/Besu/Erigon + Lighthouse/Prysm/Teku/Nimbus per EF blog reporting); covered by consensus-spec-tests / execution-spec-tests as it lands.",
-   "ef_tier": "SFI",
-   "ef_eips": [
-    "EIP-7732"
-   ],
-   "ef_fork": "G",
-   "ef_note": "Glamsterdam CL headliner (SFI)."
-  },
-  {
-   "id": "cl-focil",
-   "label": "FOCIL",
-   "layer": "CL",
-   "track": "accessibility",
-   "subtrack": "roles",
-   "fork_target": "H",
-   "tag": "SFI",
-   "color_class": "CL headliner",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [
-    "EIP-7805"
-   ],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Fork-choice enforced Inclusion Lists. Hegotá CL headliner (blog.ethereum.org Hegotá EIP tier-list post, 2026-09-07; ACDC #175 formal selection per Christine D. Kim / etherworld.co coverage). Ships alongside EIP-8369 (VOPS profiles for FOCIL eligibility) per search results — UNVERIFIED, not fetched directly. | 2026-09-08 orchestrator: set to unknown (critic C2): Hegotá headliner, devnet work reported in progress, not multi-client-confirmed.",
-   "ef_tier": "S",
-   "ef_eips": [
-    "EIP-7805"
-   ],
-   "ef_fork": "H",
-   "ef_note": "Locked-in CL headliner; ships with EIP-8369 VOPS Profiles (A)."
-  },
-  {
-   "id": "cl-tapered-issuance-burn",
-   "label": "tapered issuance burn",
-   "layer": "CL",
-   "track": "accessibility",
-   "subtrack": "roles",
-   "fork_target": "I",
-   "tag": "none",
-   "color_class": "CL onchain",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "cl-attester-proposer-separation",
-   "label": "attester-proposer separation",
-   "layer": "CL",
-   "track": "accessibility",
-   "subtrack": "roles",
-   "fork_target": "L",
-   "tag": "none",
-   "color_class": "CL onchain",
-   "uncertain": true,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Underlined."
-  },
-  {
-   "id": "cl-distributed-block-building",
-   "label": "distributed block building",
-   "layer": "CL",
-   "track": "accessibility",
-   "subtrack": "roles",
-   "fork_target": "longer term",
-   "tag": "none",
-   "color_class": "CL offchain",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "cl-crypto-specs-lean4",
-   "label": "cryptography specs in Lean 4",
-   "layer": "CL",
-   "track": "accessibility",
-   "subtrack": "specs",
-   "fork_target": "H",
-   "tag": "none",
-   "color_class": "CL offchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "cl-beacon-leancl-specs-merge"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "cl-beacon-leancl-specs-merge",
-   "label": "beacon & leanCL specs merge",
-   "layer": "CL",
-   "track": "accessibility",
-   "subtrack": "specs",
-   "fork_target": "I",
-   "tag": "none",
-   "color_class": "CL offchain",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Both 'beacon' and 'leanCL' are separately underlined links within the label."
-  },
-  {
-   "id": "cl-tech-debt-reset",
-   "label": "tech debt reset",
-   "layer": "CL",
-   "track": "accessibility",
-   "subtrack": "specs",
-   "fork_target": "L",
-   "tag": "none",
-   "color_class": "CL onchain",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Underlined."
-  },
-  {
-   "id": "cl-51pct-attack-auto-recovery",
-   "label": "51% attack auto-recovery",
-   "layer": "CL",
-   "track": "accessibility",
-   "subtrack": "specs",
-   "fork_target": "longer term",
-   "tag": "none",
-   "color_class": "CL offchain",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Underlined; no uncertainty emoji despite being a longer-term/speculative item."
-  },
-  {
-   "id": "cl-post-quantum-pubkey-registry",
-   "label": "post quantum pubkey registry",
-   "layer": "CL",
-   "track": "cryptography",
-   "subtrack": "quantum",
-   "fork_target": "H",
-   "tag": "none",
-   "color_class": "CL onchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "cl-post-quantum-heartbeat"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "cl-post-quantum-heartbeat",
-   "label": "post quantum heartbeat",
-   "layer": "CL",
-   "track": "cryptography",
-   "subtrack": "quantum",
-   "fork_target": "I",
-   "tag": "none",
-   "color_class": "CL headliner",
-   "uncertain": false,
-   "throughlines_to": [
-    "dl-post-quantum-l1"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Feeds the cross-layer 'post quantum L1' north star via a long arrow down into the Data Layer band (I column down to K column)."
-  },
-  {
-   "id": "cl-pq-leanxmss-attestations",
-   "label": "PQ leanXMSS attestations",
-   "layer": "CL",
-   "track": "cryptography",
-   "subtrack": "quantum",
-   "fork_target": "L",
-   "tag": "none",
-   "color_class": "CL headliner",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "yes (leanEthereum/leanVM aggregate benchmark + python-verifier)",
-   "notes": "Underlined. | 2026-09-08: PoC node; harness leanEthereum/leanVM (CPU-only), see leanvm-facts.md"
-  },
-  {
-   "id": "cl-vdf-randomness",
-   "label": "VDF randomness",
-   "layer": "CL",
-   "track": "cryptography",
-   "subtrack": "quantum",
-   "fork_target": "longer term",
-   "tag": "none",
-   "color_class": "CL onchain",
-   "uncertain": true,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Underlined."
-  },
-  {
-   "id": "cl-real-time-cl-proofs",
-   "label": "real-time CL proofs",
-   "layer": "CL",
-   "track": "cryptography",
-   "subtrack": "proofs",
-   "fork_target": "L",
-   "tag": "none",
-   "color_class": "CL offchain",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "proofs row has no G/H/I node; first appearance is at L."
-  },
-  {
-   "id": "cl-secret-proposers",
-   "label": "secret proposers",
-   "layer": "CL",
-   "track": "cryptography",
-   "subtrack": "proofs",
-   "fork_target": "longer term",
-   "tag": "none",
-   "color_class": "CL onchain",
-   "uncertain": true,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Underlined."
-  },
-  {
-   "id": "dl-sparse-blobpool",
-   "label": "sparse blobpool",
-   "layer": "DL",
-   "track": "throughput",
-   "subtrack": "write",
-   "fork_target": "G",
-   "tag": "CFI",
-   "color_class": "DL offchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "dl-data-availability-increases"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "dl-data-availability-increases",
-   "label": "data availability increases",
-   "layer": "DL",
-   "track": "throughput",
-   "subtrack": "write",
-   "fork_target": "I-L (bar)",
-   "tag": "none",
-   "color_class": "DL onchain (bar)",
-   "uncertain": false,
-   "throughlines_to": [
-    "dl-teragas-l2"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "One of the 3 named trend bars; spans from ~I/J through to the teragas L2 north star."
-  },
-  {
-   "id": "dl-teragas-l2",
-   "label": "teragas L2",
-   "layer": "DL",
-   "track": "throughput",
-   "subtrack": "write (north star)",
-   "fork_target": "north star",
-   "tag": "none",
-   "color_class": "DL north star",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "North star italic subtitle: '1 Gbyte/sec'."
-  },
-  {
-   "id": "dl-cell-level-deltas",
-   "label": "cell-level deltas",
-   "layer": "DL",
-   "track": "throughput",
-   "subtrack": "read",
-   "fork_target": "G",
-   "tag": "CFI",
-   "color_class": "DL offchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "dl-local-blob-reconstruction"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "dl-local-blob-reconstruction",
-   "label": "local blob reconstruction",
-   "layer": "DL",
-   "track": "throughput",
-   "subtrack": "read",
-   "fork_target": "H",
-   "tag": "none",
-   "color_class": "DL offchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "dl-data-availability-increases (curves into the write-row bar)"
-   ],
-   "eip_numbers": [
-    "EIP-8371"
-   ],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "",
-   "ef_tier": "related: C",
-   "ef_eips": [
-    "EIP-8371 (RowDAS, related not identical)"
-   ],
-   "ef_fork": "H",
-   "ef_note": "RowDAS distributed blob reconstruction graded C; the strawmap node is local reconstruction. Related, not the same item."
-  },
-  {
-   "id": "dl-blob-streaming",
-   "label": "blob streaming",
-   "layer": "DL",
-   "track": "throughput",
-   "subtrack": "read",
-   "fork_target": "longer term",
-   "tag": "none",
-   "color_class": "DL onchain",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Underlined; unlike its two row-mates below it, carries NO uncertainty emoji (verified via tight crop)."
-  },
-  {
-   "id": "dl-pq-leanda-sampling",
-   "label": "PQ leanDA sampling",
-   "layer": "DL",
-   "track": "types",
-   "subtrack": "quantum",
-   "fork_target": "I",
-   "tag": "none",
-   "color_class": "DL onchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "dl-post-quantum-l1"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Small looping arrow connects it to leanVM directly below (bidirectional-looking curve); both feed post quantum L1."
-  },
-  {
-   "id": "dl-post-quantum-l1",
-   "label": "post quantum L1",
-   "layer": "DL",
-   "track": "types",
-   "subtrack": "quantum",
-   "fork_target": "K",
-   "tag": "none",
-   "color_class": "cross-layer north star",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "One of the strawmap's five official north stars (confirmed via strawmap.org FAQ: 'post quantum L1: centuries-long cryptographic security, via hash-based schemes') even though drawn mid-timeline at K rather than at the far right; layer is cross (CL+DL feed it). Italic subtitle 'hash-based'."
-  },
-  {
-   "id": "dl-leanvm",
-   "label": "leanVM",
-   "layer": "DL",
-   "track": "types",
-   "subtrack": "features",
-   "fork_target": "I",
-   "tag": "none",
-   "color_class": "DL offchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "dl-pq-leanda-sampling"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "dl-remove-blob-transaction-type",
-   "label": "remove blob transaction type",
-   "layer": "DL",
-   "track": "types",
-   "subtrack": "features",
-   "fork_target": "L",
-   "tag": "none",
-   "color_class": "DL onchain",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "dl-proofs-of-custody",
-   "label": "proofs of custody",
-   "layer": "DL",
-   "track": "types",
-   "subtrack": "quantum",
-   "fork_target": "longer term",
-   "tag": "none",
-   "color_class": "DL onchain",
-   "uncertain": true,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Underlined; row placement approximate (aligned under quantum row in the longer-term column; strawmap does not label this explicitly)."
-  },
-  {
-   "id": "dl-short-dated-blob-futures",
-   "label": "short-dated blob futures",
-   "layer": "DL",
-   "track": "types",
-   "subtrack": "features",
-   "fork_target": "longer term",
-   "tag": "none",
-   "color_class": "DL onchain",
-   "uncertain": true,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Underlined."
-  },
-  {
-   "id": "el-gas-limit-increases",
-   "label": "gas limit increases",
-   "layer": "EL",
-   "track": "throughput",
-   "subtrack": "gas",
-   "fork_target": "H-L (bar)",
-   "tag": "none",
-   "color_class": "EL offchain (bar)",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-gigagas-l1"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "One of the 3 named trend bars; starts ~H, spans to gigagas L1 north star. Colored gray (offchain), unlike the other two bars which are onchain-colored."
-  },
-  {
-   "id": "el-gigagas-l1",
-   "label": "gigagas L1",
-   "layer": "EL",
-   "track": "throughput",
-   "subtrack": "gas (north star)",
-   "fork_target": "north star",
-   "tag": "none",
-   "color_class": "EL north star",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "North star italic subtitle: '1 Ggas/sec'."
-  },
-  {
-   "id": "el-ethp2p-broadcast",
-   "label": "ethp2p broadcast",
-   "layer": "EL",
-   "track": "throughput",
-   "subtrack": "gossip",
-   "fork_target": "H",
-   "tag": "none",
-   "color_class": "EL offchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-ethp2p-unification"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "el-ethp2p-unification",
-   "label": "ethp2p unification",
-   "layer": "EL",
-   "track": "throughput",
-   "subtrack": "gossip",
-   "fork_target": "L",
-   "tag": "none",
-   "color_class": "EL offchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-sharded-mempool"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "el-sharded-mempool",
-   "label": "sharded mempool",
-   "layer": "EL",
-   "track": "throughput",
-   "subtrack": "gossip",
-   "fork_target": "longer term",
-   "tag": "none",
-   "color_class": "EL offchain",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "No uncertainty emoji despite longer-term placement."
-  },
-  {
-   "id": "el-evm-asm-canonical-guest",
-   "label": "evm-asm canonical guest",
-   "layer": "EL",
-   "track": "sustainability",
-   "subtrack": "zkEVM",
-   "fork_target": "G",
-   "tag": "none",
-   "color_class": "EL offchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-optional-2of3-proofs"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "zkEVM row terminates at H; no further downstream node shown for this row."
-  },
-  {
-   "id": "el-optional-2of3-proofs",
-   "label": "optional 2-of-3 proofs",
-   "layer": "EL",
-   "track": "sustainability",
-   "subtrack": "zkEVM",
-   "fork_target": "H",
-   "tag": "EIP",
-   "color_class": "EL onchain",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [
-    "EIP-8025"
-   ],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "",
-   "ef_tier": "A",
-   "ef_eips": [
-    "EIP-8025"
-   ],
-   "ef_fork": "H",
-   "ef_note": "Optional Execution Proofs: upstreams stateless-execution changes into the canonical specs."
-  },
-  {
-   "id": "el-glamsterdam-repricing",
-   "label": "Glamsterdam repricing",
-   "layer": "EL",
-   "track": "sustainability",
-   "subtrack": "pricing",
-   "fork_target": "G",
-   "tag": "CFI",
-   "color_class": "EL onchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-data-repricing"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "el-data-repricing",
-   "label": "data repricing",
-   "layer": "EL",
-   "track": "sustainability",
-   "subtrack": "pricing",
-   "fork_target": "H",
-   "tag": "EIP",
-   "color_class": "EL onchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-multidimensional-pricing"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "el-multidimensional-pricing",
-   "label": "multidimensional pricing",
-   "layer": "EL",
-   "track": "sustainability",
-   "subtrack": "pricing",
-   "fork_target": "I",
-   "tag": "EIP",
-   "color_class": "EL onchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-leanda-block-sampling"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "el-leanda-block-sampling",
-   "label": "leanDA block sampling",
-   "layer": "EL",
-   "track": "sustainability",
-   "subtrack": "pricing",
-   "fork_target": "J",
-   "tag": "EIP",
-   "color_class": "EL onchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-mandatory-1of1-proofs"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "el-mandatory-1of1-proofs",
-   "label": "mandatory 1-of-1 proofs",
-   "layer": "EL",
-   "track": "sustainability",
-   "subtrack": "pricing",
-   "fork_target": "K",
-   "tag": "none",
-   "color_class": "EL headliner",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-native-rollups"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Also receives an arrow from decentralized-state (state row), a cross-subtrack throughline."
-  },
-  {
-   "id": "el-native-rollups",
-   "label": "native rollups",
-   "layer": "EL",
-   "track": "sustainability",
-   "subtrack": "pricing",
-   "fork_target": "L",
-   "tag": "EIP",
-   "color_class": "EL offchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-long-dated-gas-futures"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "el-long-dated-gas-futures",
-   "label": "long-dated gas futures",
-   "layer": "EL",
-   "track": "sustainability",
-   "subtrack": "pricing",
-   "fork_target": "longer term",
-   "tag": "none",
-   "color_class": "EL onchain",
-   "uncertain": true,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Underlined."
-  },
-  {
-   "id": "el-bals",
-   "label": "BALs",
-   "layer": "EL",
-   "track": "EVM",
-   "subtrack": "state",
-   "fork_target": "G",
-   "tag": "SFI",
-   "color_class": "EL headliner",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-state-asm"
-   ],
-   "eip_numbers": [
-    "EIP-7928"
-   ],
-   "has_public_tests_or_benchmark": "yes",
-   "notes": "Block-Level Access Lists. Glamsterdam EL headliner (strawmap.org FAQ). Multi-client devnet-tested; execution-spec-tests coverage as it advances SFI.",
-   "ef_tier": "SFI",
-   "ef_eips": [
-    "EIP-7928"
-   ],
-   "ef_fork": "G",
-   "ef_note": "Glamsterdam EL headliner (SFI)."
-  },
-  {
-   "id": "el-state-asm",
-   "label": "state-asm",
-   "layer": "EL",
-   "track": "EVM",
-   "subtrack": "state",
-   "fork_target": "H",
-   "tag": "none",
-   "color_class": "EL offchain",
-   "uncertain": true,
-   "throughlines_to": [
-    "el-partitioned-binary-tree"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "el-partitioned-binary-tree",
-   "label": "partitioned binary tree",
-   "layer": "EL",
-   "track": "EVM",
-   "subtrack": "state",
-   "fork_target": "I",
-   "tag": "EIP",
-   "color_class": "EL headliner",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-validity-only-partial-state"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "el-validity-only-partial-state",
-   "label": "validity-only partial state",
-   "layer": "EL",
-   "track": "EVM",
-   "subtrack": "state",
-   "fork_target": "J",
-   "tag": "none",
-   "color_class": "EL offchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-decentralized-state"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "el-decentralized-state",
-   "label": "decentralized state",
-   "layer": "EL",
-   "track": "EVM",
-   "subtrack": "state",
-   "fork_target": "K",
-   "tag": "none",
-   "color_class": "EL offchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-mandatory-1of1-proofs",
-    "el-endgame-state"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "el-endgame-state",
-   "label": "endgame state",
-   "layer": "EL",
-   "track": "EVM",
-   "subtrack": "state",
-   "fork_target": "longer term",
-   "tag": "none",
-   "color_class": "EL onchain",
-   "uncertain": true,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Underlined."
-  },
-  {
-   "id": "el-evmify-long-tail-precompiles",
-   "label": "EVMify long-tail precompiles",
-   "layer": "EL",
-   "track": "EVM",
-   "subtrack": "ISA",
-   "fork_target": "H",
-   "tag": "EIP",
-   "color_class": "EL onchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-pureth-purges"
-   ],
-   "eip_numbers": [
-    "EIP-7666",
-    "EIP-8200"
-   ],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "",
-   "ef_tier": "C",
-   "ef_eips": [
-    "EIP-8200",
-    "EIP-7666"
-   ],
-   "ef_fork": "H",
-   "ef_note": "Bytecodes not yet in the EIP; graded with EIP-7666."
-  },
-  {
-   "id": "el-pureth-purges",
-   "label": "pureth purges",
-   "layer": "EL",
-   "track": "EVM",
-   "subtrack": "ISA",
-   "fork_target": "I",
-   "tag": "EIP",
-   "color_class": "EL onchain",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "ISA row terminates at I; no J/K/L/longer-term/north-star node shown for this row."
-  },
-  {
-   "id": "el-frame-transactions",
-   "label": "frame transactions",
-   "layer": "EL",
-   "track": "cryptography",
-   "subtrack": "quantum",
-   "fork_target": "G",
-   "tag": "CFI",
-   "color_class": "EL headliner",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-ephemeral-keys"
-   ],
-   "eip_numbers": [
-    "EIP-8141"
-   ],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "",
-   "ef_tier": "S",
-   "ef_eips": [
-    "EIP-8141"
-   ],
-   "ef_fork": "H",
-   "ef_note": "Locked-in EL headliner; ships with EIP-8250 and EIP-8272. Image (2026-08-04) placed it at G/CFI; the 2026-09-07 tier list makes it the Hegotá headliner."
-  },
-  {
-   "id": "el-ephemeral-keys",
-   "label": "ephemeral keys",
-   "layer": "EL",
-   "track": "cryptography",
-   "subtrack": "quantum",
-   "fork_target": "H",
-   "tag": "none",
-   "color_class": "EL offchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-pq-leansphincs-transactions"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "el-pq-leansphincs-transactions",
-   "label": "PQ leanSPHINCS transactions",
-   "layer": "EL",
-   "track": "cryptography",
-   "subtrack": "quantum",
-   "fork_target": "J",
-   "tag": "EIP",
-   "color_class": "EL headliner",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-leansphincs-mempool"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Also receives a long cross-layer throughline arrow up from/through the CL 'post quantum heartbeat' area (shared PQ theme arrow visible descending through I/J columns)."
-  },
-  {
-   "id": "el-leansphincs-mempool",
-   "label": "leanSPHINCS mempool",
-   "layer": "EL",
-   "track": "cryptography",
-   "subtrack": "quantum",
-   "fork_target": "K",
-   "tag": "EIP",
-   "color_class": "EL onchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-encrypted-mempool"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "el-encrypted-mempool",
-   "label": "encrypted mempool",
-   "layer": "EL",
-   "track": "cryptography",
-   "subtrack": "quantum",
-   "fork_target": "longer term",
-   "tag": "EIP",
-   "color_class": "EL offchain",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "el-keyed-nonces-recent-roots",
-   "label": "keyed nonces & recent roots",
-   "layer": "EL",
-   "track": "cryptography",
-   "subtrack": "privacy",
-   "fork_target": "G",
-   "tag": "EIP",
-   "color_class": "EL onchain",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-zkzk-frames"
-   ],
-   "eip_numbers": [
-    "EIP-8250",
-    "EIP-8272"
-   ],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "Row appears to skip directly from G to K (no H/I/J discrete node shown for privacy row).",
-   "ef_tier": "A",
-   "ef_eips": [
-    "EIP-8250",
-    "EIP-8272"
-   ],
-   "ef_fork": "H",
-   "ef_note": "Frames core; both A. Image placed at G; tier list: Hegotá."
-  },
-  {
-   "id": "el-zkzk-frames",
-   "label": "zkzk frames",
-   "layer": "EL",
-   "track": "cryptography",
-   "subtrack": "privacy",
-   "fork_target": "K",
-   "tag": "none",
-   "color_class": "EL headliner",
-   "uncertain": false,
-   "throughlines_to": [
-    "el-lean-privacy-pool-wormholes"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "el-lean-privacy-pool-wormholes",
-   "label": "lean privacy pool & wormholes",
-   "layer": "EL",
-   "track": "cryptography",
-   "subtrack": "privacy",
-   "fork_target": "longer term",
-   "tag": "none",
-   "color_class": "EL onchain",
-   "uncertain": true,
-   "throughlines_to": [
-    "el-private-l1"
-   ],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": ""
-  },
-  {
-   "id": "el-private-l1",
-   "label": "private L1",
-   "layer": "EL",
-   "track": "cryptography",
-   "subtrack": "privacy (north star)",
-   "fork_target": "north star",
-   "tag": "none",
-   "color_class": "EL north star",
-   "uncertain": false,
-   "throughlines_to": [],
-   "eip_numbers": [],
-   "has_public_tests_or_benchmark": "unknown",
-   "notes": "North star italic subtitle: 'shielded transfers'."
-  }
- ]
+  "source_image": "sources/ethereum-strawmap-2026-08-04.png",
+  "source_updated_date": "2026-08-04",
+  "source_page": "https://strawmap.org/ (live page as of 2026-09-08; may differ from the 2026-08-04 image snapshot -- strawmap updates at least quarterly)",
+  "extraction_date": "2026-09-08",
+  "node_count": 65,
+  "count_breakdown": {
+    "CL": 22,
+    "DL": 12,
+    "EL": 31,
+    "note": "counts include the 3 named trend bars (slot-duration-decreases, data-availability-increases, gas-limit-increases) and the 5 north stars (fast L1, teragas L2, gigagas L1, post quantum L1, private L1) as nodes, per the task instruction."
+  },
+  "legend": {
+    "tags": {
+      "EIP": "underlined text links to a specific EIP or write-up (strawmap.org FAQ)",
+      "SFI": "Scheduled for Inclusion",
+      "CFI": "Considered for Inclusion",
+      "none": "no tag shown on the box"
+    },
+    "color_class": [
+      "CL/DL/EL headliner (dark, saturated)",
+      "CL/DL/EL onchain (light pastel)",
+      "CL/DL/EL offchain (gray)",
+      "CL/DL/EL north star (dark, black box)",
+      "cross-layer north star / cross-layer offchain (gray, spans layers)"
+    ],
+    "uncertain": "true = the yellow/orange worried-face emoji is attached to the box, meaning (per legend) 'uncertainty about ever shipping upgrade'"
+  },
+  "nodes": [
+    {
+      "id": "cl-fast-confirmation",
+      "label": "fast confirmation",
+      "layer": "CL",
+      "track": "latency",
+      "subtrack": "finality",
+      "fork_target": "G",
+      "tag": "none",
+      "color_class": "CL offchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "cl-decoupled-consensus"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Box drawn wide, visually spanning G-H columns; single node, fork_target read as G (2026) per label position under Glamsterdam column start.",
+      "summary": "fast confirmation is a consensus layer item on the latency track, targeted at G. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-decoupled-consensus",
+      "label": "decoupled consensus",
+      "layer": "CL",
+      "track": "latency",
+      "subtrack": "finality",
+      "fork_target": "I",
+      "tag": "none",
+      "color_class": "CL headliner",
+      "uncertain": true,
+      "throughlines_to": [
+        "cl-quick-slots",
+        "cl-1-round-finality"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "decoupled consensus is a consensus layer item on the latency track, targeted at I. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-1-round-finality",
+      "label": "1-round finality",
+      "layer": "CL",
+      "track": "latency",
+      "subtrack": "finality",
+      "fork_target": "L",
+      "tag": "none",
+      "color_class": "CL headliner",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Underlined (links to EIP/write-up per strawmap FAQ) though no EIP tag box shown.",
+      "summary": "1-round finality is a consensus layer item on the latency track, targeted at L. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-return-to-1m-attesters",
+      "label": "return to 1M attesters",
+      "layer": "CL",
+      "track": "latency",
+      "subtrack": "finality",
+      "fork_target": "longer term",
+      "tag": "none",
+      "color_class": "CL onchain",
+      "uncertain": true,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "return to 1M attesters is a consensus layer item on the latency track, targeted at longer term. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-quick-slots",
+      "label": "quick slots",
+      "layer": "CL",
+      "track": "latency",
+      "subtrack": "slots",
+      "fork_target": "I",
+      "tag": "EIP",
+      "color_class": "CL onchain",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [
+        "EIP-8198"
+      ],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "ef_tier": "B",
+      "ef_eips": [
+        "EIP-8198"
+      ],
+      "ef_fork": "H",
+      "ef_note": "Four requirements before A: full specification, prototype, downstream assessment, sign-off vs decoupled consensus.",
+      "summary": "quick slots is a consensus layer item on the latency track, targeted at I, tagged EIP. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-slot-duration-decreases",
+      "label": "slot duration decreases",
+      "layer": "CL",
+      "track": "latency",
+      "subtrack": "slots",
+      "fork_target": "I-L (bar)",
+      "tag": "none",
+      "color_class": "CL onchain (bar)",
+      "uncertain": false,
+      "throughlines_to": [
+        "cl-fast-l1"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "One of the 3 named trend bars on the diagram; spans from ~I through L to the fast L1 north star.",
+      "summary": "slot duration decreases is a consensus layer item on the latency track, targeted at I-L (bar). It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-fast-l1",
+      "label": "fast L1",
+      "layer": "CL",
+      "track": "latency",
+      "subtrack": "slots/finality (north star)",
+      "fork_target": "north star",
+      "tag": "none",
+      "color_class": "CL north star",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "North star italic subtitle: 'finality in seconds'.",
+      "summary": "fast L1 is a consensus layer item on the latency track, targeted at north star. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-epbs",
+      "label": "ePBS",
+      "layer": "CL",
+      "track": "accessibility",
+      "subtrack": "roles",
+      "fork_target": "G",
+      "tag": "SFI",
+      "color_class": "CL headliner",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [
+        "EIP-7732"
+      ],
+      "has_public_tests_or_benchmark": "yes",
+      "notes": "Enshrined Proposer-Builder Separation. Glamsterdam CL headliner (strawmap.org FAQ: 'in Glamsterdam, these are ePBS and BALs'). Multi-client devnet-tested (Geth/Nethermind/Besu/Erigon + Lighthouse/Prysm/Teku/Nimbus per EF blog reporting); covered by consensus-spec-tests / execution-spec-tests as it lands.",
+      "ef_tier": "SFI",
+      "ef_eips": [
+        "EIP-7732"
+      ],
+      "ef_fork": "G",
+      "ef_note": "Glamsterdam CL headliner (SFI).",
+      "summary": "ePBS is a consensus layer item on the accessibility track, targeted at G, tagged SFI. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-focil",
+      "label": "FOCIL",
+      "layer": "CL",
+      "track": "accessibility",
+      "subtrack": "roles",
+      "fork_target": "H",
+      "tag": "SFI",
+      "color_class": "CL headliner",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [
+        "EIP-7805"
+      ],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Fork-choice enforced Inclusion Lists. Hegot\u00e1 CL headliner (blog.ethereum.org Hegot\u00e1 EIP tier-list post, 2026-09-07; ACDC #175 formal selection per Christine D. Kim / etherworld.co coverage). Ships alongside EIP-8369 (VOPS profiles for FOCIL eligibility) per search results \u2014 UNVERIFIED, not fetched directly. | 2026-09-08 orchestrator: set to unknown (critic C2): Hegot\u00e1 headliner, devnet work reported in progress, not multi-client-confirmed.",
+      "ef_tier": "S",
+      "ef_eips": [
+        "EIP-7805"
+      ],
+      "ef_fork": "H",
+      "ef_note": "Locked-in CL headliner; ships with EIP-8369 VOPS Profiles (A).",
+      "summary": "FOCIL is a consensus layer item on the accessibility track, targeted at H, tagged SFI. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-tapered-issuance-burn",
+      "label": "tapered issuance burn",
+      "layer": "CL",
+      "track": "accessibility",
+      "subtrack": "roles",
+      "fork_target": "I",
+      "tag": "none",
+      "color_class": "CL onchain",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "tapered issuance burn is a consensus layer item on the accessibility track, targeted at I. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-attester-proposer-separation",
+      "label": "attester-proposer separation",
+      "layer": "CL",
+      "track": "accessibility",
+      "subtrack": "roles",
+      "fork_target": "L",
+      "tag": "none",
+      "color_class": "CL onchain",
+      "uncertain": true,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Underlined.",
+      "summary": "attester-proposer separation is a consensus layer item on the accessibility track, targeted at L. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-distributed-block-building",
+      "label": "distributed block building",
+      "layer": "CL",
+      "track": "accessibility",
+      "subtrack": "roles",
+      "fork_target": "longer term",
+      "tag": "none",
+      "color_class": "CL offchain",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "distributed block building is a consensus layer item on the accessibility track, targeted at longer term. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-crypto-specs-lean4",
+      "label": "cryptography specs in Lean 4",
+      "layer": "CL",
+      "track": "accessibility",
+      "subtrack": "specs",
+      "fork_target": "H",
+      "tag": "none",
+      "color_class": "CL offchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "cl-beacon-leancl-specs-merge"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "cryptography specs in Lean 4 is a consensus layer item on the accessibility track, targeted at H. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-beacon-leancl-specs-merge",
+      "label": "beacon & leanCL specs merge",
+      "layer": "CL",
+      "track": "accessibility",
+      "subtrack": "specs",
+      "fork_target": "I",
+      "tag": "none",
+      "color_class": "CL offchain",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Both 'beacon' and 'leanCL' are separately underlined links within the label.",
+      "summary": "beacon & leanCL specs merge is a consensus layer item on the accessibility track, targeted at I. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-tech-debt-reset",
+      "label": "tech debt reset",
+      "layer": "CL",
+      "track": "accessibility",
+      "subtrack": "specs",
+      "fork_target": "L",
+      "tag": "none",
+      "color_class": "CL onchain",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Underlined.",
+      "summary": "tech debt reset is a consensus layer item on the accessibility track, targeted at L. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-51pct-attack-auto-recovery",
+      "label": "51% attack auto-recovery",
+      "layer": "CL",
+      "track": "accessibility",
+      "subtrack": "specs",
+      "fork_target": "longer term",
+      "tag": "none",
+      "color_class": "CL offchain",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Underlined; no uncertainty emoji despite being a longer-term/speculative item.",
+      "summary": "51% attack auto-recovery is a consensus layer item on the accessibility track, targeted at longer term. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-post-quantum-pubkey-registry",
+      "label": "post quantum pubkey registry",
+      "layer": "CL",
+      "track": "cryptography",
+      "subtrack": "quantum",
+      "fork_target": "H",
+      "tag": "none",
+      "color_class": "CL onchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "cl-post-quantum-heartbeat"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "post quantum pubkey registry is a consensus layer item on the cryptography track, targeted at H. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-post-quantum-heartbeat",
+      "label": "post quantum heartbeat",
+      "layer": "CL",
+      "track": "cryptography",
+      "subtrack": "quantum",
+      "fork_target": "I",
+      "tag": "none",
+      "color_class": "CL headliner",
+      "uncertain": false,
+      "throughlines_to": [
+        "dl-post-quantum-l1"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Feeds the cross-layer 'post quantum L1' north star via a long arrow down into the Data Layer band (I column down to K column).",
+      "summary": "post quantum heartbeat is a consensus layer item on the cryptography track, targeted at I. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-pq-leanxmss-attestations",
+      "label": "PQ leanXMSS attestations",
+      "layer": "CL",
+      "track": "cryptography",
+      "subtrack": "quantum",
+      "fork_target": "L",
+      "tag": "none",
+      "color_class": "CL headliner",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "yes (leanEthereum/leanVM aggregate benchmark + python-verifier)",
+      "notes": "Underlined. | 2026-09-08: PoC node; harness leanEthereum/leanVM (CPU-only), see leanvm-facts.md",
+      "summary": "Validators sign every attestation, and today's signatures are breakable by a large quantum computer. This worknode replaces them with leanXMSS, a hash-based post-quantum scheme, and aggregates many of those signatures into one proof produced by leanVM, so the consensus layer can verify a whole committee cheaply. The work is to make that proof cheaper to produce."
+    },
+    {
+      "id": "cl-vdf-randomness",
+      "label": "VDF randomness",
+      "layer": "CL",
+      "track": "cryptography",
+      "subtrack": "quantum",
+      "fork_target": "longer term",
+      "tag": "none",
+      "color_class": "CL onchain",
+      "uncertain": true,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Underlined.",
+      "summary": "VDF randomness is a consensus layer item on the cryptography track, targeted at longer term. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-real-time-cl-proofs",
+      "label": "real-time CL proofs",
+      "layer": "CL",
+      "track": "cryptography",
+      "subtrack": "proofs",
+      "fork_target": "L",
+      "tag": "none",
+      "color_class": "CL offchain",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "proofs row has no G/H/I node; first appearance is at L.",
+      "summary": "real-time CL proofs is a consensus layer item on the cryptography track, targeted at L. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "cl-secret-proposers",
+      "label": "secret proposers",
+      "layer": "CL",
+      "track": "cryptography",
+      "subtrack": "proofs",
+      "fork_target": "longer term",
+      "tag": "none",
+      "color_class": "CL onchain",
+      "uncertain": true,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Underlined.",
+      "summary": "secret proposers is a consensus layer item on the cryptography track, targeted at longer term. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "dl-sparse-blobpool",
+      "label": "sparse blobpool",
+      "layer": "DL",
+      "track": "throughput",
+      "subtrack": "write",
+      "fork_target": "G",
+      "tag": "CFI",
+      "color_class": "DL offchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "dl-data-availability-increases"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "sparse blobpool is a data layer item on the throughput track, targeted at G, tagged CFI. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "dl-data-availability-increases",
+      "label": "data availability increases",
+      "layer": "DL",
+      "track": "throughput",
+      "subtrack": "write",
+      "fork_target": "I-L (bar)",
+      "tag": "none",
+      "color_class": "DL onchain (bar)",
+      "uncertain": false,
+      "throughlines_to": [
+        "dl-teragas-l2"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "One of the 3 named trend bars; spans from ~I/J through to the teragas L2 north star.",
+      "summary": "data availability increases is a data layer item on the throughput track, targeted at I-L (bar). It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "dl-teragas-l2",
+      "label": "teragas L2",
+      "layer": "DL",
+      "track": "throughput",
+      "subtrack": "write (north star)",
+      "fork_target": "north star",
+      "tag": "none",
+      "color_class": "DL north star",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "North star italic subtitle: '1 Gbyte/sec'.",
+      "summary": "teragas L2 is a data layer item on the throughput track, targeted at north star. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "dl-cell-level-deltas",
+      "label": "cell-level deltas",
+      "layer": "DL",
+      "track": "throughput",
+      "subtrack": "read",
+      "fork_target": "G",
+      "tag": "CFI",
+      "color_class": "DL offchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "dl-local-blob-reconstruction"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "cell-level deltas is a data layer item on the throughput track, targeted at G, tagged CFI. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "dl-local-blob-reconstruction",
+      "label": "local blob reconstruction",
+      "layer": "DL",
+      "track": "throughput",
+      "subtrack": "read",
+      "fork_target": "H",
+      "tag": "none",
+      "color_class": "DL offchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "dl-data-availability-increases (curves into the write-row bar)"
+      ],
+      "eip_numbers": [
+        "EIP-8371"
+      ],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "ef_tier": "related: C",
+      "ef_eips": [
+        "EIP-8371 (RowDAS, related not identical)"
+      ],
+      "ef_fork": "H",
+      "ef_note": "RowDAS distributed blob reconstruction graded C; the strawmap node is local reconstruction. Related, not the same item.",
+      "summary": "local blob reconstruction is a data layer item on the throughput track, targeted at H. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "dl-blob-streaming",
+      "label": "blob streaming",
+      "layer": "DL",
+      "track": "throughput",
+      "subtrack": "read",
+      "fork_target": "longer term",
+      "tag": "none",
+      "color_class": "DL onchain",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Underlined; unlike its two row-mates below it, carries NO uncertainty emoji (verified via tight crop).",
+      "summary": "blob streaming is a data layer item on the throughput track, targeted at longer term. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "dl-pq-leanda-sampling",
+      "label": "PQ leanDA sampling",
+      "layer": "DL",
+      "track": "types",
+      "subtrack": "quantum",
+      "fork_target": "I",
+      "tag": "none",
+      "color_class": "DL onchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "dl-post-quantum-l1"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Small looping arrow connects it to leanVM directly below (bidirectional-looking curve); both feed post quantum L1.",
+      "summary": "PQ leanDA sampling is a data layer item on the types track, targeted at I. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "dl-post-quantum-l1",
+      "label": "post quantum L1",
+      "layer": "DL",
+      "track": "types",
+      "subtrack": "quantum",
+      "fork_target": "K",
+      "tag": "none",
+      "color_class": "cross-layer north star",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "One of the strawmap's five official north stars (confirmed via strawmap.org FAQ: 'post quantum L1: centuries-long cryptographic security, via hash-based schemes') even though drawn mid-timeline at K rather than at the far right; layer is cross (CL+DL feed it). Italic subtitle 'hash-based'.",
+      "summary": "post quantum L1 is a data layer item on the types track, targeted at K. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "dl-leanvm",
+      "label": "leanVM",
+      "layer": "DL",
+      "track": "types",
+      "subtrack": "features",
+      "fork_target": "I",
+      "tag": "none",
+      "color_class": "DL offchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "dl-pq-leanda-sampling"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "leanVM is the small virtual machine that produces those proofs, together with its compiler. Everything above it is only as cheap as leanVM is, so a cycle saved here is saved everywhere it runs. This worknode admits the compiler as well as the guest program, which is a wider surface than most and is stated as such."
+    },
+    {
+      "id": "dl-remove-blob-transaction-type",
+      "label": "remove blob transaction type",
+      "layer": "DL",
+      "track": "types",
+      "subtrack": "features",
+      "fork_target": "L",
+      "tag": "none",
+      "color_class": "DL onchain",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "remove blob transaction type is a data layer item on the types track, targeted at L. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "dl-proofs-of-custody",
+      "label": "proofs of custody",
+      "layer": "DL",
+      "track": "types",
+      "subtrack": "quantum",
+      "fork_target": "longer term",
+      "tag": "none",
+      "color_class": "DL onchain",
+      "uncertain": true,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Underlined; row placement approximate (aligned under quantum row in the longer-term column; strawmap does not label this explicitly).",
+      "summary": "proofs of custody is a data layer item on the types track, targeted at longer term. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "dl-short-dated-blob-futures",
+      "label": "short-dated blob futures",
+      "layer": "DL",
+      "track": "types",
+      "subtrack": "features",
+      "fork_target": "longer term",
+      "tag": "none",
+      "color_class": "DL onchain",
+      "uncertain": true,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Underlined.",
+      "summary": "short-dated blob futures is a data layer item on the types track, targeted at longer term. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-gas-limit-increases",
+      "label": "gas limit increases",
+      "layer": "EL",
+      "track": "throughput",
+      "subtrack": "gas",
+      "fork_target": "H-L (bar)",
+      "tag": "none",
+      "color_class": "EL offchain (bar)",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-gigagas-l1"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "One of the 3 named trend bars; starts ~H, spans to gigagas L1 north star. Colored gray (offchain), unlike the other two bars which are onchain-colored.",
+      "summary": "gas limit increases is a execution layer item on the throughput track, targeted at H-L (bar). It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-gigagas-l1",
+      "label": "gigagas L1",
+      "layer": "EL",
+      "track": "throughput",
+      "subtrack": "gas (north star)",
+      "fork_target": "north star",
+      "tag": "none",
+      "color_class": "EL north star",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "North star italic subtitle: '1 Ggas/sec'.",
+      "summary": "gigagas L1 is a execution layer item on the throughput track, targeted at north star. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-ethp2p-broadcast",
+      "label": "ethp2p broadcast",
+      "layer": "EL",
+      "track": "throughput",
+      "subtrack": "gossip",
+      "fork_target": "H",
+      "tag": "none",
+      "color_class": "EL offchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-ethp2p-unification"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "ethp2p broadcast is a execution layer item on the throughput track, targeted at H. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-ethp2p-unification",
+      "label": "ethp2p unification",
+      "layer": "EL",
+      "track": "throughput",
+      "subtrack": "gossip",
+      "fork_target": "L",
+      "tag": "none",
+      "color_class": "EL offchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-sharded-mempool"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "ethp2p unification is a execution layer item on the throughput track, targeted at L. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-sharded-mempool",
+      "label": "sharded mempool",
+      "layer": "EL",
+      "track": "throughput",
+      "subtrack": "gossip",
+      "fork_target": "longer term",
+      "tag": "none",
+      "color_class": "EL offchain",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "No uncertainty emoji despite longer-term placement.",
+      "summary": "sharded mempool is a execution layer item on the throughput track, targeted at longer term. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-evm-asm-canonical-guest",
+      "label": "evm-asm canonical guest",
+      "layer": "EL",
+      "track": "sustainability",
+      "subtrack": "zkEVM",
+      "fork_target": "G",
+      "tag": "none",
+      "color_class": "EL offchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-optional-2of3-proofs"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "zkEVM row terminates at H; no further downstream node shown for this row.",
+      "summary": "evm-asm canonical guest is a execution layer item on the sustainability track, targeted at G. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-optional-2of3-proofs",
+      "label": "optional 2-of-3 proofs",
+      "layer": "EL",
+      "track": "sustainability",
+      "subtrack": "zkEVM",
+      "fork_target": "H",
+      "tag": "EIP",
+      "color_class": "EL onchain",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [
+        "EIP-8025"
+      ],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "ef_tier": "A",
+      "ef_eips": [
+        "EIP-8025"
+      ],
+      "ef_fork": "H",
+      "ef_note": "Optional Execution Proofs: upstreams stateless-execution changes into the canonical specs.",
+      "summary": "optional 2-of-3 proofs is a execution layer item on the sustainability track, targeted at H, tagged EIP. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-glamsterdam-repricing",
+      "label": "Glamsterdam repricing",
+      "layer": "EL",
+      "track": "sustainability",
+      "subtrack": "pricing",
+      "fork_target": "G",
+      "tag": "CFI",
+      "color_class": "EL onchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-data-repricing"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "Glamsterdam repricing is a execution layer item on the sustainability track, targeted at G, tagged CFI. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-data-repricing",
+      "label": "data repricing",
+      "layer": "EL",
+      "track": "sustainability",
+      "subtrack": "pricing",
+      "fork_target": "H",
+      "tag": "EIP",
+      "color_class": "EL onchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-multidimensional-pricing"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "data repricing is a execution layer item on the sustainability track, targeted at H, tagged EIP. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-multidimensional-pricing",
+      "label": "multidimensional pricing",
+      "layer": "EL",
+      "track": "sustainability",
+      "subtrack": "pricing",
+      "fork_target": "I",
+      "tag": "EIP",
+      "color_class": "EL onchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-leanda-block-sampling"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "multidimensional pricing is a execution layer item on the sustainability track, targeted at I, tagged EIP. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-leanda-block-sampling",
+      "label": "leanDA block sampling",
+      "layer": "EL",
+      "track": "sustainability",
+      "subtrack": "pricing",
+      "fork_target": "J",
+      "tag": "EIP",
+      "color_class": "EL onchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-mandatory-1of1-proofs"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "leanDA block sampling is a execution layer item on the sustainability track, targeted at J, tagged EIP. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-mandatory-1of1-proofs",
+      "label": "mandatory 1-of-1 proofs",
+      "layer": "EL",
+      "track": "sustainability",
+      "subtrack": "pricing",
+      "fork_target": "K",
+      "tag": "none",
+      "color_class": "EL headliner",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-native-rollups"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Also receives an arrow from decentralized-state (state row), a cross-subtrack throughline.",
+      "summary": "mandatory 1-of-1 proofs is a execution layer item on the sustainability track, targeted at K. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-native-rollups",
+      "label": "native rollups",
+      "layer": "EL",
+      "track": "sustainability",
+      "subtrack": "pricing",
+      "fork_target": "L",
+      "tag": "EIP",
+      "color_class": "EL offchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-long-dated-gas-futures"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "native rollups is a execution layer item on the sustainability track, targeted at L, tagged EIP. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-long-dated-gas-futures",
+      "label": "long-dated gas futures",
+      "layer": "EL",
+      "track": "sustainability",
+      "subtrack": "pricing",
+      "fork_target": "longer term",
+      "tag": "none",
+      "color_class": "EL onchain",
+      "uncertain": true,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Underlined.",
+      "summary": "long-dated gas futures is a execution layer item on the sustainability track, targeted at longer term. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-bals",
+      "label": "BALs",
+      "layer": "EL",
+      "track": "EVM",
+      "subtrack": "state",
+      "fork_target": "G",
+      "tag": "SFI",
+      "color_class": "EL headliner",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-state-asm"
+      ],
+      "eip_numbers": [
+        "EIP-7928"
+      ],
+      "has_public_tests_or_benchmark": "yes",
+      "notes": "Block-Level Access Lists. Glamsterdam EL headliner (strawmap.org FAQ). Multi-client devnet-tested; execution-spec-tests coverage as it advances SFI.",
+      "ef_tier": "SFI",
+      "ef_eips": [
+        "EIP-7928"
+      ],
+      "ef_fork": "G",
+      "ef_note": "Glamsterdam EL headliner (SFI).",
+      "summary": "BALs is a execution layer item on the EVM track, targeted at G, tagged SFI. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-state-asm",
+      "label": "state-asm",
+      "layer": "EL",
+      "track": "EVM",
+      "subtrack": "state",
+      "fork_target": "H",
+      "tag": "none",
+      "color_class": "EL offchain",
+      "uncertain": true,
+      "throughlines_to": [
+        "el-partitioned-binary-tree"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "state-asm is a execution layer item on the EVM track, targeted at H. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-partitioned-binary-tree",
+      "label": "partitioned binary tree",
+      "layer": "EL",
+      "track": "EVM",
+      "subtrack": "state",
+      "fork_target": "I",
+      "tag": "EIP",
+      "color_class": "EL headliner",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-validity-only-partial-state"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "partitioned binary tree is a execution layer item on the EVM track, targeted at I, tagged EIP. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-validity-only-partial-state",
+      "label": "validity-only partial state",
+      "layer": "EL",
+      "track": "EVM",
+      "subtrack": "state",
+      "fork_target": "J",
+      "tag": "none",
+      "color_class": "EL offchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-decentralized-state"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "validity-only partial state is a execution layer item on the EVM track, targeted at J. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-decentralized-state",
+      "label": "decentralized state",
+      "layer": "EL",
+      "track": "EVM",
+      "subtrack": "state",
+      "fork_target": "K",
+      "tag": "none",
+      "color_class": "EL offchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-mandatory-1of1-proofs",
+        "el-endgame-state"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "decentralized state is a execution layer item on the EVM track, targeted at K. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-endgame-state",
+      "label": "endgame state",
+      "layer": "EL",
+      "track": "EVM",
+      "subtrack": "state",
+      "fork_target": "longer term",
+      "tag": "none",
+      "color_class": "EL onchain",
+      "uncertain": true,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Underlined.",
+      "summary": "endgame state is a execution layer item on the EVM track, targeted at longer term. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-evmify-long-tail-precompiles",
+      "label": "EVMify long-tail precompiles",
+      "layer": "EL",
+      "track": "EVM",
+      "subtrack": "ISA",
+      "fork_target": "H",
+      "tag": "EIP",
+      "color_class": "EL onchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-pureth-purges"
+      ],
+      "eip_numbers": [
+        "EIP-7666",
+        "EIP-8200"
+      ],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "ef_tier": "C",
+      "ef_eips": [
+        "EIP-8200",
+        "EIP-7666"
+      ],
+      "ef_fork": "H",
+      "ef_note": "Bytecodes not yet in the EIP; graded with EIP-7666.",
+      "summary": "EVMify long-tail precompiles is a execution layer item on the EVM track, targeted at H, tagged EIP. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-pureth-purges",
+      "label": "pureth purges",
+      "layer": "EL",
+      "track": "EVM",
+      "subtrack": "ISA",
+      "fork_target": "I",
+      "tag": "EIP",
+      "color_class": "EL onchain",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "ISA row terminates at I; no J/K/L/longer-term/north-star node shown for this row.",
+      "summary": "pureth purges is a execution layer item on the EVM track, targeted at I, tagged EIP. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-frame-transactions",
+      "label": "frame transactions",
+      "layer": "EL",
+      "track": "cryptography",
+      "subtrack": "quantum",
+      "fork_target": "G",
+      "tag": "CFI",
+      "color_class": "EL headliner",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-ephemeral-keys"
+      ],
+      "eip_numbers": [
+        "EIP-8141"
+      ],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "ef_tier": "S",
+      "ef_eips": [
+        "EIP-8141"
+      ],
+      "ef_fork": "H",
+      "ef_note": "Locked-in EL headliner; ships with EIP-8250 and EIP-8272. Image (2026-08-04) placed it at G/CFI; the 2026-09-07 tier list makes it the Hegot\u00e1 headliner.",
+      "summary": "frame transactions is a execution layer item on the cryptography track, targeted at G, tagged CFI. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-ephemeral-keys",
+      "label": "ephemeral keys",
+      "layer": "EL",
+      "track": "cryptography",
+      "subtrack": "quantum",
+      "fork_target": "H",
+      "tag": "none",
+      "color_class": "EL offchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-pq-leansphincs-transactions"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "ephemeral keys is a execution layer item on the cryptography track, targeted at H. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-pq-leansphincs-transactions",
+      "label": "PQ leanSPHINCS transactions",
+      "layer": "EL",
+      "track": "cryptography",
+      "subtrack": "quantum",
+      "fork_target": "J",
+      "tag": "EIP",
+      "color_class": "EL headliner",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-leansphincs-mempool"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Also receives a long cross-layer throughline arrow up from/through the CL 'post quantum heartbeat' area (shared PQ theme arrow visible descending through I/J columns).",
+      "summary": "PQ leanSPHINCS transactions is a execution layer item on the cryptography track, targeted at J, tagged EIP. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-leansphincs-mempool",
+      "label": "leanSPHINCS mempool",
+      "layer": "EL",
+      "track": "cryptography",
+      "subtrack": "quantum",
+      "fork_target": "K",
+      "tag": "EIP",
+      "color_class": "EL onchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-encrypted-mempool"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "leanSPHINCS mempool is a execution layer item on the cryptography track, targeted at K, tagged EIP. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-encrypted-mempool",
+      "label": "encrypted mempool",
+      "layer": "EL",
+      "track": "cryptography",
+      "subtrack": "quantum",
+      "fork_target": "longer term",
+      "tag": "EIP",
+      "color_class": "EL offchain",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "encrypted mempool is a execution layer item on the cryptography track, targeted at longer term, tagged EIP. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-keyed-nonces-recent-roots",
+      "label": "keyed nonces & recent roots",
+      "layer": "EL",
+      "track": "cryptography",
+      "subtrack": "privacy",
+      "fork_target": "G",
+      "tag": "EIP",
+      "color_class": "EL onchain",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-zkzk-frames"
+      ],
+      "eip_numbers": [
+        "EIP-8250",
+        "EIP-8272"
+      ],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "Row appears to skip directly from G to K (no H/I/J discrete node shown for privacy row).",
+      "ef_tier": "A",
+      "ef_eips": [
+        "EIP-8250",
+        "EIP-8272"
+      ],
+      "ef_fork": "H",
+      "ef_note": "Frames core; both A. Image placed at G; tier list: Hegot\u00e1.",
+      "summary": "keyed nonces & recent roots is a execution layer item on the cryptography track, targeted at G, tagged EIP. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-zkzk-frames",
+      "label": "zkzk frames",
+      "layer": "EL",
+      "track": "cryptography",
+      "subtrack": "privacy",
+      "fork_target": "K",
+      "tag": "none",
+      "color_class": "EL headliner",
+      "uncertain": false,
+      "throughlines_to": [
+        "el-lean-privacy-pool-wormholes"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "zkzk frames is a execution layer item on the cryptography track, targeted at K. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-lean-privacy-pool-wormholes",
+      "label": "lean privacy pool & wormholes",
+      "layer": "EL",
+      "track": "cryptography",
+      "subtrack": "privacy",
+      "fork_target": "longer term",
+      "tag": "none",
+      "color_class": "EL onchain",
+      "uncertain": true,
+      "throughlines_to": [
+        "el-private-l1"
+      ],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "",
+      "summary": "lean privacy pool & wormholes is a execution layer item on the cryptography track, targeted at longer term. It is not yet defined as a worknode: no criterion, no escrow."
+    },
+    {
+      "id": "el-private-l1",
+      "label": "private L1",
+      "layer": "EL",
+      "track": "cryptography",
+      "subtrack": "privacy (north star)",
+      "fork_target": "north star",
+      "tag": "none",
+      "color_class": "EL north star",
+      "uncertain": false,
+      "throughlines_to": [],
+      "eip_numbers": [],
+      "has_public_tests_or_benchmark": "unknown",
+      "notes": "North star italic subtitle: 'shielded transfers'.",
+      "summary": "private L1 is a execution layer item on the cryptography track, targeted at north star. It is not yet defined as a worknode: no criterion, no escrow."
+    }
+  ]
 }

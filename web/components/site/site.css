@@ -1,0 +1,566 @@
+/* Direction A — "the grid is the graphic".
+ *
+ * Composition comes from the picked reference: a masthead over one hairline, a 1240px column, rules
+ * instead of boxes, and one accent. Colour and type come from web/design/tokens.css, so every value
+ * here is a var(--ep-*) except the two the tokens do not carry (the code ground and the throughline
+ * tint), which are named at the point of use.
+ *
+ * Type is the six sizes and the three weights from web/design/BRIEF.md §3: 32/24/18/16/13/11 and
+ * 400/500/700. There is no 600 anywhere in this file.
+ */
+
+.ep {
+  font-family: var(--ep-font-sans), sans-serif;
+  font-size: var(--ep-size-body);
+  font-weight: var(--ep-weight-regular);
+  line-height: 1.6;
+  color: var(--ep-on-surface);
+  background: var(--ep-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+.ep-wrap {
+  max-width: var(--ep-content-max);
+  margin: 0 auto;
+  padding-left: var(--ep-space-xl);
+  padding-right: var(--ep-space-xl);
+}
+
+/* ---------------------------------------------------------------- masthead */
+
+.ep-masthead-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ep-space-xxl);
+  padding-top: var(--ep-space-xxl);
+  padding-bottom: var(--ep-space-lg);
+  border-bottom: 1px solid var(--ep-border);
+}
+
+.ep-mark {
+  font-size: var(--ep-size-lg);
+  font-weight: var(--ep-weight-bold);
+  letter-spacing: -0.01em;
+  color: var(--ep-on-surface);
+  text-decoration: none;
+}
+
+.ep-nav {
+  display: flex;
+  gap: var(--ep-space-xl);
+  font-size: var(--ep-size-sm);
+}
+
+.ep-nav a {
+  color: var(--ep-secondary);
+  text-decoration: none;
+  font-weight: var(--ep-weight-regular);
+}
+
+.ep-nav a:hover {
+  color: var(--ep-on-surface);
+}
+
+.ep-nav a[aria-current="page"] {
+  color: var(--ep-on-surface);
+  font-weight: var(--ep-weight-medium);
+}
+
+/* -------------------------------------------------------------------- hero */
+
+.ep-hero {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: var(--ep-space-xxxl);
+  align-items: end;
+  padding-top: var(--ep-space-xxxl);
+  padding-bottom: var(--ep-space-xxl);
+}
+
+.ep-hero h1 {
+  margin: 0;
+  font-size: var(--ep-size-display);
+  line-height: 1.15;
+  font-weight: var(--ep-weight-bold);
+  letter-spacing: -0.02em;
+}
+
+.ep-lead {
+  margin: 0;
+  font-size: var(--ep-size-md);
+  line-height: 1.55;
+  color: var(--ep-secondary);
+  max-width: 84ch;
+}
+
+@media (max-width: 880px) {
+  .ep-hero {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: var(--ep-space-xl);
+  }
+}
+
+/* ------------------------------------------------------------- rules, bits */
+
+.ep-rule {
+  border-top: 1px solid var(--ep-border);
+}
+
+.ep-label {
+  margin: 0;
+  font-size: var(--ep-size-sm);
+  font-weight: var(--ep-weight-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ep-secondary);
+}
+
+.ep-mono {
+  font-family: var(--ep-font-mono), monospace;
+}
+
+/* --------------------------------------------------------- numbers strip */
+
+.ep-nums {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--ep-border);
+  border-bottom: 1px solid var(--ep-border);
+}
+
+.ep-nums > div {
+  padding: var(--ep-space-lg) var(--ep-space-xl) var(--ep-space-lg) 0;
+  border-right: 1px solid var(--ep-border);
+}
+
+.ep-nums > div:last-child {
+  border-right: 0;
+}
+
+.ep-nums b {
+  display: block;
+  font-family: var(--ep-font-mono), monospace;
+  font-size: var(--ep-size-display);
+  font-weight: var(--ep-weight-bold);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.ep-nums span {
+  display: block;
+  margin-top: var(--ep-space-xs);
+  font-size: var(--ep-size-label);
+  font-weight: var(--ep-weight-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ep-secondary);
+}
+
+/* ----------------------------------------------------------------- buttons */
+
+.ep-btn {
+  font: inherit;
+  font-size: var(--ep-size-sm);
+  font-weight: var(--ep-weight-medium);
+  line-height: 1;
+  padding: var(--ep-space-md) var(--ep-space-lg);
+  border: 1px solid var(--ep-border);
+  border-radius: var(--ep-radius-md);
+  background: var(--ep-surface);
+  color: var(--ep-on-surface);
+  cursor: pointer;
+}
+
+.ep-btn:hover:not(:disabled) {
+  border-color: var(--ep-on-surface);
+}
+
+.ep-btn:disabled {
+  color: var(--ep-secondary);
+  cursor: default;
+}
+
+.ep-btn-primary {
+  background: var(--ep-primary);
+  border-color: var(--ep-primary);
+  color: var(--ep-neutral);
+}
+
+.ep-btn-primary:hover:not(:disabled) {
+  background: var(--ep-on-surface);
+  border-color: var(--ep-on-surface);
+}
+
+.ep-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: var(--ep-size-sm);
+  color: var(--ep-secondary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.ep-link:hover {
+  color: var(--ep-on-surface);
+}
+
+/* -------------------------------------------------------------------- deck */
+
+.ep-deck-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 88px);
+  padding-bottom: var(--ep-space-xxl);
+}
+
+.ep-deck-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ep-space-lg);
+  padding-top: var(--ep-space-lg);
+  padding-bottom: var(--ep-space-lg);
+  border-bottom: 1px solid var(--ep-border);
+}
+
+.ep-deck-n {
+  font-family: var(--ep-font-mono), monospace;
+  font-size: var(--ep-size-label);
+  color: var(--ep-secondary);
+}
+
+.ep-deck-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: var(--ep-space-xxxl);
+  /* One row, held in the middle of the screen, with the body's first line on the point's first
+   * baseline. Bottom-alignment left a void above the point on every screen. */
+  align-content: center;
+  align-items: baseline;
+  padding: var(--ep-space-xxxl) 0;
+}
+
+.ep-point {
+  margin: 0;
+  font-size: var(--ep-size-display);
+  line-height: 1.2;
+  font-weight: var(--ep-weight-bold);
+  letter-spacing: -0.02em;
+}
+
+/* A first sentence long enough to read as a paragraph is set one size down, still at 700. */
+.ep-point-long {
+  font-size: var(--ep-size-lg);
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+/* When the section states figures, the figures are the largest thing on the screen and the sentence
+ * steps down one size and one weight. BRIEF.md §6. */
+.ep-point-quiet {
+  font-size: var(--ep-size-lg);
+  font-weight: var(--ep-weight-medium);
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.ep-deck-body {
+  margin: 0;
+  font-size: var(--ep-size-body);
+  line-height: 1.6;
+  color: var(--ep-secondary);
+  max-width: 84ch;
+}
+
+.ep-deck-body .ep-fig {
+  font-family: var(--ep-font-mono), monospace;
+  font-weight: var(--ep-weight-bold);
+  color: var(--ep-on-surface);
+}
+
+.ep-deck-foot {
+  display: flex;
+  align-items: center;
+  gap: var(--ep-space-lg);
+  padding-top: var(--ep-space-lg);
+  border-top: 1px solid var(--ep-border);
+}
+
+.ep-ticks {
+  display: flex;
+  gap: var(--ep-space-xs);
+  margin-left: auto;
+}
+
+.ep-tick {
+  width: 24px;
+  height: 2px;
+  border: 0;
+  padding: 0;
+  background: var(--ep-border);
+  cursor: pointer;
+}
+
+.ep-tick[aria-current="true"] {
+  background: var(--ep-primary);
+}
+
+.ep-counter {
+  font-family: var(--ep-font-mono), monospace;
+  font-size: var(--ep-size-sm);
+  color: var(--ep-secondary);
+}
+
+@media (max-width: 880px) {
+  .ep-deck-main {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: var(--ep-space-xl);
+  }
+}
+
+/* -------------------------------------------------------------------- docs */
+
+.ep-index {
+  border-top: 1px solid var(--ep-border);
+}
+
+.ep-index a {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ep-space-lg);
+  padding: var(--ep-space-md) 0;
+  border-bottom: 1px solid var(--ep-border);
+  color: var(--ep-on-surface);
+  text-decoration: none;
+}
+
+.ep-index a:hover {
+  color: var(--ep-primary);
+}
+
+.ep-index-title {
+  font-size: var(--ep-size-body);
+  font-weight: var(--ep-weight-medium);
+}
+
+.ep-index-file {
+  font-family: var(--ep-font-mono), monospace;
+  font-size: var(--ep-size-sm);
+  color: var(--ep-secondary);
+  margin-left: auto;
+}
+
+.ep-doc-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ep-space-lg);
+  padding-top: var(--ep-space-xxxl);
+  padding-bottom: var(--ep-space-lg);
+  border-bottom: 1px solid var(--ep-border);
+}
+
+.ep-doc-head h2 {
+  margin: 0;
+  font-size: var(--ep-size-lg);
+  font-weight: var(--ep-weight-medium);
+  letter-spacing: -0.01em;
+}
+
+/* Rendered markdown from the repository. The words are the files'; only the type is ours. */
+.ep-doc {
+  padding-top: var(--ep-space-xl);
+}
+
+.ep-doc p,
+.ep-doc li {
+  max-width: 84ch;
+  font-size: var(--ep-size-body);
+  line-height: 1.6;
+}
+
+.ep-doc p {
+  margin: var(--ep-space-lg) 0;
+}
+
+.ep-doc h1 {
+  margin: var(--ep-space-xxl) 0 var(--ep-space-md);
+  font-size: var(--ep-size-lg);
+  font-weight: var(--ep-weight-bold);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.ep-doc h2 {
+  margin: var(--ep-space-xxl) 0 var(--ep-space-md);
+  font-size: var(--ep-size-md);
+  font-weight: var(--ep-weight-medium);
+  line-height: 1.4;
+}
+
+.ep-doc h3,
+.ep-doc h4,
+.ep-doc h5,
+.ep-doc h6 {
+  margin: var(--ep-space-xl) 0 var(--ep-space-sm);
+  font-size: var(--ep-size-body);
+  font-weight: var(--ep-weight-bold);
+  line-height: 1.5;
+}
+
+.ep-doc ul,
+.ep-doc ol {
+  margin: var(--ep-space-lg) 0;
+  padding-left: var(--ep-space-xl);
+}
+
+.ep-doc li {
+  margin: var(--ep-space-xs) 0;
+}
+
+.ep-doc a {
+  color: var(--ep-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ep-doc strong {
+  font-weight: var(--ep-weight-medium);
+  color: var(--ep-on-surface);
+}
+
+.ep-doc hr {
+  margin: var(--ep-space-xxl) 0;
+  border: 0;
+  border-top: 1px solid var(--ep-border);
+}
+
+.ep-doc blockquote {
+  margin: var(--ep-space-lg) 0;
+  padding-left: var(--ep-space-lg);
+  border-left: 1px solid var(--ep-border);
+  color: var(--ep-secondary);
+}
+
+/* Code and hashes: mono on the code ground. #F5F5F7 is set by the brief and is not a token. */
+.ep-doc code {
+  font-family: var(--ep-font-mono), monospace;
+  font-size: var(--ep-size-sm);
+  background: #f5f5f7;
+  padding: 2px 4px;
+  border-radius: var(--ep-radius-sm);
+}
+
+.ep-doc pre {
+  margin: var(--ep-space-lg) 0;
+  padding: var(--ep-space-lg);
+  background: #f5f5f7;
+  border-radius: var(--ep-radius-md);
+  overflow-x: auto;
+}
+
+.ep-doc pre code {
+  background: none;
+  padding: 0;
+  font-size: var(--ep-size-sm);
+  line-height: 1.6;
+}
+
+.ep-doc table {
+  width: 100%;
+  margin: var(--ep-space-lg) 0;
+  border-collapse: collapse;
+  font-size: var(--ep-size-sm);
+  display: block;
+  overflow-x: auto;
+}
+
+.ep-doc th,
+.ep-doc td {
+  text-align: left;
+  padding: var(--ep-space-sm) var(--ep-space-lg) var(--ep-space-sm) 0;
+  border-bottom: 1px solid var(--ep-border);
+  vertical-align: top;
+}
+
+.ep-doc th {
+  font-weight: var(--ep-weight-medium);
+  color: var(--ep-secondary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: var(--ep-size-label);
+}
+
+.ep-doc img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* -------------------------------------------------------------------- join */
+
+.ep-panel {
+  padding-top: var(--ep-space-xl);
+  padding-bottom: var(--ep-space-xxl);
+  border-top: 1px solid var(--ep-border);
+}
+
+.ep-panel h2 {
+  margin: 0 0 var(--ep-space-md);
+  font-size: var(--ep-size-lg);
+  font-weight: var(--ep-weight-medium);
+  letter-spacing: -0.01em;
+}
+
+.ep-panel p {
+  margin: 0 0 var(--ep-space-lg);
+  color: var(--ep-secondary);
+  max-width: 84ch;
+}
+
+.ep-panel .ep-name {
+  font-size: var(--ep-size-lg);
+  font-weight: var(--ep-weight-medium);
+  letter-spacing: -0.01em;
+  color: var(--ep-on-surface);
+}
+
+.ep-addr {
+  font-family: var(--ep-font-mono), monospace;
+  font-size: var(--ep-size-sm);
+  color: var(--ep-secondary);
+  word-break: break-all;
+}
+
+.ep-panel .ep-error {
+  color: var(--ep-error);
+  font-size: var(--ep-size-sm);
+}
+
+.ep-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ep-space-lg);
+}
+
+.ep-foot {
+  padding-top: var(--ep-space-lg);
+  padding-bottom: var(--ep-space-xxxl);
+  border-top: 1px solid var(--ep-border);
+  font-size: var(--ep-size-sm);
+  color: var(--ep-secondary);
+}
+
+/* The deck, docs and join pages carry the same five links and the same right-hand source link as
+   the map and node pages, so the chrome does not change when a reader moves between them. */
+.ep-source {
+  margin-left: auto;
+  font-size: var(--ep-size-sm);
+  color: var(--ep-secondary);
+  text-decoration: none;
+}
+
+.ep-source:hover { color: var(--ep-on-surface); text-decoration: underline; }

@@ -42,6 +42,94 @@ export function deckSlides(): Slide[] {
   });
 }
 
+/**
+ * A deck screen: the section title, the first sentence as the point, the rest as body, and any
+ * figures the section states plainly enough to lift out.
+ *
+ * Nothing here writes words. Every string on a screen is a slice of docs/DECK.md, and `words` is the
+ * body count so the 40-word limit in web/design/BRIEF.md §6 can be read off the DOM instead of
+ * counted by eye.
+ */
+export type Screen = {
+  title: string;
+  point: string;
+  bodyHtml: string;
+  words: number;
+  figures: Array<{ value: string; label: string }>;
+};
+
+/** Markdown to plain text. DECK.md is plain paragraphs today; this holds if that changes. */
+function plain(md: string): string {
+  return md
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/(\*\*|__)(.+?)\1/g, '$2')
+    .replace(/^[#>\-*+\s]+/gm, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Sentence split. The boundary is a full stop followed by whitespace and a capital or a digit, so
+ * "ethplane.eth," "guests.ethplane.eth," and "1,541,462" survive intact while "…paid work. 65 nodes"
+ * splits. A digit only ever follows the boundary; it never creates one.
+ */
+function sentences(text: string): string[] {
+  return text
+    .split(/(?<=[.?!])\s+(?=[A-Z(\d])/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/**
+ * A number a reader could check: digit-led and not part of a word, so ENSv2 and 30B are not numbers.
+ * A single digit is an ordinal in this file — "Node 1", "Node 2" — so it is left in the prose; only
+ * two characters or more are set as a value. A group separator only counts inside a number, so
+ * the comma after "Node 2" is punctuation and stays in the prose.
+ */
+const NUMBER = /\b\d+(?:,\d+)*(?:\/\d+)*(?![\w])/g;
+
+/**
+ * A figure is a number the file itself labels: a digit-led value, one lowercase word, then a comma
+ * or a full stop. "16 measurements," qualifies; "65 nodes from the Foundation's strawmap" does not,
+ * because the label would have to be cut somewhere the file does not cut it. The strict form is why
+ * only the results section carries a strip: everywhere else the file states its numbers in prose.
+ */
+const FIGURE = /(\b\d+(?:,\d+)*(?:\/\d+)*)(?![\w])\s+([a-z]+)(?=[,.])/g;
+
+export function deckScreens(): Screen[] {
+  const md = readDoc('DECK.md');
+  if (!md) return [];
+  // Everything before the first "## " is the file's own title and one line about the file. It is not
+  // a section, so it is not a screen — the same drop deckSlides makes, made the same way.
+  const first = md.search(/^## /m);
+  if (first === -1) return [];
+  const parts = md.slice(first).split(/^## /m).filter((s) => s.trim().length > 0);
+  return parts.map((part) => {
+    const nl = part.indexOf('\n');
+    const title = (nl === -1 ? part : part.slice(0, nl)).trim();
+    const text = plain(nl === -1 ? '' : part.slice(nl + 1));
+    const [point, ...rest] = sentences(text);
+    const body = rest.join(' ');
+    const figures = [...text.matchAll(FIGURE)]
+      .map((m) => ({ value: m[1], label: m[2] }))
+      .slice(0, 3);
+    return {
+      title,
+      point: point ?? '',
+      bodyHtml: escapeHtml(body).replace(NUMBER, (n) =>
+        n.length > 1 ? `<span class="ep-fig">${n}</span>` : n,
+      ),
+      words: body.split(/\s+/).filter(Boolean).length,
+      figures,
+    };
+  });
+}
+
 export const DOC_FILES = [
   { file: 'SPEC.md', title: 'Spec' },
   { file: 'CRITERION-pq-leanxmss.md', title: 'Criterion' },

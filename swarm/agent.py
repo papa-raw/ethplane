@@ -8,7 +8,7 @@ action. Peers wake each other: handoff/report append to the swarm board and type
 Env: OPENAI_BASE (http://127.0.0.1:8000/v1), MODEL, ROLE, SWARM_DIR, SESSION_PREFIX (qwen- | qwen-b-),
 WORKDIR (repo the builder/critic act in), LEAN (leanVM checkout), MAX_TURNS (default 300).
 """
-import argparse, datetime, json, os, pathlib, queue, re, shutil, subprocess, sys, threading, time, urllib.request
+import argparse, datetime, json, os, pathlib, queue, re, select, shutil, subprocess, sys, threading, time, urllib.request
 
 BASE = os.environ.get("OPENAI_BASE", "http://127.0.0.1:8000/v1")
 MODEL = os.environ.get("MODEL", "Qwen/Qwen3-Coder-30B-A3B-Instruct-FP8")
@@ -76,10 +76,10 @@ def draw_zone(typed=""):
     w, h = width(), height(); chip = f" {SESSION} "; left = f"  ▸▸ swarm tools on · {ROLE} · {MODEL.split('/')[-1][:24]}"; right = "/rc "
     rule = "─" * max(1, w - len(chip) - 1)
     sys.stdout.write("\0337" + f"\033[{h - 3};1H\033[K{D}{rule}{X}\033[48;5;24m\033[38;5;153m{chip}\033[0m"
-                     + f"\033[{h - 2};1H\033[K{B}›{X} {typed[:w - 3]}" + f"\033[{h - 1};1H\033[K"
+                     + f"\033[{h - 2};1H\033[K{B}›{X} {typed[-(w - 5):]}\033[7m \033[0m" + f"\033[{h - 1};1H\033[K"
                      + f"\033[{h};1H\033[K{D}{left}{' ' * max(1, w - len(left) - len(right))}{right}{X}" + "\0338"); sys.stdout.flush()
 def set_region():
-    h = height(); sys.stdout.write(f"\033[1;{h - ZONE}r\033[{h - ZONE};1H"); sys.stdout.flush(); draw_zone()
+    h = height(); sys.stdout.write(f"\033[?25l\033[1;{h - ZONE}r\033[{h - ZONE};1H"); sys.stdout.flush(); draw_zone(TYPED["s"])
 def prompt_line(): draw_zone()
 def footer(t0):
     dur = int(time.time() - t0); done = datetime.datetime.now().strftime("%-I:%M %p")
@@ -266,12 +266,33 @@ def _run(messages, tools):
     say(f"stopped after {MAX_TURNS} turns; send a message to continue", Y)
 def tools_names(tools): return [t["function"]["name"] for t in tools]
 
+TYPED = {"s": ""}
 def stdin_reader():
+    """Own the keyboard: no echo, keys drawn in the prompting zone, Enter sends, Backspace edits, escape sequences dropped."""
+    fd = sys.stdin.fileno()
     try:
-        import termios; fd = sys.stdin.fileno(); a = termios.tcgetattr(fd); a[3] &= ~termios.ECHO; termios.tcsetattr(fd, termios.TCSANOW, a)
-    except Exception: pass
-    for line in sys.stdin:
-        if line.strip(): INBOX.put(line.rstrip("\n"))
+        import termios, tty; tty.setcbreak(fd)
+    except Exception:
+        for line in sys.stdin:
+            if line.strip(): INBOX.put(line.rstrip("\n"))
+        return
+    buf = b""
+    while True:
+        ch = os.read(fd, 1)
+        if not ch: return
+        if ch == b"\x1b":
+            while select.select([fd], [], [], 0.02)[0]: os.read(fd, 1)
+            continue
+        if ch in (b"\r", b"\n"):
+            text = TYPED["s"]; TYPED["s"] = ""; draw_zone("")
+            if text.strip(): INBOX.put(text)
+            continue
+        if ch in (b"\x7f", b"\x08"): TYPED["s"] = TYPED["s"][:-1]; draw_zone(TYPED["s"]); continue
+        if ch == b"\x15": TYPED["s"] = ""; draw_zone(""); continue
+        buf += ch
+        try: TYPED["s"] += buf.decode(); buf = b""
+        except UnicodeDecodeError: continue
+        draw_zone(TYPED["s"])
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--init", help="first message"); ap.add_argument("--init-file"); ap.add_argument("--once", action="store_true", help="run the init message then exit")
@@ -300,4 +321,4 @@ def main():
 if __name__ == "__main__":
     try: main()
     except KeyboardInterrupt: print()
-    finally: sys.stdout.write("\033[r\033[999;1H\n"); sys.stdout.flush()
+    finally: sys.stdout.write("\033[r\033[?25h\033[999;1H\n"); sys.stdout.flush()

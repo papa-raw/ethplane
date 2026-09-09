@@ -46,10 +46,18 @@ def wrap(text, indent=2):
     return out
 def say(text, color=""):
     """Assistant prose: one ● bullet per paragraph, continuation lines indented."""
-    text = re.sub(r"\*\*|`|^#+ ", "", text.strip(), flags=re.M)
+    text = re.sub(r"</?tool_call>|\*\*|`|^#+ ", "", text.strip(), flags=re.M)
     for para in [p for p in re.split(r"\n\s*\n", text) if p.strip()]:
         lines = wrap(para.strip())
         print(f"{color}●{X} {lines[0]}"); [print("  " + l) for l in lines[1:]]; print()
+def user_line(text):
+    """The human's (or a peer's) message, highlighted the way Claude Code shows a prompt in the transcript."""
+    w = width(); lines = wrap(text.strip(), 2) or [""]
+    sys.stdout.write("\r\033[K")
+    for i, l in enumerate(lines[:12]):
+        pre = "› " if i == 0 else "  "; sys.stdout.write(f"\033[48;5;236m\033[97m{pre}{l}{' ' * max(0, w - len(pre) - len(l))}\033[0m\n")
+    if len(lines) > 12: sys.stdout.write(f"\033[48;5;236m\033[97m  … +{len(lines) - 12} lines{' ' * max(0, w - 14)}\033[0m\n")
+    sys.stdout.write("\n"); sys.stdout.flush()
 def tool_line(label, ok=True):
     print(f"{G if ok else R}●{X} {label[:width() - 2]}")
 def result_lines(text, keep=3, first="⎿ "):
@@ -285,7 +293,7 @@ def stdin_reader():
             continue
         if ch in (b"\r", b"\n"):
             text = TYPED["s"]; TYPED["s"] = ""; draw_zone("")
-            if text.strip(): INBOX.put(text)
+            if text.strip(): user_line(text); INBOX.put(text)
             continue
         if ch in (b"\x7f", b"\x08"): TYPED["s"] = TYPED["s"][:-1]; draw_zone(TYPED["s"]); continue
         if ch == b"\x15": TYPED["s"] = ""; draw_zone(""); continue
@@ -307,14 +315,14 @@ def main():
     threading.Thread(target=stdin_reader, daemon=True).start()
     first = a.init or (pathlib.Path(a.init_file).read_text().strip() if a.init_file else None)
     if first:
-        print(f"{D}› {first[:3 * width()]}{X}\n"); run_task(messages, first, tools)
+        user_line(first); run_task(messages, first, tools)
         if a.once: return
     nudge = os.environ.get("IDLE_NUDGE"); idle = int(os.environ.get("IDLE_SECONDS", "240"))
     while True:
         prompt_line()
         try: text = INBOX.get(timeout=idle if nudge else None)
         except queue.Empty: text = nudge
-        print(f"{D}› {text[: 3 * width()]}{X}\n")
+        pass
         if text.strip() in ("/quit", "exit"): return
         run_task(messages, text, tools)
 

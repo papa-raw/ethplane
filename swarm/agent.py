@@ -45,7 +45,7 @@ def say(text, color=""):
     text = re.sub(r"\*\*|`|^#+ ", "", text.strip(), flags=re.M)
     for para in [p for p in re.split(r"\n\s*\n", text) if p.strip()]:
         lines = wrap(para.strip())
-        print(f"{color}●{X} {lines[0]}"); [print("  " + l) for l in lines[1:]]
+        print(f"{color}●{X} {lines[0]}"); [print("  " + l) for l in lines[1:]]; print()
 def tool_line(label, ok=True):
     print(f"{G if ok else R}●{X} {label[:width() - 2]}")
 def result_lines(text, keep=3, first="⎿ "):
@@ -53,6 +53,7 @@ def result_lines(text, keep=3, first="⎿ "):
     for i, l in enumerate(lines[:keep]):
         print(f"  {D}{first if i == 0 else '  '} {l[:width() - 6]}{X}")
     if len(lines) > keep: print(f"  {D}   … +{len(lines) - keep} lines{X}")
+    print()
 class Spinner:
     def __init__(self): self.stop = threading.Event(); self.t0 = time.time()
     def __enter__(self):
@@ -66,11 +67,13 @@ class Spinner:
     def __exit__(self, *a): self.stop.set(); self.th.join()
 SESSION = f"{ROLE}-{os.environ.get('SWARM_NAME', PREFIX.rstrip('-'))}"
 def prompt_line():
-    w = width(); chip = f" {SESSION} "; left = f"  ▸▸ swarm tools on · {MODEL.split('/')[-1][:28]}"
-    print(f"{D}{'─' * w}{X}\n{B}›{X} \n{D}{left}{' ' * max(1, w - len(left) - len(chip))}{X}\033[7m{chip}\033[0m\033[1A\r{B}›{X} ", end="", flush=True)
+    w = width(); chip = f" {SESSION} "; left = f"  ▸▸ swarm tools on · {ROLE} · {MODEL.split('/')[-1][:24]}"; right = "/rc "
+    rule = "─" * max(1, w - len(chip) - 1)
+    print(f"{D}{rule}{X}\033[48;5;24m\033[38;5;153m{chip}\033[0m\n{B}›{X} \n\n{D}{left}{' ' * max(1, w - len(left) - len(right))}{right}{X}\033[2A\r{B}›{X} ", end="", flush=True)
 def footer(t0):
     dur = int(time.time() - t0); done = datetime.datetime.now().strftime("%-I:%M %p")
-    print(f"{D}✻ Worked for {dur // 60}m {dur % 60:02d}s · ↓ {TOK['task']:,} tokens · done {done}{X}"); TOK["task"] = 0
+    verb = ["Worked", "Crunched", "Cooked", "Brewed", "Baked"][int(t0) % 5]
+    print(f"{D}✻ {verb} for {dur // 60}m {dur % 60:02d}s · ↓ {TOK['task']:,} tokens · done {done}{X}\n"); TOK["task"] = 0
 
 # ── swarm plumbing ──────────────────────────────────────────────────────────────────────────────
 def stamp(): return datetime.datetime.now().strftime("%H:%M")
@@ -136,11 +139,9 @@ def t_edit(path: str, old: str = None, new: str = None, **alias):
     p.write_text(s.replace(old, new, 1)); return f"replaced 1 occurrence (+{len(new.splitlines())} -{len(old.splitlines())} lines)", True
 WORK = {"n": 0}
 def t_board(kind: str, text: str):
-    if ROLE != "orchestrator" and WORK["n"] < 3: return "refused: do work first (three edit, read, bash or measure calls since the last board or report line)", False
-    WORK["n"] = 0; board_append(f"{ROLE} {kind}: {text}"); return "written to the board", True
+    board_append(f"{ROLE} {kind}: {text}"); return "written to the board", True
 def t_report(text: str):
-    if ROLE != "orchestrator" and WORK["n"] < 3: return "refused: do work first (three edit, read, bash or measure calls since the last report); a report carries a measured number or a path", False
-    WORK["n"] = 0; board_append(f"REPORT {ROLE}: {text}")
+    board_append(f"REPORT {ROLE}: {text}")
     if ROLE != "orchestrator": send_to("orchestrator", f"REPORT {ROLE}: {text}")
     return "reported", True
 def t_read_board(lines: int = 20): return "\n".join(BOARD.read_text().splitlines()[-lines:]) if BOARD.exists() else "(empty board)", True
@@ -177,7 +178,7 @@ TOOLS = {
     "revert": (t_revert, spec("revert", "Restore the leanVM checkout to the reference commit before the next hypothesis.", {}, [])),
 }
 ROLE_TOOLS = {"orchestrator": ["board_plan", "handoff", "report", "read_board", "wait"],
-              "builder": ["bash", "read_file", "write_file", "edit_file", "measure", "submit", "revert", "board", "report", "read_board"],
+              "builder": ["bash", "read_file", "write_file", "edit_file", "measure", "submit", "revert", "report", "read_board"],
               "critic": ["bash", "read_file", "measure", "board", "report", "read_board"]}
 LABELS = {"bash": lambda a: f"Bash({a.get('command', '')[:90]})", "read_file": lambda a: f"Read({a.get('path')})",
           "write_file": lambda a: f"Write({a.get('path')})", "edit_file": lambda a: f"Update({a.get('path')})",
@@ -189,7 +190,7 @@ LABELS = {"bash": lambda a: f"Bash({a.get('command', '')[:90]})", "read_file": l
 COMMON = ("You are the {role} of a three-model swarm working an Ethplane node. Peers: orchestrator, builder, critic; the shared board is {board}. "
           "Every tool call carries a why: one short line, present tense, under 100 characters, what the step does and why. Write no other prose between tool calls. "
           "Never claim a result without the measured number or the command output that shows it. If a command fails, say what failed and try a different way; "
-          "never say you lack access: you have the tools listed. No markdown headers, no bold, no summaries of accomplishments. When your piece is finished, call report once with the number or the output, then stop.")
+          "never say you lack access: you have the tools listed. No markdown headers, no bold, no summaries of accomplishments. When your piece is finished, call report once with the number or the output; report ends your turn, so do the whole piece before it.")
 ROLE_PROMPT = {
     "orchestrator": "You never do the work yourself. For each task from the human: board_plan, then ONE handoff to the builder (task, files, done_when with a number), then one handoff to the critic (what to re-measure or re-run, done_when), then wait. Never queue several handoffs to one peer: the next handoff goes out only after that peer's report. While no REPORT has arrived, call wait again; never report that you are waiting and never re-send a handoff. When a REPORT arrives: if the critic's REVIEW is PASS with a number, report the result to the human in three lines; if FAIL, one corrected handoff naming what was missing. Read the board only when a report says to.",
     "builder": f"You edit code in the leanVM checkout {LEAN}; the editable surface is {', '.join(EDITABLE)} and nothing else. The loop for every hypothesis: read the file, make ONE real change with edit_file, call measure, then submit if measure says BELOW, otherwise revert and start the next hypothesis. measure is the only way to measure; never run cargo yourself. The baseline is {BASELINE} cycles; only strictly below counts. Comments and renames are not changes. Never conclude that nothing can be improved: the compiler surface (when editable) changed cycles in past runs.",
@@ -241,16 +242,16 @@ def _run(messages, tools):
             try: args = json.loads(c["function"].get("arguments") or "{}")
             except json.JSONDecodeError: args = {}
             why = str(args.pop("why", "")).strip()
-            if why: say(why, G if name == "bash" else "")
+            if why: say(why)
             if name not in tools_names(tools): out, ok = f"unknown tool {name}; you have {', '.join(tools_names(tools))}", False
             else:
                 try: out, ok = TOOLS[name][0](**args)
                 except TypeError as e: out, ok = f"bad arguments for {name}: {e}", False
                 except Exception as e: out, ok = f"{name} failed: {e}", False
-            if name not in ("board", "report", "read_board", "wait", "board_plan", "handoff"): WORK["n"] += 1
             if name == "bash": print(f"  {D}⎿  $ {args.get('command', '')[:width() - 8]}{X}"); result_lines(out, keep=3, first="  ")
             else: tool_line(LABELS.get(name, lambda a: name)(args), ok); result_lines(out)
             messages.append({"role": "tool", "tool_call_id": c.get("id", name), "content": out}); log({"role": "tool", "name": name, "ok": ok, "content": out[:2000]})
+            if name == "report" and ok and ROLE != "orchestrator": return
     say(f"stopped after {MAX_TURNS} turns; send a message to continue", Y)
 def tools_names(tools): return [t["function"]["name"] for t in tools]
 
@@ -280,7 +281,7 @@ def main():
         prompt_line()
         try: text = INBOX.get(timeout=idle if nudge else None)
         except queue.Empty: text = nudge
-        print(text if len(text) < 2 * width() else text[: 2 * width()] + " …")
+        print(f"\r\033[K\033[1B\033[K\033[1B\033[K\033[2A{D}› {text[: 3 * width()]}{X}\n")
         if text.strip() in ("/quit", "exit"): return
         run_task(messages, text, tools)
 

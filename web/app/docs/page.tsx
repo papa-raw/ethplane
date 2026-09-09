@@ -10,7 +10,7 @@ export default function DocsPage() {
     <main className="mx-auto max-w-4xl px-6 py-10 space-y-8">
       <Link href="/" className="text-sm text-muted-foreground hover:underline">← the plane</Link>
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold">Docs</h1>
+        <h1 className="text-2xl font-bold">Docs</h1>
         <p className="text-sm text-muted-foreground">
           Rendered from the repository, not rewritten for the web: {docs.length} document{docs.length === 1 ? '' : 's'}.
         </p>
@@ -30,7 +30,7 @@ export default function DocsPage() {
           <div className="space-y-12">
             {docs.map((d) => (
               <section key={d.file} id={d.file} data-testid="docs-section" className="space-y-3 scroll-mt-8">
-                <h2 className="text-lg font-semibold">
+                <h2 className="text-lg font-bold">
                   {d.title} <span className="font-mono text-xs text-muted-foreground">docs/{d.file}</span>
                 </h2>
                 <div

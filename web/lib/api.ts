@@ -58,3 +58,81 @@ export function stateOf(n: NodeRow): string {
   if (n.head) return 'passed';
   return n.state ?? 'seeded';
 }
+
+/**
+ * The state column exactly as the API returns it, with no derivation on top. The map highlights a
+ * node on this and nothing else (BRIEF §2 refusal 8): a chip is live because the API returned that
+ * node_id as `open`, never because its label looked interesting.
+ */
+export function apiState(n: NodeRow): string {
+  const s = (n.state ?? '').trim().toLowerCase();
+  return s.length > 0 ? s : 'seeded';
+}
+
+export function isOpen(n: NodeRow): boolean {
+  return apiState(n) === 'open';
+}
+
+/** One colour per state, from the tokens. `unknown` is the colour of "the API did not answer". */
+export const STATE_INK: Record<string, string> = {
+  seeded: 'var(--ep-secondary)',
+  defined: 'var(--ep-state-defined)',
+  funded: 'var(--ep-state-defined)',
+  open: 'var(--ep-primary)',
+  claimed: 'var(--ep-state-claimed)',
+  passed: 'var(--ep-state-passed)',
+  closed: 'var(--ep-secondary)',
+  unknown: 'var(--ep-state-unknown)',
+};
+
+/* ---------------------------------------------------------------------------------------------
+ * Sessions. The contract and the indexer call these leases and their JSON keys stay as deployed;
+ * every name a reader can reach is a session (BRIEF §3, vocabulary). The rename happens here, at
+ * the edge, so the words "lease" and "lease_seq" live in one file instead of across the pages.
+ * ------------------------------------------------------------------------------------------- */
+export type SessionRow = {
+  nodeId: string; lineage: string; operator: string; seq: number;
+  start: number; expiry: number; lastHeartbeat: number; fromHash: string | null; active: boolean;
+};
+export type SessionEvent = { kind: string; block: number; ts: number; lineage: string; seq: number };
+export type VerdictRow = { artifactHash: string; passed: boolean; metric: string; ts: number; seq: number };
+
+export type RawNodeDetail = {
+  node: NodeRow;
+  leases?: LeaseRow[];
+  lease_events?: Array<{ kind: string; block: number; ts: number; lineage: string; lease_seq: number }>;
+  submissions?: SubmissionRow[];
+  verdicts?: Array<{ artifact_hash: string; passed: number; metric: string; ts: number; lease_seq: number }>;
+  attribution?: AttributionRow[];
+  head?: { head: string; block: number } | null;
+};
+
+export type NodeDetail = {
+  node: NodeRow;
+  sessions: SessionRow[];
+  sessionEvents: SessionEvent[];
+  submissions: SubmissionRow[];
+  verdicts: VerdictRow[];
+  attribution: AttributionRow[];
+  head: string | null;
+};
+
+export function toNodeDetail(raw: RawNodeDetail): NodeDetail {
+  return {
+    node: raw.node,
+    sessions: (raw.leases ?? []).map((l) => ({
+      nodeId: l.node_id, lineage: l.lineage, operator: l.operator, seq: l.lease_seq,
+      start: l.start, expiry: l.expiry, lastHeartbeat: l.last_heartbeat,
+      fromHash: l.from_hash, active: Boolean(l.active),
+    })),
+    sessionEvents: (raw.lease_events ?? []).map((e) => ({
+      kind: e.kind, block: e.block, ts: e.ts, lineage: e.lineage, seq: e.lease_seq,
+    })),
+    submissions: raw.submissions ?? [],
+    verdicts: (raw.verdicts ?? []).map((v) => ({
+      artifactHash: v.artifact_hash, passed: Boolean(v.passed), metric: v.metric, ts: v.ts, seq: v.lease_seq,
+    })),
+    attribution: raw.attribution ?? [],
+    head: raw.head?.head ?? null,
+  };
+}

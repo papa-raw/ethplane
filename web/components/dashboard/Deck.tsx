@@ -38,7 +38,7 @@ export function Deck({ slides }: { slides: Slide[] }) {
   return (
     <div data-testid="deck" className="flex min-h-[70vh] flex-col justify-between gap-8">
       <article className="space-y-4">
-        <h2 className="text-3xl font-semibold tracking-tight">{slide.title}</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{slide.title}</h2>
         <div
           data-testid="deck-body"
           className="prose prose-zinc max-w-3xl text-lg [&_li]:my-1 [&_p]:my-3"

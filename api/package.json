@@ -7,7 +7,7 @@
     "build": "tsc && mkdir -p dist/src/abi && cp src/abi/*.json dist/src/abi/",
     "start": "node dist/src/server.js",
     "dev": "ts-node src/server.ts",
-    "test": "vitest"
+    "test": "vitest run"
   },
   "dependencies": {
     "@privy-io/server-auth": "^1.32.5",

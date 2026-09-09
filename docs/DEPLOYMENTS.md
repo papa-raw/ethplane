@@ -49,7 +49,7 @@ tighter than node 1's 302,592 B**, because the baseline it was measured from was
 So node 2 is lenient on time and stricter on size than node 1, and size is what its three
 submissions failed on.
 
-What the chain actually shows, rather than what the parameters suggest: all seven
+What the chain actually shows, rather than what the parameters suggest (read 2026-09-09 15:19 UTC): all seven
 `MeasurementRecorded` events on both nodes carry `verifierAccepted = false`, so **not one reached the
 contract's cycles comparison** — `_judge` returns FAIL on that flag before it looks at the number.
 The cycles criterion is what would decide a submission the verifier accepted; no submission has been

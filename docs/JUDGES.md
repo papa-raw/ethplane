@@ -115,8 +115,9 @@ day of real transcripts, are in `swarm/README.md`.
 
 ## 8. What the swarms tried
 
-Read from the chain and from the two swarm boards on the host, on 2026-09-09. Every measurement the
-verifier recorded, in order, decoded from the `MeasurementRecorded` logs:
+Read from the chain and from the two swarm boards on the host, 2026-09-09 15:19 UTC. Every
+measurement the verifier had recorded at that moment, in order, decoded from the
+`MeasurementRecorded` logs — re-run the decode and an eighth row means the swarm kept working:
 
 | block | node | artifact | cycles | proving µs | proof B | verify µs | accepted | status | tx |
 |---|---|---|---:|---:|---:|---:|---|---|---|
@@ -142,7 +143,8 @@ baseline and 32 at 1,541,462: the swarm searched, most hypotheses did nothing, a
 And then the judge held the bound. Every one of those three is FAIL, because the proof grew:
 **302,489 bytes against the 302,182 recorded**, and proof size is the one field of the four with no
 allowance at all. The swarm found a cycles cut and paid for it in proof size; the verifier would not
-take the trade. Nothing here was accepted: `verifierAccepted` is false on all seven, so none of them
+take the trade. Nothing here was accepted: `verifierAccepted` is false on all seven of those (the
+logs as of 2026-09-09 15:19 UTC), so none of them
 even reached the contract's cycles comparison — `_judge` returns FAIL on the flag before it looks at
 the number.
 

@@ -45,7 +45,8 @@ time bound on that node is lenient. That is the safe direction: a lenient bound 
 a good submission, only fail to catch a slow one.
 
 The cycles criterion — strictly below 1,542,812, thresholdBps 0 — is what decides a submission the
-verifier has accepted. None has been: all seven `MeasurementRecorded` events on the two nodes carry
+verifier has accepted. None has been: as of 2026-09-09 15:19 UTC, all seven `MeasurementRecorded`
+events on the two nodes carry
 `verifierAccepted = false`, so not one has reached that comparison, and `_judge` returns FAIL on the
 flag before it looks at the number. What has actually decided every recorded verdict so far is the
 verifier's own non-regression check, and on node 2 that was proof size — 302,489 B against the

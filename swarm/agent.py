@@ -180,6 +180,10 @@ def t_board(kind: str, text: str):
     board_append(f"{ROLE} {kind}: {text}"); return "written to the board", True
 def t_report(text: str):
     if os.environ.get("DESIGN") and ROLE == "builder" and not LAST.get("build"): return "refused: call build first; a page report needs a passing build since the last report", False
+    if os.environ.get("DESIGN") and ROLE == "builder" and not LAST.get("accent"): return f"refused: the build found the accent {ACCENT} in no built file; the tokens are not applied yet", False
+    if ROLE == "designer":
+        pngs = sorted(SHOTS.glob("*.png")) if SHOTS.exists() else []; variants = sorted((pathlib.Path(WORKDIR) / "web/design/variants").glob("*.html"))
+        if len(variants) < 3 or len(pngs) < 3: return f"refused: the designer reports only with three variants and three screenshots; found {len(variants)} variant files in web/design/variants and {len(pngs)} PNGs in shots/", False
     LAST["build"] = False
     board_append(f"REPORT {ROLE}: {text}")
     if ROLE != "orchestrator": send_to("orchestrator", f"REPORT {ROLE}: {text}")
@@ -223,10 +227,12 @@ def t_build():
     pages, _ = run_shell("find web/out -name '*.html' 2>/dev/null | wc -l")
     accent, _ = run_shell(f"grep -rli '{ACCENT}' web/out/*.html web/out/_next/static/css 2>/dev/null | wc -l")
     pages = pages.strip() or "0"; accent = accent.strip() or "0"
-    status = "ok" if ok and not errs and int(pages) > 0 else "FAILED"
+    min_pages = int(os.environ.get("MIN_PAGES", "60"))
+    status = "ok" if ok and not errs and int(pages) >= min_pages else "FAILED"
+    if ok and not errs and 0 < int(pages) < min_pages: errs = [f"only {pages} pages built; the site has at least {min_pages} (node routes lost)"]
     kind = "BUILD" if ROLE == "builder" else "REVIEW"
     board_append(f"{ROLE} {kind}: {status} · {pages} pages · accent {ACCENT} in {accent} built files" + (" · " + errs[0][:120] if errs else ""))
-    LAST["build"] = status == "ok"
+    LAST["build"] = status == "ok"; LAST["accent"] = int(accent) > 0
     return (f"build {status} · {pages} html pages in web/out · accent {ACCENT} found in {accent} built files\n" + ("\n".join(errs[:6]) if errs else out[-800:])), status == "ok"
 SHOTS = SWARM / "shots"
 def t_screenshot(target: str, name: str = ""):

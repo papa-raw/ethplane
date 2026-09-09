@@ -27,7 +27,11 @@ BOARD = SWARM / "board.md"
 LOG = SWARM / ROLE / "transcript.jsonl"
 
 # ── rendering ───────────────────────────────────────────────────────────────────────────────────
-D, B, G, R, Y, X = "\033[2m", "\033[1m", "\033[32m", "\033[31m", "\033[33m", "\033[0m"
+D, B, G, R, Y, X = "\033[2m", "\033[1m", "\033[38;5;71m", "\033[38;5;167m", "\033[38;5;179m", "\033[0m"
+import signal
+def height():
+    try: return shutil.get_terminal_size().lines
+    except Exception: return 40
 def width():
     try: return min(shutil.get_terminal_size().columns, 120)
     except Exception: return 100
@@ -66,14 +70,21 @@ class Spinner:
         self.th = threading.Thread(target=run, daemon=True); self.th.start(); return self
     def __exit__(self, *a): self.stop.set(); self.th.join()
 SESSION = f"{ROLE}-{os.environ.get('SWARM_NAME', PREFIX.rstrip('-'))}"
-def prompt_line():
-    w = width(); chip = f" {SESSION} "; left = f"  ▸▸ swarm tools on · {ROLE} · {MODEL.split('/')[-1][:24]}"; right = "/rc "
+ZONE = 4  # rows pinned at the bottom: rule+chip, prompt, blank, footer
+def draw_zone(typed=""):
+    """Fixed prompting zone at the bottom of the pane; the transcript scrolls in the region above it."""
+    w, h = width(), height(); chip = f" {SESSION} "; left = f"  ▸▸ swarm tools on · {ROLE} · {MODEL.split('/')[-1][:24]}"; right = "/rc "
     rule = "─" * max(1, w - len(chip) - 1)
-    print(f"{D}{rule}{X}\033[48;5;24m\033[38;5;153m{chip}\033[0m\n{B}›{X} \n\n{D}{left}{' ' * max(1, w - len(left) - len(right))}{right}{X}\033[2A\r{B}›{X} ", end="", flush=True)
+    sys.stdout.write("\0337" + f"\033[{h - 3};1H\033[K{D}{rule}{X}\033[48;5;24m\033[38;5;153m{chip}\033[0m"
+                     + f"\033[{h - 2};1H\033[K{B}›{X} {typed[:w - 3]}" + f"\033[{h - 1};1H\033[K"
+                     + f"\033[{h};1H\033[K{D}{left}{' ' * max(1, w - len(left) - len(right))}{right}{X}" + "\0338"); sys.stdout.flush()
+def set_region():
+    h = height(); sys.stdout.write(f"\033[1;{h - ZONE}r\033[{h - ZONE};1H"); sys.stdout.flush(); draw_zone()
+def prompt_line(): draw_zone()
 def footer(t0):
     dur = int(time.time() - t0); done = datetime.datetime.now().strftime("%-I:%M %p")
     verb = ["Worked", "Crunched", "Cooked", "Brewed", "Baked"][int(t0) % 5]
-    print(f"{D}✻ {verb} for {dur // 60}m {dur % 60:02d}s · ↓ {TOK['task']:,} tokens · done {done}{X}\n"); TOK["task"] = 0
+    print(f"{D}✻ {verb} for {dur // 60}m {dur % 60:02d}s · ↓ {TOK['task']:,} tokens · done {done}{X}\n"); TOK["task"] = 0; draw_zone()
 
 # ── swarm plumbing ──────────────────────────────────────────────────────────────────────────────
 def stamp(): return datetime.datetime.now().strftime("%H:%M")
@@ -271,6 +282,7 @@ def main():
     if brief.exists(): system += "\n\nNODE BRIEF:\n" + brief.read_text()[:6000]
     messages = [{"role": "system", "content": system}]
     board_append(f"{ROLE} READY (agent.py, {MODEL.split('/')[-1]})")
+    set_region(); signal.signal(signal.SIGWINCH, lambda *_: set_region())
     threading.Thread(target=stdin_reader, daemon=True).start()
     first = a.init or (pathlib.Path(a.init_file).read_text().strip() if a.init_file else None)
     if first:
@@ -281,10 +293,11 @@ def main():
         prompt_line()
         try: text = INBOX.get(timeout=idle if nudge else None)
         except queue.Empty: text = nudge
-        print(f"\r\033[K\033[1B\033[K\033[1B\033[K\033[2A{D}› {text[: 3 * width()]}{X}\n")
+        print(f"{D}› {text[: 3 * width()]}{X}\n")
         if text.strip() in ("/quit", "exit"): return
         run_task(messages, text, tools)
 
 if __name__ == "__main__":
     try: main()
     except KeyboardInterrupt: print()
+    finally: sys.stdout.write("\033[r\033[999;1H\n"); sys.stdout.flush()

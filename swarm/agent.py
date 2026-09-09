@@ -21,7 +21,8 @@ MAX_TURNS = int(os.environ.get("MAX_TURNS", "300"))
 EDITABLE = [e.strip() for e in os.environ.get("EDITABLE", "crates/rec_aggregation/guests/").split(",") if e.strip()]
 BASELINE = int(os.environ.get("BASELINE", "1542812"))
 MEASURE_CMD = os.environ.get("MEASURE_CMD", "cargo run --release -- aggregate --xmss 900 --log-inv-rate 1 --repeat 3")
-LAST = {"cycles": None}; TOK = {"n": 0}
+LAST = {"cycles": None}; TOK = {"n": 0, "task": 0}
+VERBS = ["Thinking", "Working", "Measuring", "Reading", "Building", "Checking", "Composing", "Weighing"]
 BOARD = SWARM / "board.md"
 LOG = SWARM / ROLE / "transcript.jsonl"
 
@@ -47,26 +48,29 @@ def say(text, color=""):
         print(f"{color}●{X} {lines[0]}"); [print("  " + l) for l in lines[1:]]
 def tool_line(label, ok=True):
     print(f"{G if ok else R}●{X} {label[:width() - 2]}")
-def result_lines(text, keep=3):
+def result_lines(text, keep=3, first="⎿ "):
     lines = [l for l in text.rstrip().splitlines()] or ["(no output)"]
     for i, l in enumerate(lines[:keep]):
-        print(f"  {D}{'⎿ ' if i == 0 else '  '} {l[:width() - 6]}{X}")
+        print(f"  {D}{first if i == 0 else '  '} {l[:width() - 6]}{X}")
     if len(lines) > keep: print(f"  {D}   … +{len(lines) - keep} lines{X}")
 class Spinner:
     def __init__(self): self.stop = threading.Event(); self.t0 = time.time()
     def __enter__(self):
         def run():
-            frames = "✻✼✽✾✿❀"; i = 0
+            frames = "✻✼✽✾✿❀"; i = 0; verb = VERBS[int(self.t0) % len(VERBS)]
             while not self.stop.is_set():
-                sys.stdout.write(f"\r{D}{frames[i % len(frames)]} Thinking… ({int(time.time() - self.t0)}s · ↓ {TOK['n'] / 1000:.1f}k tokens){X}\033[K"); sys.stdout.flush()
+                sys.stdout.write(f"\r{D}{frames[i % len(frames)]} {verb}… ({int(time.time() - self.t0)}s · ↓ {TOK['task']:,} tokens){X}\033[K"); sys.stdout.flush()
                 i += 1; self.stop.wait(0.25)
             sys.stdout.write("\r\033[K"); sys.stdout.flush()
         self.th = threading.Thread(target=run, daemon=True); self.th.start(); return self
     def __exit__(self, *a): self.stop.set(); self.th.join()
+SESSION = f"{ROLE}-{os.environ.get('SWARM_NAME', PREFIX.rstrip('-'))}"
 def prompt_line():
-    print(f"{D}{'─' * width()}{X}\n{B}›{X} ", end="", flush=True)
+    w = width(); chip = f" {SESSION} "; left = f"  ▸▸ swarm tools on · {MODEL.split('/')[-1][:28]}"
+    print(f"{D}{'─' * w}{X}\n{B}›{X} \n{D}{left}{' ' * max(1, w - len(left) - len(chip))}{X}\033[7m{chip}\033[0m\033[1A\r{B}›{X} ", end="", flush=True)
 def footer(t0):
-    dur = int(time.time() - t0); print(f"{D}✻ Worked for {dur // 60}m {dur % 60:02d}s · ↓ {TOK['n'] / 1000:.1f}k tokens · {ROLE} · {MODEL.split('/')[-1]}{X}")
+    dur = int(time.time() - t0); done = datetime.datetime.now().strftime("%-I:%M %p")
+    print(f"{D}✻ Worked for {dur // 60}m {dur % 60:02d}s · ↓ {TOK['task']:,} tokens · done {done}{X}"); TOK["task"] = 0
 
 # ── swarm plumbing ──────────────────────────────────────────────────────────────────────────────
 def stamp(): return datetime.datetime.now().strftime("%H:%M")
@@ -130,9 +134,13 @@ def t_edit(path: str, old: str = None, new: str = None, **alias):
     n = s.count(old)
     if n != 1: return f"old text found {n} times; it must match exactly once", False
     p.write_text(s.replace(old, new, 1)); return f"replaced 1 occurrence (+{len(new.splitlines())} -{len(old.splitlines())} lines)", True
-def t_board(kind: str, text: str): board_append(f"{ROLE} {kind}: {text}"); return "written to the board", True
+WORK = {"n": 0}
+def t_board(kind: str, text: str):
+    if ROLE != "orchestrator" and WORK["n"] < 3: return "refused: do work first (three edit, read, bash or measure calls since the last board or report line)", False
+    WORK["n"] = 0; board_append(f"{ROLE} {kind}: {text}"); return "written to the board", True
 def t_report(text: str):
-    board_append(f"REPORT {ROLE}: {text}")
+    if ROLE != "orchestrator" and WORK["n"] < 3: return "refused: do work first (three edit, read, bash or measure calls since the last report); a report carries a measured number or a path", False
+    WORK["n"] = 0; board_append(f"REPORT {ROLE}: {text}")
     if ROLE != "orchestrator": send_to("orchestrator", f"REPORT {ROLE}: {text}")
     return "reported", True
 def t_read_board(lines: int = 20): return "\n".join(BOARD.read_text().splitlines()[-lines:]) if BOARD.exists() else "(empty board)", True
@@ -195,7 +203,7 @@ def call_model(messages, tools):
         try:
             req = urllib.request.Request(f"{BASE}/chat/completions", body, {"Content-Type": "application/json", "Authorization": "Bearer local"})
             with urllib.request.urlopen(req, timeout=600) as r:
-                d = json.load(r); TOK["n"] += int(d.get("usage", {}).get("total_tokens", 0) or 0); return d["choices"][0]["message"]
+                d = json.load(r); u = d.get("usage", {}) or {}; TOK["n"] += int(u.get("total_tokens", 0) or 0); TOK["task"] += int(u.get("completion_tokens", 0) or 0); return d["choices"][0]["message"]
         except Exception as e:
             err = e; time.sleep(3 * (attempt + 1))
     raise RuntimeError(f"model unreachable: {err}")
@@ -233,18 +241,23 @@ def _run(messages, tools):
             try: args = json.loads(c["function"].get("arguments") or "{}")
             except json.JSONDecodeError: args = {}
             why = str(args.pop("why", "")).strip()
-            if why: say(why)
+            if why: say(why, G if name == "bash" else "")
             if name not in tools_names(tools): out, ok = f"unknown tool {name}; you have {', '.join(tools_names(tools))}", False
             else:
                 try: out, ok = TOOLS[name][0](**args)
                 except TypeError as e: out, ok = f"bad arguments for {name}: {e}", False
                 except Exception as e: out, ok = f"{name} failed: {e}", False
-            tool_line(LABELS.get(name, lambda a: name)(args), ok); result_lines(out)
+            if name not in ("board", "report", "read_board", "wait", "board_plan", "handoff"): WORK["n"] += 1
+            if name == "bash": print(f"  {D}⎿  $ {args.get('command', '')[:width() - 8]}{X}"); result_lines(out, keep=3, first="  ")
+            else: tool_line(LABELS.get(name, lambda a: name)(args), ok); result_lines(out)
             messages.append({"role": "tool", "tool_call_id": c.get("id", name), "content": out}); log({"role": "tool", "name": name, "ok": ok, "content": out[:2000]})
     say(f"stopped after {MAX_TURNS} turns; send a message to continue", Y)
 def tools_names(tools): return [t["function"]["name"] for t in tools]
 
 def stdin_reader():
+    try:
+        import termios; fd = sys.stdin.fileno(); a = termios.tcgetattr(fd); a[3] &= ~termios.ECHO; termios.tcsetattr(fd, termios.TCSANOW, a)
+    except Exception: pass
     for line in sys.stdin:
         if line.strip(): INBOX.put(line.rstrip("\n"))
 
@@ -260,7 +273,7 @@ def main():
     threading.Thread(target=stdin_reader, daemon=True).start()
     first = a.init or (pathlib.Path(a.init_file).read_text().strip() if a.init_file else None)
     if first:
-        print(f"{D}> {first[:width() - 2]}{X}"); run_task(messages, first, tools)
+        print(f"{D}› {first[:3 * width()]}{X}\n"); run_task(messages, first, tools)
         if a.once: return
     nudge = os.environ.get("IDLE_NUDGE"); idle = int(os.environ.get("IDLE_SECONDS", "240"))
     while True:

@@ -61,9 +61,12 @@ export function storeEvent(
     return true;
   }
 
+  // OR IGNORE against the unique (tx, log_index) index: reading a log twice is normal — a rescan,
+  // an overlapping range, a restart — and the second read must change nothing.
   const leaseEvent = (nodeId: string, lineage: string, seq: number, kind: string) =>
     db.prepare(
-      `INSERT INTO lease_events(node_id, lineage, lease_seq, kind, block, ts, tx, log_index) VALUES(?,?,?,?,?,?,?,?)`
+      `INSERT OR IGNORE INTO lease_events(node_id, lineage, lease_seq, kind, block, ts, tx, log_index)
+       VALUES(?,?,?,?,?,?,?,?)`
     ).run(nodeId, lineage, seq, kind, block, ts, tx, logIndex);
 
   switch (eventName) {
@@ -122,11 +125,12 @@ export function storeEvent(
     case 'MeasurementRecorded':
       // status: 0 NONE, 1 PENDING, 2 FAIL, 3 PASS, 4 REVIEW — PASS is the only one that pays.
       db.prepare(
-        `INSERT INTO verdicts(node_id, artifact_hash, lease_seq, passed, metric, metric_hash, spread, block, ts, tx)
-         VALUES(?,?,?,?,?,?,?,?,?,?)`
+        `INSERT OR IGNORE INTO verdicts(node_id, artifact_hash, lease_seq, passed, metric, metric_hash,
+                                        spread, block, ts, tx, log_index)
+         VALUES(?,?,?,?,?,?,?,?,?,?,?)`
       ).run(
         str(args.nodeId), str(args.artifactHash), num(args.seq), num(args.status) === 3 ? 1 : 0,
-        str(args.cycles), str(args.evidenceHash), str(args.proofBytes), block, ts, tx
+        str(args.cycles), str(args.evidenceHash), str(args.proofBytes), block, ts, tx, logIndex
       );
       return true;
 
@@ -144,13 +148,14 @@ export function storeEvent(
 
     case 'Payout':
       db.prepare(
-        `INSERT INTO attribution(node_id, operator, kind, weight, artifact_hash, block, ts, tx) VALUES(?,?,?,?,?,?,?,?)`
-      ).run(str(args.nodeId), str(args.to), num(args.kind), str(args.amount), str(args.artifactHash), block, ts, tx);
+        `INSERT OR IGNORE INTO attribution(node_id, operator, kind, weight, artifact_hash, block, ts, tx, log_index)
+         VALUES(?,?,?,?,?,?,?,?,?)`
+      ).run(str(args.nodeId), str(args.to), num(args.kind), str(args.amount), str(args.artifactHash), block, ts, tx, logIndex);
       return true;
 
     case 'Withdrawn':
-      db.prepare(`INSERT INTO releases(to_addr, amount, block, ts, tx) VALUES(?,?,?,?,?)`)
-        .run(str(args.to), str(args.amount), block, ts, tx);
+      db.prepare(`INSERT OR IGNORE INTO releases(to_addr, amount, block, ts, tx, log_index) VALUES(?,?,?,?,?,?)`)
+        .run(str(args.to), str(args.amount), block, ts, tx, logIndex);
       return true;
 
     case 'LineageRegistered':

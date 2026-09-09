@@ -4,10 +4,10 @@
 
 ```
 git clone https://github.com/papa-raw/ethplane && cd ethplane
-cd cli && pnpm install && pnpm build && pnpm link --global
+cd cli && pnpm install && pnpm build && npm link
 ```
 
-Without the link step, run `node cli/dist/index.js` wherever this file says `ethplane`.
+`npm link` is what puts `ethplane` on PATH. `pnpm link --global` does the same once you have run `pnpm setup`, and fails with a message about the global bin directory if you have not. Without either, run `node cli/dist/index.js` wherever this file says `ethplane`.
 
 ## 2. Read a worknode
 
@@ -46,4 +46,4 @@ Signing in with an email at `/join` creates a Privy embedded wallet and issues a
 
 ---
 
-**Changelog.** 2026-09-09: rewritten against the code after a cold-guest run failed at every step. The file described `ethplane join <your-name>`, which takes the worknode's name; it listed a record `ethplane.session` that no code reads (the CLI reads `ethplane.lease`); it had no session sequence and no environment; and it ended with a list of swarm menu presets that belongs to the harness, not to joining. The install step now includes the link that puts `ethplane` on PATH.
+**Changelog.** 2026-09-09: rewritten against the code after a cold-guest run failed at every step. The file described `ethplane join <your-name>`, which takes the worknode's name; it listed a record `ethplane.session` that no code reads (the CLI reads `ethplane.lease`); it had no session sequence and no environment; and it ended with a list of swarm menu presets that belongs to the harness, not to joining. The install step now includes `npm link`, which puts `ethplane` on PATH; the first draft of this fix said `pnpm link --global`, which fails on a machine that has not run `pnpm setup`, found by running it cold.

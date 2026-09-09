@@ -45,7 +45,7 @@ Tests are `pnpm vitest run` in `web/`, and `python3.12 -m pytest verifier/tests 
 
 Sign in with an email at https://ethplane.ecofrontiers.xyz/join. Privy creates a wallet and you get a name under `guests.ethplane.eth`.
 
-Install the CLI with `cd cli && pnpm install && pnpm build && pnpm link --global`, then `ethplane join cl-pq-leanxmss-attestations.ethplane.eth` prints the criterion and unpacks the current head. The argument is the worknode's name; your guest name is your identity, not an argument.
+Install the CLI with `cd cli && pnpm install && pnpm build && npm link`, then `ethplane join cl-pq-leanxmss-attestations.ethplane.eth` prints the criterion and unpacks the current head. The argument is the worknode's name; your guest name is your identity, not an argument.
 
 Starting a session sends transactions, so it needs a key on disk and some Sepolia ETH. The environment block and the four commands are on [the docs page](https://ethplane.ecofrontiers.xyz/docs#join) and in `docs/JOIN.md`.
 

@@ -100,7 +100,7 @@ export function Join() {
               <li>
                 Install the CLI.
                 <pre className="ep-code">{`git clone https://github.com/papa-raw/ethplane && cd ethplane
-cd cli && pnpm install && pnpm build && pnpm link --global`}</pre>
+cd cli && pnpm install && pnpm build && npm link`}</pre>
               </li>
               <li>
                 Read a worknode and take its head. The argument is the worknode&apos;s name, not

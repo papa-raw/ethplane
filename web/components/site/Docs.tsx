@@ -413,11 +413,14 @@ cast call ${UNIVERSAL_RESOLVER} \\
             <h3 style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, margin: '16px 0 8px' }}>1. Install the CLI</h3>
             <pre style={{ ...mono, background: '#F5F5F7', padding: 12, borderRadius: 4, overflowX: 'auto', margin: '0 0 12px' }}>
 {`git clone https://github.com/papa-raw/ethplane && cd ethplane
-cd cli && pnpm install && pnpm build && pnpm link --global`}
+cd cli && pnpm install && pnpm build && npm link`}
             </pre>
             <Row>
-              Without the link step, run it as{' '}
-              <span style={mono}>node cli/dist/index.js</span> instead of{' '}
+              <span style={mono}>npm link</span> is what puts <span style={mono}>ethplane</span> on
+              PATH. <span style={mono}>pnpm link --global</span> does the same once you have run{' '}
+              <span style={mono}>pnpm setup</span>, and it fails with a message about the global bin
+              directory if you have not. Without either, run{' '}
+              <span style={mono}>node cli/dist/index.js</span> wherever this page says{' '}
               <span style={mono}>ethplane</span>.
             </Row>
             <h3 style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, margin: '16px 0 8px' }}>2. Read a worknode and take its head</h3>

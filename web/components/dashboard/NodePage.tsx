@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePolling } from '@/lib/usePolling';
 import { NodeRow, LeaseRow, SubmissionRow, AttributionRow, STATE_STYLE, stateOf } from '@/lib/api';
-import { readEnsText } from '@/lib/ens';
+import { readEnsText, shortEnsError } from '@/lib/ens';
 import { Panel } from './Panel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +21,13 @@ export type NodeDetail = {
 
 const KIND = ['winner', 'parents', 'verifier', 'compute', 'registrant'];
 const PRIVY_POLICY = 'c8io5x5g08igo85ljedozu2k';
+/** The contract's verbs stay as deployed; only what a reader sees changes. */
+const SESSION_WORD: Record<string, string> = {
+  claimed: 'started',
+  heartbeat: 'heartbeat',
+  expired: 'lapsed',
+  'missed-heartbeat': 'lapsed, no heartbeat',
+};
 
 export function NodePage({ nodeId, slug, label }: { nodeId: string; slug: string | null; label: string | null }) {
   const poll = usePolling<NodeDetail>(`/api/nodes/${nodeId}`);
@@ -61,7 +68,7 @@ function Detail({ d, slug }: { d: NodeDetail; slug: string | null }) {
       </div>
 
       <EnsCard slug={slug} />
-      <LeaseTimeline events={d.lease_events} leases={d.leases} />
+      <Sessions events={d.lease_events} leases={d.leases} />
       <Submissions rows={d.submissions} verdicts={d.verdicts} head={d.head?.head ?? null} />
       <Attribution rows={d.attribution} />
     </div>
@@ -75,8 +82,9 @@ function RegisterCard({ slug }: { slug: string | null }) {
       <CardHeader><CardTitle className="text-base">Nobody has registered this node</CardTitle></CardHeader>
       <CardContent className="space-y-2 text-sm text-muted-foreground">
         <p>
-          Registration is permissionless and free: claim the name, then define the node with its
-          criterion and split. Anyone may do it once, and the registrant keeps the registrant share.
+          In principle anybody can contribute to any node, and registering one is permissionless and
+          free: take the name, then define the node with its criterion and split. Anyone may do it
+          once, and the registrant keeps the registrant share of everything the node ever pays.
         </p>
         <pre className="overflow-x-auto rounded bg-muted p-3 text-xs">
 {`# claim the ENS name (one call, no fee)
@@ -134,13 +142,17 @@ function FundingCard({ node }: { node: NodeRow }) {
 /** Read through the Universal Resolver, so this panel proves ENS resolution rather than asserting it. */
 function EnsCard({ slug }: { slug: string | null }) {
   const name = slug ? `${slug}.ethplane.eth` : null;
-  const [state, setState] = useState<{ value?: string; resolver?: string; error?: string; loading: boolean }>({ loading: true });
+  const [state, setState] = useState<{ value?: string; resolver?: string; error?: string; detail?: string; loading: boolean }>({ loading: true });
   useEffect(() => {
     if (!name) { setState({ loading: false, error: 'no ENS name for this node' }); return; }
     let alive = true;
     readEnsText(name, 'ethplane.status')
       .then((r) => alive && setState({ ...r, loading: false }))
-      .catch((e) => alive && setState({ loading: false, error: e instanceof Error ? e.message : String(e) }));
+      .catch((e) => {
+        if (!alive) return;
+        console.warn('ENS read failed', e);
+        setState({ loading: false, error: shortEnsError(e), detail: e instanceof Error ? e.message : String(e) });
+      });
     return () => { alive = false; };
   }, [name]);
   return (
@@ -149,7 +161,9 @@ function EnsCard({ slug }: { slug: string | null }) {
       <CardContent className="space-y-1 text-sm">
         <p className="font-mono">{name ?? '—'}</p>
         {state.loading ? <p className="text-muted-foreground">reading through the Universal Resolver…</p> : null}
-        {state.error ? <p className="text-muted-foreground">no record yet ({state.error})</p> : null}
+        {state.error ? (
+          <p className="text-muted-foreground" title={state.detail}>no record yet — {state.error}</p>
+        ) : null}
         {state.value ? (
           <>
             <p><span className="text-muted-foreground">ethplane.status</span> {state.value}</p>
@@ -161,27 +175,33 @@ function EnsCard({ slug }: { slug: string | null }) {
   );
 }
 
-function LeaseTimeline({ events, leases }: { events: NodeDetail['lease_events']; leases: LeaseRow[] }) {
+function Sessions({ events, leases }: { events: NodeDetail['lease_events']; leases: LeaseRow[] }) {
   return (
-    <Card data-testid="lease-timeline">
-      <CardHeader><CardTitle className="text-base">Leases</CardTitle></CardHeader>
+    <Card data-testid="sessions">
+      <CardHeader><CardTitle className="text-base">Sessions</CardTitle></CardHeader>
       <CardContent>
         {events.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No lease has been claimed on this node yet.</p>
+          <p className="text-sm text-muted-foreground">
+            No session has been started on this node yet. A session is not permission and not
+            exclusivity: it is a declaration that you are working from a particular head, kept alive
+            by heartbeats, so that what you submit carries its provenance and a worker who goes
+            silent lapses instead of holding the node.
+          </p>
         ) : (
           <ol className="space-y-2 text-sm">
             {events.map((e, i) => (
               <li key={i} className="flex flex-wrap items-baseline gap-2">
-                <Badge variant={e.kind === 'claimed' ? 'default' : 'secondary'}>{e.kind}</Badge>
+                <Badge variant={e.kind === 'claimed' ? 'default' : 'secondary'}>{SESSION_WORD[e.kind] ?? e.kind}</Badge>
                 <span className="font-mono text-xs">{e.lineage?.slice(0, 10)}…</span>
-                <span className="text-muted-foreground text-xs">lease {e.lease_seq} · block {e.block}</span>
+                <span className="text-muted-foreground text-xs">session {e.lease_seq} · block {e.block}</span>
               </li>
             ))}
           </ol>
         )}
         {leases.some((l) => l.active) ? (
           <p className="mt-3 text-xs text-muted-foreground">
-            {leases.filter((l) => l.active).length} lease(s) live now — claim-alongside means another lineage may work the same node.
+            {leases.filter((l) => l.active).length} active session(s) — in principle anybody can
+            contribute to any node, and many sessions run on one node at once.
           </p>
         ) : null}
       </CardContent>

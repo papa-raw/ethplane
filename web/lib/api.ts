@@ -48,7 +48,7 @@ export const STATE_STYLE: Record<string, { label: string; dot: string; ring: str
   defined:  { label: 'defined',  dot: 'bg-sky-500',    ring: 'ring-sky-300' },
   funded:   { label: 'funded',   dot: 'bg-sky-600',    ring: 'ring-sky-400' },
   open:     { label: 'open',     dot: 'bg-violet-500', ring: 'ring-violet-300' },
-  claimed:  { label: 'claimed',  dot: 'bg-amber-500',  ring: 'ring-amber-300' },
+  claimed:  { label: 'in session',  dot: 'bg-amber-500',  ring: 'ring-amber-300' },
   passed:   { label: 'passed',   dot: 'bg-emerald-500', ring: 'ring-emerald-300' },
   closed:   { label: 'closed',   dot: 'bg-zinc-600',   ring: 'ring-zinc-400' },
 };

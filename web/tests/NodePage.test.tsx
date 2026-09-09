@@ -1,7 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 
-vi.mock('@/lib/ens', () => ({ readEnsText: vi.fn().mockRejectedValue(new Error('no record')) }));
+vi.mock('@/lib/ens', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/ens')>()),
+  readEnsText: vi.fn().mockRejectedValue(new Error('no record')),
+}));
 vi.mock('@/lib/usePolling', () => ({ usePolling: vi.fn() }));
 
 import { usePolling } from '@/lib/usePolling';
@@ -43,7 +46,7 @@ describe('NodePage', () => {
     expect(screen.getByTestId('funding-card')).toHaveTextContent('10,000 PLANE');
     expect(screen.getByTestId('funding-card')).toHaveTextContent('c8io5x5g08igo85ljedozu2k');
     expect(screen.getByTestId('funding-card')).toHaveTextContent('policy violation');
-    expect(screen.getByTestId('lease-timeline')).toHaveTextContent('No lease has been claimed');
+    expect(screen.getByTestId('sessions')).toHaveTextContent('No session has been started on this node yet');
     expect(screen.getByTestId('attribution')).toHaveTextContent('No payouts yet');
   });
 
@@ -55,5 +58,12 @@ describe('NodePage', () => {
     vi.mocked(usePolling).mockReturnValue({ data: detail({ node: node({ state: 'open' }) }) as never, error: null, loading: false });
     render(<NodePage nodeId="0x8e67" slug="cl-pq" label="PQ" />);
     expect(screen.queryByTestId('register-control')).toBeNull();
+  });
+
+  it('shows one line when the ENS read fails, not viem\'s stack', async () => {
+    vi.mocked(usePolling).mockReturnValue({ data: detail() as never, error: null, loading: false });
+    render(<NodePage nodeId="0x8e67" slug="cl-pq" label="PQ aggregation" />);
+    await waitFor(() => expect(screen.getByTestId('ens-card')).toHaveTextContent('no record yet'));
+    expect(screen.getByTestId('ens-card')).not.toHaveTextContent('Contract Call');
   });
 });

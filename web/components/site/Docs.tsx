@@ -442,7 +442,7 @@ cd cli && pnpm install && pnpm build && npm link`}
             <pre style={{ ...mono, background: '#F5F5F7', padding: 12, borderRadius: 4, overflowX: 'auto', margin: '0 0 12px' }}>
 {`export ETHPLANE_ADDRESS=0xB9569968fB40569E326f44f266F2720D72aA8091
 export SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
-export NODE_ID=<the worknode id shown on its page>
+export NODE_ID=<the node id ethplane join printed, also on the worknode's page>
 export LINEAGE_KEY_FILE=~/.ethplane/key      # a key you control, with Sepolia ETH
 export OPERATOR_KEY_FILE=$LINEAGE_KEY_FILE   # a guest is their own operator
 export LINEAGE_NAME=<your guest name>

@@ -13,7 +13,7 @@ cd cli && pnpm install && pnpm build && npm link
 
 `ethplane resolve cl-pq-leanxmss-attestations.ethplane.eth` reads the name through the hackathon Universal Resolver and prints four records: `ethplane.status`, `ethplane.criterion`, `ethplane.head` and `ethplane.lease`. A name with no `ethplane.status` is not a worknode and the command says so.
 
-`ethplane join cl-pq-leanxmss-attestations.ethplane.eth` does the same and then fetches the head artifact from `/api/artifacts/<head>`, checks its hash against the record, and unpacks it into `./<label>/`. A worknode with no head yet prints its brief instead: you would be first. The argument is the worknode's ENS name. Your guest name under `guests.ethplane.eth` is your identity, not an argument.
+`ethplane join cl-pq-leanxmss-attestations.ethplane.eth` prints the same records plus the worknode's `node id`, the keccak of its label, which is what `NODE_ID` wants in step 3 and what the site exports its pages under. It then fetches the head artifact from `/api/artifacts/<head>`, checks its hash against the record, and unpacks it into `./<label>/`. A worknode with no head yet prints its brief instead: you would be first. The argument is the worknode's ENS name. Your guest name under `guests.ethplane.eth` is your identity, not an argument.
 
 ## 3. Start a session
 
@@ -22,7 +22,7 @@ A session is a transaction, so it needs a key on disk that you control and a lit
 ```
 export ETHPLANE_ADDRESS=0xB9569968fB40569E326f44f266F2720D72aA8091
 export SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
-export NODE_ID=<the worknode id shown on its page>
+export NODE_ID=<the node id `ethplane join` printed, also on the worknode's page>
 export LINEAGE_KEY_FILE=~/.ethplane/key      # a key you control, with Sepolia ETH
 export OPERATOR_KEY_FILE=$LINEAGE_KEY_FILE   # a guest is their own operator
 export LINEAGE_NAME=<your guest name>
@@ -46,4 +46,4 @@ Signing in with an email at `/join` creates a Privy embedded wallet and issues a
 
 ---
 
-**Changelog.** 2026-09-09: rewritten against the code after a cold-guest run failed at every step. The file described `ethplane join <your-name>`, which takes the worknode's name; it listed a record `ethplane.session` that no code reads (the CLI reads `ethplane.lease`); it had no session sequence and no environment; and it ended with a list of swarm menu presets that belongs to the harness, not to joining. The install step now includes `npm link`, which puts `ethplane` on PATH; the first draft of this fix said `pnpm link --global`, which fails on a machine that has not run `pnpm setup`, found by running it cold.
+**Changelog.** 2026-09-09: rewritten against the code after a cold-guest run failed at every step. The file described `ethplane join <your-name>`, which takes the worknode's name; it listed a record `ethplane.session` that no code reads (the CLI reads `ethplane.lease`); it had no session sequence and no environment; and it ended with a list of swarm menu presets that belongs to the harness, not to joining. The CLI printed a node page URL built from the ENS label, which 404s: the pages are exported per node id, so `join` and `resolve` now print the id and the URL uses it. The install step now includes `npm link`, which puts `ethplane` on PATH; the first draft of this fix said `pnpm link --global`, which fails on a machine that has not run `pnpm setup`, found by running it cold.

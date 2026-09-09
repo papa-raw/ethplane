@@ -104,7 +104,7 @@ cd cli && pnpm install && pnpm build && npm link`}</pre>
               </li>
               <li>
                 Read a worknode and take its head. The argument is the worknode&apos;s name, not
-                yours.
+                yours. It prints the node id you need in step 4.
                 <pre className="ep-code">ethplane join cl-pq-leanxmss-attestations.ethplane.eth</pre>
               </li>
               <li>

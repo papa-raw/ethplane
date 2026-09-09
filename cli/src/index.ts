@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import path from 'path';
-import { makeClient, readNode, NODE_KEYS, DEFAULT_RPC } from './ens';
+import { makeClient, readNode, nodeIdFor, NODE_KEYS, DEFAULT_RPC } from './ens';
 import { fetchArtifact, unpack, DEFAULT_API } from './artifacts';
 
 const program = new Command();
@@ -23,7 +23,8 @@ program
   .action(async (name: string, opts: { rpc: string }) => {
     const records = await readNode(makeClient(opts.rpc), name);
     console.log(`\n${name}\n`);
-    console.log(table(NODE_KEYS.map((k) => [k, records[k]])));
+    console.log(table([...NODE_KEYS.map((k) => [k, records[k]] as [string, string]),
+                       ['node id', nodeIdFor(name)]]));
     console.log();
     if (!Object.values(records).some(Boolean)) {
       console.log('  (no records: the name may not be registered, or its resolver is not set)\n');
@@ -60,8 +61,9 @@ program
         ['status', records['ethplane.status']],
         ['criterion', records['ethplane.criterion']],
         ['lease', records['ethplane.lease']],
+        ['node id', nodeIdFor(label)],
       ]));
-      console.log(`\n  node page  ${opts.api}/node/${label}\n`);
+      console.log(`\n  node page  ${opts.api}/node/${nodeIdFor(label)}\n`);
       return;
     }
 

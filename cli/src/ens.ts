@@ -58,6 +58,15 @@ export async function readText(client: PublicClient, name: string, key: string):
   }
 }
 
+/**
+ * The contract's id for a worknode: keccak of the label, which is what defineNode was called with
+ * and what the site exports its pages under. The ENS label and the id are not interchangeable in a
+ * URL, and printing the label as one is how the CLI sent guests to a 404.
+ */
+export function nodeIdFor(labelOrName: string): `0x${string}` {
+  return keccak256(toBytes(labelOrName.split('.')[0]));
+}
+
 export async function readNode(client: PublicClient, name: string): Promise<Record<NodeKey, string>> {
   const values = await Promise.all(NODE_KEYS.map((k) => readText(client, name, k)));
   return Object.fromEntries(NODE_KEYS.map((k, i) => [k, values[i]])) as Record<NodeKey, string>;

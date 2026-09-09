@@ -51,6 +51,14 @@ The treasury is a Privy server wallet whose policy allows three shapes of transa
 - Node 1: https://ethplane.ecofrontiers.xyz/node/0x8e67c816b1f39fa072094b67f4f74937bd1920a7a9d79e4b98e785ae9aa29d58
 - Film script and proof table: docs/FILM.md
 
+# Feedback for ENS (the form asks for it)
+
+The hackathon ENSv2 deployment's PermissionedResolverImpl and UserRegistryImpl expose no initializer, so proxies from the VerifiableFactory hold no roles and cannot be seeded; resolver roles scope per key, not per name. We built our own IRegistry subregistry and a resolver per node instead. ens-cli falls back to ENSv1 silently when pointed at this deployment. A seedable resolver implementation and a cli flag for the v2 registry address would have saved a day. The Universal Resolver worked first time, including through Foundry's fork test.
+
+# Feedback for Privy (the form asks for it)
+
+The policy engine did exactly what we needed: an allowlist on the treasury wallet with per-method conditions, and a refusal at signing with a clear error. Two things cost time: the SDK requires camelCase policy fields (chainType, fieldSource) while the dashboard shows snake_case, and an off-policy transaction reports "RPC request denied due to policy violation" without naming the rule that refused it. Embedded wallets with create-on-login and the auth token verification on the server were straightforward.
+
 # Honest limitations (≤ 100 words)
 
 No payout has happened: every verdict so far is a FAIL, recorded with its reason. Node 1 admits only the guest program, which never moved cycles in sixteen measurements. Node 2's baseline was measured under load, so its time bound is lenient and its proof-size bound is strict. The compute share is held, not paid, in this version. The swarm runs on one box we operate; guests bring their own compute. Sepolia only.

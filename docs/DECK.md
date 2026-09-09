@@ -1,35 +1,43 @@
+# Ethplane, the deck
+
+One screen per section. The site renders this file at /deck.
+
 ## The question
 
-Humans and AI as a swarm pull a history of contributions, build on it, receive attribution.
+How do humans and AI, working as a swarm, pull a history of contributions, build on it, and get paid only for what a judge can verify?
 
 ## The plane
 
-Nodes = roadmap items, sessions, submissions with parents, verifier, escrow split 68/15/10/5/2.
+The Ethereum roadmap as a plane of paid work. 65 nodes from the Foundation's strawmap. Each node: a name under ethplane.eth, a criterion a machine can check, an escrow that pays on a verdict. Split 68/15/10/2, with 5 held for the host.
 
-## The first node
+## A session
 
-cl-pq-leanxmss-attestations, criterion cycles strictly below 1,542,812 at a210ef1b.
+A declaration, not a permission: working on this node, from this head. Heartbeats keep it live; two minutes of silence and anyone can end it. Many sessions on one node at once. Submissions name the parents they built on.
+
+## The judge
+
+A verifier with its own key. It rebuilds the artifact at the pinned commit as a user that cannot read the key, runs the benchmark itself, corrupts signatures one at a time to test they were checked: three probes on any pass, all 900 before a payout that reaches the target. It writes the verdict onchain. The contract believes no other account.
 
 ## Why ENS
 
-Every actor is a name under ethplane.eth; our subregistry and per-node resolvers; only the verifier key writes ethplane.head; names expire with sessions.
+Every actor is a name under ethplane.eth. Node status and head live in text records only the verifier can write. Our own ENSv2 subregistry and per-node resolvers, resolved through the hackathon Universal Resolver. Join rebuilds a node's verified state from its name.
 
 ## Why Privy
 
-Treasury wallet with a policy that refuses everything except approve, fundNode under a cap, defineNode with verifier share ≥ 10 %; guests log in with email and get a wallet.
+The treasury signs three shapes of transaction and nothing else: approve, fund a node, define a node with a verifier share of at least ten percent. A transfer we tried was refused at signing. Guests log in with email, get a wallet and a name, and start a session.
 
 ## The swarm
 
-Orchestrator/builder/critic on local models; the orchestrator has four tools and no shell.
+Orchestrator, builder, critic and a View seat on Qwen3-Coder 30B, one rented GPU box. Each role is its tools: measure posts the number, submit refuses what the verifier would reject, the critic's shell refuses edits. No model can read a key.
 
-## The numbers
+## What happened today
 
-ROUTED 65 % valid attempts and 20 measurements vs SOLO 7.6 % and 0, same model; cycles unchanged: an honest rejection.
+Node 1, guest program only: 16 measurements, cycles unchanged. Node 2, compiler open: 1,541,462 cycles, below the 1,542,812 baseline, three times. Proof 302,489 bytes against a 302,182 bound, three times. Three verdicts: FAIL, reason recorded. The swarm tried; the judge held the line.
 
 ## Kill the agent, work survives
 
-The recovery beat.
+Thirteen transactions in the rehearsal: a session starts, heartbeats, an artifact lands, the worker is killed, the session lapses, a second lineage starts from the artifact and submits with it as parent. The history is on chain; the worker is not the record.
 
 ## Join
 
-ethplane join <name> rebuilds the tree from the name.
+ethplane.ecofrontiers.xyz/join. Email in, wallet out, a name under guests.ethplane.eth, a session on any node. The code is public.

@@ -1,50 +1,56 @@
-# Project name (Ethplane)
+# Submission form text (ETHOnline 2026)
+
+Paste as written. Every number is on chain or in this repo; the proof column in docs/FILM.md names where.
+
+# Project name
 
 Ethplane
 
 # One-line description (≤ 120 characters)
 
-A collaborative plane for research and engineering work with ENS addressing, Privy treasury, and swarm coordination.
+The Ethereum roadmap as a plane of paid work: swarms work nodes, a verifier judges, escrow pays on the verdict.
 
-# Description (≤ 250 words: the question, the plane, the first node, what is live)
+# Description (≤ 250 words)
 
-The question is: how can we design a collaborative plane that lets humans and AI, working as a swarm, pull and rebuild a history of contributions, build on it, and receive attribution for their own contributions? 
+Ethplane takes the Ethereum Foundation's strawmap, 65 roadmap nodes, and turns each into a name under ethplane.eth with a criterion a machine can check and an escrow that pays only on a verdict.
 
-Ethplane is a task registry and verification system for research and engineering work. It holds a roadmap as a set of nodes, lets many independent agent groups and people work on those nodes in parallel, verifies results with code the contributors cannot modify, records every contribution as a content-addressed checkpoint addressable by an ENS name, and pays out on verified results under an organisation's policy.
+A worker, human or a swarm of local models, starts a session on a node: a declaration of working, from this head, kept alive by heartbeats. Many sessions run on one node at once. A submission is an artifact plus the parents it built on. The node's verifier rebuilds it from the pinned reference commit as a user that cannot read the verifier key, runs the benchmark itself, corrupts signatures one at a time to test they were checked, and writes the verdict onchain. On a pass the contract releases the split: 68 percent to the winning lineage, 15 to the parent, 10 to the verifier, 2 to the registrant, 5 held for the host.
 
-Its first history is the Ethereum protocol roadmap: the 65 nodes of the EF strawmap, classified by criterion type and routed by task shape, with the EF's own maturity pipeline as the node lifecycle and the Hegotá tier list as priority. The proof of concept runs one node.
+Two nodes are live on Sepolia with 10,000 PLANE each in escrow. Node 1, cl-pq-leanxmss-attestations: aggregate 900 post-quantum signatures in fewer VM cycles than 1,542,812. Node 2, dl-leanvm: the same criterion with the compiler open to the swarm.
 
-Live: https://ethplane.ecofrontiers.xyz — the 65-node map, the node pages, the deck and the docs. Contracts, names and treasury on Sepolia: docs/DEPLOYMENTS.md. The first node, cl-pq-leanxmss-attestations.ethplane.eth, is open with a funded bounty and a recorded baseline; its acceptance criterion is docs/CRITERION-pq-leanxmss.md.
+What happened today: two swarms of Qwen3-Coder 30B on one rented GPU box worked both nodes. On node 2 the swarm cut cycles to 1,541,462 with a four-line compiler change, three times. All three grew the proof past the 302,182-byte bound. The verifier said no three times and wrote why. Honest scope: no payout yet. The framework is the product.
 
-# How it is made (≤ 300 words: contracts, our ENSv2 subregistry and per-node resolvers and why, the Privy treasury policy, the indexer and dashboard, the verifier with differential probes, the local-model swarm with an orchestrator that has four tools and no shell)
+# How it is made (≤ 300 words)
 
-Ethplane is built with smart contracts on Sepolia, ENSv2 names for addressing, and a Privy server wallet for treasury policy. The contracts include Ethplane (registry, sessions, submissions, measurements, escrow, attribution), PlaneToken (PLANE, test ERC-20), EthplaneSubregistry (our ENSv2 registry under ethplane.eth), and per-node resolvers.
+Contracts, Foundry, Sepolia: Ethplane (nodes, sessions, submissions with parents, measurement, pull-based cumulative release, EIP-712 relay), PlaneToken, EthplaneSubregistry and one EthplaneResolver per node. 56 tests, one of them a fork test through the hackathon Universal Resolver.
 
-Our ENSv2 subregistry and per-node resolvers are implemented because the hackathon deployment's registry and resolver implementations expose no initializer, so proxies from its factory hold no roles and cannot register names or write records. Additionally, the deployed resolver scopes record roles per key rather than per name. 
+ENS, on the hackathon ENSv2 deployment: ethplane.eth is registered on the v2 registry. The deployment's resolver and registry implementations expose no initializer, so proxies from its factory hold no roles; we ship our own subregistry (contracts-v2 IRegistry, permissionless one-time labels, expiry) and one resolver per node with an immutable servedNode and a writer role per key. Only the verifier writes ethplane.head and ethplane.status. docs/ENS-PROBES.md has every probe with its output.
 
-The Privy treasury policy allows only approve(PLANE → Ethplane), fundNode with amount ≤ 100,000 PLANE, and defineNode whose split gives the verifier at least 10%. Every other transaction is refused at signing.
+Privy: the treasury is a server wallet under a policy that allows three transaction shapes, approve, fundNode under a cap, and defineNode whose split gives the verifier at least ten percent. A plain transfer was refused at signing: "RPC request denied due to policy violation". Guests log in with email, get an embedded wallet and a name under guests.ethplane.eth.
 
-The indexer and dashboard are built with Node.js and Next.js respectively, using viem for contract interaction and SQLite for local storage. The dashboard is a web application that renders the EF strawmap as an interactive graph, showing node details and enabling users to join tasks.
+Verifier, Python: a separate user with its own key; builds and runs the submission as a second user that cannot read that key; non-regression on proving time, verify time and proof size against a baseline the verifier measured itself; three differential probes on any pass, all 900 before a payout that reaches the target. Two watchers, one per node, judge for real.
 
-The verifier with differential probes is a Python-based system that runs submissions on verifier-owned compute against held-out data. It performs differential probes at 900 signature indices to ensure all signatures are properly checked, with each probe taking about 15 seconds on the verifier's host.
+Swarm: our own agent loop, standard library only, on vLLM. Orchestrator, builder, critic and a View seat, each defined by its tools: measure posts the number, submit refuses anything the verifier would reject, the critic's shell refuses edits. A submitter loop holds the lineage key; no model can read it.
 
-The local-model swarm consists of role sessions in tmux with an orchestrator that has four tools and no shell. The orchestrator handles coordination, building, critiquing, and testing tasks in parallel.
+API and site: Fastify, SQLite, viem indexer; Next.js static export. Everything in this repo; who wrote what is in ATTRIBUTION.md.
 
-# ENS track statement (≤ 150 words, addressed to the ENS judges: what is central, not cosmetic, and which ENSv2 features are used: hierarchical registries, expiring names, per-node resolvers, Universal Resolver resolution, agents as namespaces)
+# ENS track statement (≤ 150 words)
 
-ENS is central to Ethplane's architecture, not cosmetic. Every actor is a name under ethplane.eth: the 65 roadmap nodes, operators, their lineages (the agents), the verifier and guests. Hierarchical registries are used through our own subregistry. Expiring names are used for sessions and guest names after fourteen days. Per-node resolvers handle each node's records. Universal Resolver resolution enables ethplane join <name> to work from any machine. Agents are namespaces through their subnames under operator identities.
+ENS is the record, not a label. Every actor is a name under ethplane.eth: 65 roadmap nodes, lineages, the verifier, guests. Node status and head live in text records that only the verifier key can write; a lineage key that tries gets a revert, on chain, in the rehearsal log. Names resolve through the hackathon Universal Resolver on the v2 registry. We built an ENSv2 subregistry and per-node resolvers because the hackathon deployment's implementations cannot be seeded with roles; ours use the contracts-v2 IRegistry interface, permissionless one-time labels and expiry. Join rebuilds a node's verified state from its name. docs/ENS-PROBES.md carries the commands and their outputs; the fork test runs through the Universal Resolver.
 
-# Privy track statement (≤ 150 words: the policy rules, the refusal, guests with embedded wallets, which of the two Privy tracks each part serves)
+# Privy track statement (≤ 150 words)
 
-The Privy policy rules allow exactly three actions: approve(PLANE → Ethplane), fundNode under a cap, and defineNode whose split gives the verifier at least ten percent. Everything else is refused before a signature exists (RPC request denied due to policy violation, recorded on the node page). Guests log in with email or a wallet, receive an embedded wallet, and get a guest name under guests.ethplane.eth; their sessions and submissions go through a relay with EIP-712 signatures. The policy serves the treasury track, ensuring funds are managed according to organizational policy.
+The treasury is a Privy server wallet whose policy allows three shapes of transaction: approve the escrow, fund a node under a cap, define a node whose split gives the verifier at least ten percent. We tried a fourth, a plain transfer. Refused at signing, and the refusal is on the record. That is the money side of a plane where payouts follow verdicts, not people. On the user side, a guest logs in with an email, Privy creates an embedded wallet, the API verifies the auth token and issues a name under guests.ethplane.eth, and the guest can start a session on any node. Smart wallets are enabled with a public bundler for the relay path.
 
-# Links (site, repo, docs/DEPLOYMENTS.md, the node page URL for cl-pq-leanxmss-attestations)
+# Links
 
-Site: https://ethplane.ecofrontiers.xyz
-Repo: https://github.com/Ecofrontiers/ethplane
-Docs/DEPLOYMENTS.md: docs/DEPLOYMENTS.md
-Node page URL: https://ethplane.ecofrontiers.xyz/node/cl-pq-leanxmss-attestations
+- Site: https://ethplane.ecofrontiers.xyz
+- Repo: https://github.com/papa-raw/ethplane
+- Deployments, every address and tx: docs/DEPLOYMENTS.md
+- Node 2: https://ethplane.ecofrontiers.xyz/node/0x662b44f5cf418a3e3d4126a187d0154034afbdc8d2536b9076c68f2a4440c37e
+- Node 1: https://ethplane.ecofrontiers.xyz/node/0x8e67c816b1f39fa072094b67f4f74937bd1920a7a9d79e4b98e785ae9aa29d58
+- Film script and proof table: docs/FILM.md
 
-# Honest limitations (≤ 100 words: the compiler is frozen so a pass is unlikely on the first node; the 7B model could not call tools; what runs where)
+# Honest limitations (≤ 100 words)
 
-The compiler is frozen so a pass is unlikely on the first node. The 7B model could not call tools. The verifier and dashboard run on dedicated machines, while the local-model swarm with orchestrator runs locally in tmux sessions. The contracts and indexer run on Sepolia testnet.
+No payout has happened: every verdict so far is a FAIL, recorded with its reason. Node 1 admits only the guest program, which never moved cycles in sixteen measurements. Node 2's baseline was measured under load, so its time bound is lenient and its proof-size bound is strict. The compute share is held, not paid, in this version. The swarm runs on one box we operate; guests bring their own compute. Sepolia only.

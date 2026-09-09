@@ -64,7 +64,7 @@ export function PlaneNumbers() {
         {cells.map((c, i) => (
           <div
             key={c.label}
-            className={i < cells.length - 1 ? 'py-[18px] sm:border-r sm:pr-6' : 'py-[18px]'}
+            className={i < cells.length - 1 ? 'px-5 py-[18px] sm:border-r' : 'px-5 py-[18px]'}
             style={{ borderColor: 'var(--ep-border)' }}
           >
             <b

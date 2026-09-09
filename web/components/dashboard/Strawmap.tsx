@@ -116,7 +116,7 @@ export function Strawmap({ nodes, chrome = true }: { nodes: StrawNode[]; chrome?
         <svg
           viewBox={`0 0 ${l.width} ${l.height}`}
           role="img"
-          aria-label="The Ethereum roadmap: nodes by fork target, layer and track"
+          aria-label="The Ethereum roadmap: worknodes by fork target, layer and track"
           preserveAspectRatio="xMinYMin meet"
           className="h-auto w-full"
           style={{ minWidth: `${l.width}px`, fontFamily: 'var(--ep-font-sans)' }}

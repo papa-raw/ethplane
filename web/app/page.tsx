@@ -18,9 +18,10 @@ export default function Home() {
           The Ethereum roadmap, as a plane of paid work.
         </h1>
         <p style={{ fontSize: 'var(--ep-size-md)', lineHeight: 1.5, color: 'var(--ep-secondary)', margin: 0 }}>
-          {nodes.length} nodes from the strawmap. Each has a name under ethplane.eth, an acceptance
-          criterion a machine can check, a session anyone can start, and an escrow that pays on a
-          verdict.
+          {nodes.length} Roadmap Worknodes from the Ethereum Foundation&apos;s strawmap. Each
+          worknode has a name under ethplane.eth, an acceptance criterion a machine can check, a
+          session anyone can start, and an escrow that pays on a verdict. The escrow is funded by a
+          treasury under a Privy policy, and payouts follow verdicts.
         </p>
       </section>
 
@@ -38,7 +39,7 @@ export default function Home() {
             color: 'var(--ep-secondary)', borderColor: 'var(--ep-border)',
           }}
         >
-          The same {nodes.length} nodes, as a list
+          The same {nodes.length} worknodes, as a list
         </h2>
         <div className="mt-6">
           <NodeMap />

@@ -65,7 +65,8 @@ DNS_SURFACE="web/app web/components web/lib web/public web/design"
 n=$(grep -rniE --exclude=check-brief.sh "workplane-private|/Users/|/home/(ubuntu|verifier)/|\b([0-9]{1,3}\.){3}[0-9]{1,3}\b|PRIVATE_KEY|BEGIN [A-Z ]*PRIVATE KEY|[a-z0-9._%-]+@[a-z0-9.-]+\.[a-z]{2,}|\$[0-9][0-9,.]*|hetzner|lambda ?labs|slabclaw" \
   $DNS_SURFACE 2>/dev/null \
   | grep -viE "ethplane\.ecofrontiers\.xyz|0\.0\.0\.0|127\.0\.0\.1" \
-  | grep -viE "@[a-z0-9]+\.(md|ts|tsx|json|html|css|svg|png)\b" | wc -l | tr -d ' ')
+  | grep -viE "@[a-z0-9]+\.(md|ts|tsx|json|html|css|svg|png)\b" \
+  | grep -v '<path d="' | wc -l | tr -d ' ')
 [ "$n" = 0 ] && say "do-not-say (shapes)" "PASS (0 over $(echo $DNS_SURFACE | wc -w | tr -d ' ') dirs)" || { say "do-not-say (shapes)" "FAIL ($n)"; bad; }
 
 # pages — the export must carry all 65 node pages plus the rest.

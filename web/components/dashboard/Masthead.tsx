@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { GitHubMark } from '@/components/site/GitHubMark';
 
 /**
  * One masthead for every route, so nothing jumps between pages (BRIEF §2 refusal 5): the same
@@ -6,7 +7,7 @@ import Link from 'next/link';
  */
 const NAV = [
   { href: '/', label: 'map' },
-  { href: '/#nodes', label: 'nodes' },
+  { href: '/#nodes', label: 'worknodes' },
   { href: '/deck', label: 'deck' },
   { href: '/docs', label: 'docs' },
   { href: '/join', label: 'join' },
@@ -41,10 +42,11 @@ export function Masthead() {
       </nav>
       <a
         href="https://github.com/papa-raw/ethplane"
-        className="ml-auto hover:underline"
-        style={{ fontSize: 'var(--ep-size-sm)', color: 'var(--ep-secondary)' }}
+        aria-label="Source on GitHub"
+        className="ml-auto inline-flex items-center hover:opacity-70"
+        style={{ color: 'var(--ep-secondary)' }}
       >
-        source
+        <GitHubMark />
       </a>
     </header>
   );

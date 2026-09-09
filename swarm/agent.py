@@ -183,6 +183,30 @@ def t_handoff(role: str, task: str, files: str, done_when: str):
     if role not in ("builder", "critic"): return "role must be builder or critic", False
     msg = f"HANDOFF orchestrator -> {role}: {task} | files: {files} | done when: {done_when}"
     board_append(msg); send_to(role, msg); return f"sent to {role}", True
+SKILLS = SWARM / "skills"; RESOURCES = SWARM / "resources"
+def _skill_index():
+    rows = []
+    for d in sorted(SKILLS.glob("*/SKILL.md")):
+        desc = ""
+        for line in d.read_text(errors="ignore").splitlines()[:12]:
+            if line.startswith("description:"): desc = line.split(":", 1)[1].strip()[:110]; break
+        rows.append(f"{d.parent.name}: {desc}")
+    return rows
+def t_skill(name: str = ""):
+    """Same skills the human's Claude sessions use, synced to this swarm. skill() lists them; skill(name) loads one."""
+    if not SKILLS.exists(): return "no skills synced to this swarm", False
+    if not name: return "\n".join(_skill_index()) or "(none)", True
+    f = SKILLS / name / "SKILL.md"
+    if not f.exists(): return f"no skill {name}; skill() lists them", False
+    return f.read_text(errors="ignore")[:12000], True
+def t_resources(query: str = ""):
+    """Search the estate's design and writing references synced to this swarm (2_resources); returns matching file paths and a first line."""
+    if not RESOURCES.exists(): return "no resources synced", False
+    hits = []
+    for f in RESOURCES.rglob("*"):
+        if f.is_file() and (not query or query.lower() in f.name.lower() or query.lower() in str(f.relative_to(RESOURCES)).lower()):
+            hits.append(str(f))
+    return "\n".join(hits[:60]) or "no match; try a shorter word", True
 def t_wait(seconds: int = 300):
     """Wait for peers; returns early when a message arrives in this pane."""
     for _ in range(min(int(seconds), 900)):
@@ -204,18 +228,20 @@ TOOLS = {
     "read_board": (t_read_board, spec("read_board", "Read the last N lines of the shared board.", {"lines": I("default 20")}, [])),
     "board_plan": (t_plan, spec("board_plan", "Write the PLAN: what the builder makes, what the critic checks, done-when.", {"builder": S("builder's job"), "critic": S("critic's check"), "done_when": S("completion criterion with a number or a path")}, ["builder", "critic", "done_when"])),
     "handoff": (t_handoff, spec("handoff", "Hand work to builder or critic: lands on the board and in that pane.", {"role": S("builder | critic"), "task": S("one sentence"), "files": S("paths"), "done_when": S("verifiable criterion")}, ["role", "task", "files", "done_when"])),
+    "skill": (t_skill, spec("skill", "List the skills available to this role (no name) or load one by name: design, design-research, design-tokens, frontend-design, interface-design, visual-qa, baseline-ui, write, humanizer, pptx and more. Load the relevant skill before starting a page or a document and follow it.", {"name": S("skill name, or empty to list")}, [])),
+    "resources": (t_resources, spec("resources", "Search the estate's synced design and writing references (component kits, briefs, style guides) by a word in the path; then read_file the hit.", {"query": S("a word from the file or folder name")}, [])),
     "wait": (t_wait, spec("wait", "Wait up to N seconds for a peer's report to arrive in this pane.", {"seconds": I("default 300, max 900")}, [])),
     "measure": (t_measure, spec("measure", "Build and run the node's benchmark in the leanVM checkout; posts MEASURED/REVIEW cycles=<n> to the board and says whether it is strictly below the baseline. Refuses while files outside the editable surface are modified.", {}, [])),
     "submit": (t_submit, spec("submit", "Flag the current tree for submission. Only works when the last measure was strictly below the baseline.", {}, [])),
     "revert": (t_revert, spec("revert", "Restore the leanVM checkout to the reference commit before the next hypothesis.", {}, [])),
 }
 ROLE_TOOLS = {"orchestrator": ["board_plan", "handoff", "report", "read_board", "wait"],
-              "builder": ["bash", "read_file", "write_file", "edit_file", "measure", "submit", "revert", "report", "read_board"],
-              "critic": ["bash", "read_file", "measure", "board", "report", "read_board"]}
+              "builder": ["bash", "read_file", "write_file", "edit_file", "measure", "submit", "revert", "skill", "resources", "report", "read_board"],
+              "critic": ["bash", "read_file", "measure", "skill", "resources", "board", "report", "read_board"]}
 LABELS = {"bash": lambda a: f"Bash({a.get('command', '')[:90]})", "read_file": lambda a: f"Read({a.get('path')})",
           "write_file": lambda a: f"Write({a.get('path')})", "edit_file": lambda a: f"Update({a.get('path')})",
           "board": lambda a: f"Board({a.get('kind')} {a.get('text', '')[:70]})", "report": lambda a: f"Report({a.get('text', '')[:80]})",
-          "read_board": lambda a: "ReadBoard()", "measure": lambda a: "Measure(cargo run --release -- aggregate)", "submit": lambda a: "Submit()", "revert": lambda a: "Revert(leanVM)", "board_plan": lambda a: f"Plan({a.get('builder', '')[:70]})",
+          "read_board": lambda a: "ReadBoard()", "skill": lambda a: f"Skill({a.get('name') or 'list'})", "resources": lambda a: f"Resources({a.get('query', '')})", "measure": lambda a: "Measure(cargo run --release -- aggregate)", "submit": lambda a: "Submit()", "revert": lambda a: "Revert(leanVM)", "board_plan": lambda a: f"Plan({a.get('builder', '')[:70]})",
           "handoff": lambda a: f"Handoff({a.get('role')}: {a.get('task', '')[:70]})", "wait": lambda a: f"Wait({a.get('seconds', 60)}s)"}
 
 # ── prompts ─────────────────────────────────────────────────────────────────────────────────────
@@ -325,7 +351,8 @@ def main():
     brief = SWARM / "node.md"
     if os.environ.get("DESIGN"):
         system += (f"\n\nTHIS SWARM WORKS ON THE ETHPLANE WEBSITE AND DOCS in {WORKDIR}/web (Next.js static export, shadcn, Tailwind), never on leanVM or the node benchmark. "
-                   "The builder edits pages and runs cd web && pnpm build; the critic re-runs the build and reads web/out. Direction and page order come from the human's task.")
+                   "The builder edits pages and runs cd web && pnpm build; the critic re-runs the build and reads web/out. Direction and page order come from the human's task. "
+                   "Before the first page call skill('design-research') and skill('frontend-design') and follow them; before a document call skill('write'); resources('component') finds the estate's component kits; skill('visual-qa') for the critic's review of a built page.")
     elif brief.exists(): system += "\n\nNODE BRIEF:\n" + brief.read_text()[:6000]
     messages = [{"role": "system", "content": system}]
     board_append(f"{ROLE} READY (agent.py, {MODEL.split('/')[-1]})")

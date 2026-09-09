@@ -267,9 +267,9 @@ export function Strawmap({ nodes, chrome = true }: { nodes: StrawNode[]; chrome?
 
       {chrome && !measured ? (
         <p className="mt-2 max-w-[92ch]" style={{ fontSize: 'var(--ep-size-sm)', color: 'var(--ep-secondary)' }}>
-          State is unavailable. The API did not respond, so node states and counts are not shown, and
-          every node is drawn in the unknown grey. The layout is read from the strawmap file at build
-          time and does not depend on the API.
+          Live state unavailable; node states are not shown. The API did not respond, so no counts
+          are given and every node is drawn in the unknown grey. The layout is read from the strawmap
+          file at build time and does not depend on the API.
         </p>
       ) : null}
 

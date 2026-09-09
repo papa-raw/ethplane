@@ -96,6 +96,9 @@ export type SessionRow = {
 };
 export type SessionEvent = { kind: string; block: number; ts: number; lineage: string; seq: number };
 export type VerdictRow = { artifactHash: string; passed: boolean; metric: string; ts: number; seq: number };
+export type SubmissionView = {
+  artifactHash: string; lineage: string; operator: string; seq: number; block: number; ts: number; tx: string;
+};
 
 export type RawNodeDetail = {
   node: NodeRow;
@@ -111,7 +114,7 @@ export type NodeDetail = {
   node: NodeRow;
   sessions: SessionRow[];
   sessionEvents: SessionEvent[];
-  submissions: SubmissionRow[];
+  submissions: SubmissionView[];
   verdicts: VerdictRow[];
   attribution: AttributionRow[];
   head: string | null;
@@ -128,7 +131,10 @@ export function toNodeDetail(raw: RawNodeDetail): NodeDetail {
     sessionEvents: (raw.lease_events ?? []).map((e) => ({
       kind: e.kind, block: e.block, ts: e.ts, lineage: e.lineage, seq: e.lease_seq,
     })),
-    submissions: raw.submissions ?? [],
+    submissions: (raw.submissions ?? []).map((s) => ({
+      artifactHash: s.artifact_hash, lineage: s.lineage, operator: s.operator, seq: s.lease_seq,
+      block: s.block, ts: s.ts, tx: s.tx,
+    })),
     verdicts: (raw.verdicts ?? []).map((v) => ({
       artifactHash: v.artifact_hash, passed: Boolean(v.passed), metric: v.metric, ts: v.ts, seq: v.lease_seq,
     })),

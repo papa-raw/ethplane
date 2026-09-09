@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { usePolling } from '@/lib/usePolling';
 import {
-  NodeRow, SubmissionRow, AttributionRow, STATE_STYLE, STATE_INK, stateOf, apiState,
+  NodeRow, AttributionRow, STATE_STYLE, STATE_INK, stateOf, apiState,
   toNodeDetail, type NodeDetail, type RawNodeDetail,
 } from '@/lib/api';
 import { readEnsText, shortEnsError } from '@/lib/ens';
@@ -139,18 +139,19 @@ function Escrow({ node }: { node: NodeRow }) {
       </p>
       <div className="space-y-2" style={MUTED}>
         <p className="m-0">
-          Held by the contract and released on a verified improvement, paid by cumulative progress.
+          The contract holds the escrow. It pays on a verified improvement, in proportion to
+          cumulative progress.
         </p>
         <p className="m-0">
-          Treasury wallet policy <span style={MONO}>{PRIVY_POLICY}</span> permits three operations:
+          Treasury wallet policy <span style={MONO}>{PRIVY_POLICY}</span> allows exactly three things:
         </p>
         <ul className="m-0 list-disc space-y-1 pl-5">
-          <li>defineNode on the Ethplane contract, and no other method on it</li>
+          <li>defineNode on the Ethplane contract, and nothing else on it</li>
           <li>fundNode, capped at 100,000e18 per call</li>
-          <li>the same two for signing as well as sending, because the rules are per RPC method</li>
+          <li>the same two for signing as well as sending, because policy rules are per RPC method</li>
         </ul>
         <p className="m-0">
-          Any other request is refused by Privy before it is signed:{' '}
+          Anything else is refused by Privy before it is signed:{' '}
           <span style={MONO}>RPC request denied due to policy violation</span>.
         </p>
       </div>
@@ -179,7 +180,7 @@ function Ens({ slug }: { slug: string | null }) {
       <p className="m-0 break-all" style={{ ...MONO, fontSize: 'var(--ep-size-md)' }}>{name ?? '—'}</p>
       <div className="space-y-1" style={MUTED}>
         {state.loading ? <p className="m-0">Reading through the Universal Resolver.</p> : null}
-        {state.error ? <p className="m-0" title={state.detail}>no record yet — {state.error}</p> : null}
+        {state.error ? <p className="m-0" title={state.detail}>no record yet: {state.error}</p> : null}
         {state.value ? (
           <>
             <p className="m-0">
@@ -285,8 +286,9 @@ function Sessions({ events, sessions }: { events: NodeDetail['sessionEvents']; s
             </tbody>
           </table>
           <p className="m-0" style={MUTED}>
-            {active} of {sessions.length} sessions are live. {events.length} session events are
-            recorded; the last {recent.length} are{' '}
+            {active} active session(s). In principle anybody can contribute to any node, and many
+            sessions run on one node at once. {events.length} session events are recorded; the most
+            recent are{' '}
             {recent.map((e, i) => (
               <span key={i}>
                 {i > 0 ? ', ' : ''}
@@ -302,7 +304,7 @@ function Sessions({ events, sessions }: { events: NodeDetail['sessionEvents']; s
 }
 
 function Submissions({ rows, verdicts, head }: {
-  rows: SubmissionRow[]; verdicts: NodeDetail['verdicts']; head: string | null;
+  rows: NodeDetail['submissions']; verdicts: NodeDetail['verdicts']; head: string | null;
 }) {
   const verdictFor = (h: string) => verdicts.find((v) => v.artifactHash === h);
   return (
@@ -319,16 +321,16 @@ function Submissions({ rows, verdicts, head }: {
           </thead>
           <tbody>
             {rows.map((s) => {
-              const v = verdictFor(s.artifact_hash);
+              const v = verdictFor(s.artifactHash);
               return (
-                <tr key={s.artifact_hash} className="border-b" style={RULE}>
+                <tr key={s.artifactHash} className="border-b" style={RULE}>
                   <Td mono>
-                    {s.artifact_hash.slice(0, 14)}…
-                    {head === s.artifact_hash ? (
+                    {s.artifactHash.slice(0, 14)}…
+                    {head === s.artifactHash ? (
                       <span style={{ marginLeft: 8, fontWeight: 700, color: 'var(--ep-primary)' }}>head</span>
                     ) : null}
                   </Td>
-                  <Td>{s.lease_seq}</Td>
+                  <Td>{s.seq}</Td>
                   <Td mono>{s.lineage?.slice(0, 12)}…</Td>
                   <Td>
                     <span style={{ fontWeight: v ? 700 : 400, color: v ? (v.passed ? 'var(--ep-state-passed)' : 'var(--ep-error)') : 'var(--ep-secondary)' }}>

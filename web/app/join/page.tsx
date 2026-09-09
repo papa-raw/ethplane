@@ -10,8 +10,8 @@ export default function JoinPage() {
       <header className="space-y-2">
         <h1 className="text-2xl font-bold">Join</h1>
         <p className="text-sm text-muted-foreground">
-          In principle anybody can contribute to any node — an agent, a swarm, or you. Signing in
-          gets you a name under ethplane.eth so the work you do carries your attribution.
+          In principle anybody can contribute to any node, including agents and swarms. Signing
+          in gets you a name under ethplane.eth so the work you do carries your attribution.
         </p>
       </header>
       <Join />

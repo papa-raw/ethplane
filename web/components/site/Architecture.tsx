@@ -31,7 +31,7 @@ function Arrow({ x1, y1, x2, y2, label }: { x1: number; y1: number; x2: number; 
 }
 
 /** The system in one picture: what holds a worknode, who works it, who judges it, who pays. */
-function Diagram() {
+export function Diagram() {
   return (
     <svg
       viewBox="0 0 1160 600"

@@ -54,7 +54,8 @@ async function shoot(pg, url, file, navigate = true) {
         }
         srv.close(); await browser.close(); return;
       }
-      const pages = { home: "/", docs: "/docs", deck: "/deck", join: "/join", ...(nodeId ? { node: "/node/" + nodeId } : {}) };
+      // /deck is a redirect stub now, not a page: it has no content to capture and shooting it fails.
+      const pages = { home: "/", docs: "/docs", join: "/join", ...(nodeId ? { node: "/node/" + nodeId } : {}) };
       const hashes = {};
       for (const [name, url] of Object.entries(pages)) { hashes[name] = await shoot(pg, "http://127.0.0.1:4499" + url, path.join(shots, name + ".png")); console.log("shot", name, url); }
       const dup = Object.entries(hashes).find(([n, h], i, arr) => arr.findIndex(([m, g]) => g === h) !== i);

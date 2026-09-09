@@ -27,6 +27,8 @@ export const WORKNODES = [
     escrow: '10,000 PLANE',
     editable: 'crates/rec_aggregation/guests/',
     baseline: '1,542,812 cycles, 1,433,000 µs proving, 302,592 B proof',
+    /** BaselineRecorded at block 11662947: cycles, provingMicros, proofBytes, verifyMicros, spreadBps. */
+    recorded: { cycles: 1542812, proving: 1433000, proof: 302592, verify: 30100, spreadBps: 190 },
   },
   {
     name: 'dl-leanvm',
@@ -35,6 +37,8 @@ export const WORKNODES = [
     escrow: '10,000 PLANE',
     editable: 'crates/rec_aggregation/guests/, crates/lean_compiler/',
     baseline: '1,542,812 cycles, 7,158,000 µs proving, 302,182 B proof',
+    /** BaselineRecorded at block 11668042. */
+    recorded: { cycles: 1542812, proving: 7158000, proof: 302182, verify: 554333, spreadBps: 2367 },
   },
 ] as const;
 
@@ -72,3 +76,16 @@ export const SPLIT = [
 export const UNIVERSAL_RESOLVER = '0xd26f2040d083af1cd2962ba303f4bea0c4faf142';
 export const ETH_REGISTRY = '0x1D78834d97c1D7b1A38c1deDBD1a287cFEd3971e';
 export const REPO = 'https://github.com/papa-raw/ethplane';
+
+export const REFERENCE_COMMIT = 'a210ef1b';
+
+/** The recorded baseline for a worknode id, or null when the id is not one of the two open ones. */
+export function baselineFor(nodeId: string) {
+  const w = WORKNODES.find((n) => n.id.toLowerCase() === nodeId.toLowerCase());
+  return w ? { ...w.recorded, editable: w.editable, name: w.name } : null;
+}
+
+/** The proving bound the spread implies: provingMicros * (1 + spreadBps/10000), rounded down. */
+export function provingBound(b: { proving: number; spreadBps: number }): number {
+  return Math.floor(b.proving * (1 + b.spreadBps / 10000));
+}

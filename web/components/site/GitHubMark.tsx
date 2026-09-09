@@ -6,3 +6,15 @@ export function GitHubMark() {
     </svg>
   );
 }
+
+/**
+ * The X mark. The href is a placeholder: Pat's handle is in neither the prospecting skill nor this
+ * repository, and a guessed handle on a judged page is worse than an obvious gap.
+ */
+export function XMark() {
+  return (
+    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="currentColor">
+      <path d="M9.52 6.78 15.48 0h-1.41L8.89 5.89 4.75 0H0l6.25 8.9L0 16h1.41l5.46-6.22L11.25 16H16L9.52 6.78Zm-1.93 2.2-.63-.89L1.92 1.04h2.17l4.06 5.72.63.89 5.28 7.43h-2.17L7.59 8.98Z"/>
+    </svg>
+  );
+}

@@ -6,6 +6,7 @@ import {
   toNodeDetail, type NodeDetail, type RawNodeDetail,
 } from '@/lib/api';
 import { readEnsText, shortEnsError } from '@/lib/ens';
+import { baselineFor, provingBound, REFERENCE_COMMIT, EXPLORER } from '@/lib/sepolia';
 import { Masthead } from './Masthead';
 import { Panel } from './Panel';
 
@@ -63,8 +64,9 @@ export function NodePage({ nodeId, slug, label }: { nodeId: string; slug: string
           ) : null}
           <StatusWord node={poll.data?.node ?? null} />
         </div>
-        <p className="mt-2 break-all" style={{ ...MONO, fontSize: 'var(--ep-size-label)', color: 'var(--ep-secondary)' }}>
-          {nodeId}
+        <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1" style={{ fontSize: 'var(--ep-size-label)', color: 'var(--ep-secondary)' }}>
+          <span>{[poll.data?.node?.layer, poll.data?.node?.track, poll.data?.node?.fork].filter(Boolean).join(' · ') || 'placement not indexed'}</span>
+          <CopyId nodeId={nodeId} />
         </p>
       </header>
 
@@ -96,32 +98,12 @@ function Detail({ d, slug }: { d: NodeDetail; slug: string | null }) {
   const unregistered = stateOf(d.node) === 'seeded';
   return (
     <div className="space-y-12">
-      <section className="space-y-4">
-        <SectionLabel>Criterion</SectionLabel>
-        <p className="max-w-[80ch]" style={{ fontSize: 'var(--ep-size-md)', lineHeight: 1.5 }}>
-          {d.node.criterion && d.node.criterion.trim().length > 0
-            ? d.node.criterion
-            : 'No criterion has been recorded for this node.'}
-        </p>
-        <dl className="grid max-w-[92ch] grid-cols-[10rem_1fr] gap-y-2" style={SMALL}>
-          <dt style={{ color: 'var(--ep-secondary)' }}>criterion hash</dt>
-          <dd className="m-0 break-all">
-            <span style={MONO}>{d.node.criterion_hash || '—'}</span>
-            {d.node.criterion_hash ? (
-              <span className="mt-1 block [overflow-wrap:break-word] [word-break:normal]" style={{ color: 'var(--ep-secondary)' }}>
-                hashed from <span style={MONO}>docs/CRITERION-pq-leanxmss@a2e71ccb.md</span>, the
-                frozen copy. The living file at <span style={MONO}>docs/CRITERION-pq-leanxmss.md</span>{' '}
-                has moved on and does not hash to this value.
-              </span>
-            ) : null}
-          </dd>
-          <dt style={{ color: 'var(--ep-secondary)' }}>head</dt>
-          <dd className="m-0 break-all" style={MONO}>{d.node.head || 'no verified submission'}</dd>
-          <dt style={{ color: 'var(--ep-secondary)' }}>layer and track</dt>
-          <dd className="m-0">{[d.node.layer, d.node.track].filter(Boolean).join(' · ') || '—'}</dd>
-          <dt style={{ color: 'var(--ep-secondary)' }}>fork target</dt>
-          <dd className="m-0">{d.node.fork || '—'}</dd>
-        </dl>
+      <Summary d={d} />
+      <Criterion d={d} />
+
+      <section className="space-y-8" data-testid="activity">
+        <Sessions events={d.sessionEvents} sessions={d.sessions} />
+        <Submissions rows={d.submissions} verdicts={d.verdicts} head={d.head} />
       </section>
 
       <div className="grid gap-12 md:grid-cols-2">
@@ -130,11 +112,104 @@ function Detail({ d, slug }: { d: NodeDetail; slug: string | null }) {
       </div>
 
       {unregistered ? <Register slug={slug} /> : <StartSession slug={slug} />}
-
-      <Sessions events={d.sessionEvents} sessions={d.sessions} />
-      <Submissions rows={d.submissions} verdicts={d.verdicts} head={d.head} />
-      <Attribution rows={d.attribution} />
     </div>
+  );
+}
+
+/** The worknode id, shortened, with the whole of it a click away. */
+function CopyId({ nodeId }: { nodeId: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      title={nodeId}
+      onClick={() => {
+        navigator.clipboard?.writeText(nodeId).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        }, () => setCopied(false));
+      }}
+      className="cursor-pointer border-0 bg-transparent p-0 underline-offset-2 hover:underline"
+      style={{ ...MONO, fontSize: 'var(--ep-size-label)', color: 'var(--ep-secondary)' }}
+    >
+      {nodeId.slice(0, 10)}…{nodeId.slice(-6)} {copied ? '· copied' : '· copy'}
+    </button>
+  );
+}
+
+/** Escrow, baseline and verdicts, in the same three-cell strip the map page uses. */
+function Summary({ d }: { d: NodeDetail }) {
+  const b = baselineFor(d.node.node_id);
+  const escrow = d.node.bounty && d.node.bounty !== '0'
+    ? `${(Number(d.node.bounty) / 1e18).toLocaleString('en-US')} PLANE`
+    : 'unfunded';
+  const cells = [
+    { value: escrow, label: 'escrow' },
+    { value: b ? `${b.cycles.toLocaleString('en-US')}` : 'not recorded', label: b ? 'baseline cycles' : 'baseline' },
+    {
+      value: d.verdicts.length > 0 ? String(d.verdicts.length) : 'none',
+      label: d.verdicts.length > 0 ? 'verdicts recorded' : 'no submissions yet',
+    },
+  ];
+  return (
+    <section data-testid="node-summary">
+      <div className="grid grid-cols-1 border-y sm:grid-cols-3" style={RULE}>
+        {cells.map((c, i) => (
+          <div key={c.label} className={i < cells.length - 1 ? 'px-5 py-[18px] sm:border-r' : 'px-5 py-[18px]'} style={RULE}>
+            <b className="block" style={{ fontSize: 'var(--ep-size-display)', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+              {c.value}
+            </b>
+            <span className="mt-1 block uppercase" style={{ fontSize: 'var(--ep-size-label)', fontWeight: 500, letterSpacing: '0.08em', color: 'var(--ep-secondary)' }}>
+              {c.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** What a submission has to beat, in one sentence and then in numbers. */
+function Criterion({ d }: { d: NodeDetail }) {
+  const b = baselineFor(d.node.node_id);
+  const text = d.node.criterion && d.node.criterion.trim().length > 0
+    ? d.node.criterion
+    : 'No criterion has been recorded for this worknode.';
+  return (
+    <section className="space-y-4" data-testid="criterion">
+      <SectionLabel>Criterion</SectionLabel>
+      <p className="max-w-[80ch]" style={{ fontSize: 'var(--ep-size-md)', lineHeight: 1.5 }}>{text}</p>
+      <dl className="grid max-w-[92ch] grid-cols-[12rem_1fr] gap-y-2" style={SMALL}>
+        <dt style={{ color: 'var(--ep-secondary)' }}>reference commit</dt>
+        <dd className="m-0" style={MONO}>{REFERENCE_COMMIT}</dd>
+        {b ? (
+          <>
+            <dt style={{ color: 'var(--ep-secondary)' }}>baseline cycles</dt>
+            <dd className="m-0" style={MONO}>{b.cycles.toLocaleString('en-US')}, and only strictly below counts</dd>
+            <dt style={{ color: 'var(--ep-secondary)' }}>proving band</dt>
+            <dd className="m-0" style={MONO}>
+              {b.proving.toLocaleString('en-US')} µs recorded, {provingBound(b).toLocaleString('en-US')} µs allowed ({(b.spreadBps / 100).toFixed(2)}% spread)
+            </dd>
+            <dt style={{ color: 'var(--ep-secondary)' }}>proof bound</dt>
+            <dd className="m-0" style={MONO}>{b.proof.toLocaleString('en-US')} B, no allowance</dd>
+            <dt style={{ color: 'var(--ep-secondary)' }}>verify bound</dt>
+            <dd className="m-0" style={MONO}>{b.verify.toLocaleString('en-US')} µs</dd>
+            <dt style={{ color: 'var(--ep-secondary)' }}>editable surface</dt>
+            <dd className="m-0" style={MONO}>{b.editable}</dd>
+          </>
+        ) : null}
+        <dt style={{ color: 'var(--ep-secondary)' }}>head</dt>
+        <dd className="m-0 break-all" style={MONO}>{d.node.head || 'no verified submission'}</dd>
+        <dt style={{ color: 'var(--ep-secondary)' }}>criterion hash</dt>
+        <dd className="m-0 break-all" style={MONO}>{d.node.criterion_hash || '—'}</dd>
+      </dl>
+      {d.node.criterion_hash ? (
+        <p className="m-0 max-w-[92ch]" style={MUTED}>
+          The hash is of <span style={MONO}>docs/CRITERION-pq-leanxmss@a2e71ccb.md</span>, the frozen
+          copy; the living file has moved on and does not hash to this value.
+        </p>
+      ) : null}
+    </section>
   );
 }
 

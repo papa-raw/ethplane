@@ -257,11 +257,6 @@ export function Strawmap({ nodes, chrome = true }: { nodes: StrawNode[]; chrome?
                 </span>
               )}
           </div>
-          <div style={{ fontSize: 'var(--ep-size-sm)', color: 'var(--ep-secondary)' }}>
-            {measured
-              ? 'columns are fork targets · bands are layers and tracks · lines are throughlines'
-              : 'columns are fork targets · bands are layers and tracks'}
-          </div>
         </figcaption>
       ) : null}
 
@@ -273,13 +268,6 @@ export function Strawmap({ nodes, chrome = true }: { nodes: StrawNode[]; chrome?
         </p>
       ) : null}
 
-      {chrome && measured ? (
-        <p className="mt-2 max-w-[92ch]" style={{ fontSize: 'var(--ep-size-sm)', color: 'var(--ep-secondary)' }}>
-          A filled chip is a node the API returns as open. States for {known} of the {nodes.length}
-          nodes were read from that response. Select a node for its criterion, its sessions and its
-          payouts.
-        </p>
-      ) : null}
     </figure>
   );
 }

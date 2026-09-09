@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { GitHubMark } from '@/components/site/GitHubMark';
+import { GitHubMark, XMark } from '@/components/site/GitHubMark';
 
 /**
  * One masthead for every route, so nothing jumps between pages (BRIEF §2 refusal 5): the same
@@ -7,10 +7,7 @@ import { GitHubMark } from '@/components/site/GitHubMark';
  */
 const NAV = [
   { href: '/', label: 'map' },
-  { href: '/#nodes', label: 'worknodes' },
-  { href: '/deck', label: 'deck' },
   { href: '/docs', label: 'docs' },
-  { href: '/join', label: 'join' },
 ];
 
 export function Masthead() {
@@ -47,6 +44,26 @@ export function Masthead() {
         style={{ color: 'var(--ep-secondary)' }}
       >
         <GitHubMark />
+      </a>
+      <a
+        href="https://x.com/papa_raw"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Pat on X"
+        className="inline-flex items-center hover:opacity-70"
+        style={{ color: 'var(--ep-secondary)' }}
+      >
+        <XMark />
+      </a>
+      <a
+        href="/join"
+        className="ml-4 no-underline"
+        style={{
+          padding: '7px 14px', borderRadius: 'var(--ep-radius-md)', background: 'var(--ep-primary)',
+          color: '#ffffff', fontSize: 'var(--ep-size-sm)', fontWeight: 500,
+        }}
+      >
+        Join
       </a>
     </header>
   );

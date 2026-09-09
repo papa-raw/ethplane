@@ -564,3 +564,72 @@
 }
 
 .ep-source:hover { color: var(--ep-on-surface); text-decoration: underline; }
+
+/* The docs page: a rail and a column. The rail was sticky with no column of its own, so it drew on
+   top of the paragraphs at the left margin. Below 900px it is a horizontal list above the text. */
+.ep-docs-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--ep-space-xl);
+}
+
+.ep-docs-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ep-space-sm);
+}
+
+@media (min-width: 900px) {
+  .ep-docs-grid {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: var(--ep-space-xxxl);
+  }
+
+  .ep-docs-nav {
+    display: block;
+    position: sticky;
+    top: var(--ep-space-lg);
+    align-self: start;
+  }
+}
+
+/* Join is the one action in the masthead, so it is the one button. The marks sit left of it. */
+.ep-social {
+  font-size: var(--ep-size-sm);
+  color: var(--ep-secondary);
+  text-decoration: none;
+  margin-left: var(--ep-space-lg);
+}
+
+.ep-social:hover { color: var(--ep-on-surface); }
+
+.ep-join {
+  margin-left: var(--ep-space-lg);
+  padding: 7px 14px;
+  border-radius: var(--ep-radius-md);
+  background: var(--ep-primary);
+  color: #ffffff;
+  font-size: var(--ep-size-sm);
+  font-weight: var(--ep-weight-medium);
+  text-decoration: none;
+}
+
+.ep-join:hover { opacity: 0.9; }
+
+.ep-join-current { background: var(--ep-on-surface); }
+
+/* After a name is issued, the page says what to do next rather than ending. */
+.ep-next { margin-top: var(--ep-space-xl); border-top: 1px solid var(--ep-border); padding-top: var(--ep-space-lg); }
+.ep-next h3 { font-size: var(--ep-size-md); font-weight: var(--ep-weight-medium); margin: 0 0 var(--ep-space-md); }
+.ep-next ol { margin: 0 0 var(--ep-space-md); padding-left: 20px; }
+.ep-next li { margin-bottom: var(--ep-space-md); }
+.ep-mono { font-family: var(--ep-font-mono), monospace; font-size: var(--ep-size-sm); }
+.ep-code {
+  font-family: var(--ep-font-mono), monospace;
+  font-size: var(--ep-size-sm);
+  background: #f5f5f7;
+  border-radius: var(--ep-radius-sm);
+  padding: 8px 10px;
+  margin: var(--ep-space-sm) 0 0;
+  overflow-x: auto;
+}

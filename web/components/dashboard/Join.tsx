@@ -18,19 +18,28 @@ export function Join() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  /**
+   * One POST, and every way it can fail says so on the page. The button did nothing on the live site
+   * with no console error and no request: a click that reaches a handler which throws before `fetch`
+   * looks identical to a click that never landed, so the token step is now its own failure with its
+   * own message, and the handler cannot exit without either a result or an error line.
+   */
   const join = async () => {
     setBusy(true);
     setError(null);
     try {
       const token = await getAccessToken();
+      if (!token) throw new Error('Privy returned no access token. Sign out and sign in again.');
       const res = await fetch(`${API_BASE}/api/join`, {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-        body: JSON.stringify({ wallet: wallets[0]?.address ?? '' }),
+        body: JSON.stringify({ wallet: wallets[0]?.address ?? user?.wallet?.address ?? '' }),
       });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error ?? `join responded ${res.status}`);
-      setResult(body as JoinResult);
+      const text = await res.text();
+      let body: Record<string, unknown> = {};
+      try { body = text ? JSON.parse(text) : {}; } catch { throw new Error(`join responded ${res.status} with ${text.slice(0, 80)}`); }
+      if (!res.ok) throw new Error(String(body.error ?? `join responded ${res.status}`));
+      setResult(body as unknown as JoinResult);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -52,10 +61,10 @@ export function Join() {
         <h2>Join the plane</h2>
         <p>
           Sign in with an email or a wallet. You get a name under guests.ethplane.eth and an embedded
-          wallet if you do not have one, and you can start a session on any open node, exactly like
+          wallet if you do not have one, and you can start a session on any open worknode, exactly like
           any other contributor.
         </p>
-        <button className="ep-btn ep-btn-primary" onClick={login}>
+        <button className="ep-btn ep-btn-primary" onClick={() => login()}>
           Sign in
         </button>
       </div>
@@ -75,13 +84,41 @@ export function Join() {
             {result.returning
               ? 'This name was already reserved for this wallet.'
               : 'Your name is reserved.'}{' '}
-            It is registered on chain by the maintainer shortly; the dashboard shows it as soon as
-            it is.
+            The maintainer registers it on chain shortly, and the dashboard shows it as soon as it
+            is.
           </p>
+
+          <div data-testid="join-next" className="ep-next">
+            <h3>Next steps</h3>
+            <ol>
+              <li>
+                Your name is <span className="ep-mono">{result.guestName}.guests.ethplane.eth</span>{' '}
+                and your wallet is{' '}
+                <span className="ep-mono">{wallets[0]?.address ?? user?.wallet?.address ?? 'not created yet'}</span>.
+              </li>
+              <li>
+                Install the CLI.
+                <pre className="ep-code">{`git clone https://github.com/papa-raw/ethplane
+cd ethplane/cli && pnpm install && pnpm build`}</pre>
+              </li>
+              <li>
+                Rebuild the tree from your name.
+                <pre className="ep-code">{`ethplane join ${result.guestName}`}</pre>
+              </li>
+              <li>
+                Start a session on an open worknode, from its current head.
+                <pre className="ep-code">{`python3 swarm/client.py claim --node <worknode-id>`}</pre>
+              </li>
+            </ol>
+            <p>
+              The worknodes are on <a href="/">the map</a>, and{' '}
+              <a href="/docs#join">the docs</a> carry the whole sequence with the addresses.
+            </p>
+          </div>
         </div>
       ) : (
         <p>
-          <button className="ep-btn ep-btn-primary" onClick={join} disabled={busy}>
+          <button className="ep-btn ep-btn-primary" onClick={() => { void join(); }} disabled={busy}>
             {busy ? 'Taking…' : 'Take my name'}
           </button>
         </p>

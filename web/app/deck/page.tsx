@@ -1,13 +1,15 @@
-import { Architecture } from '@/components/site/Architecture';
-import { Masthead } from '@/components/site/Masthead';
-
-export const metadata = { title: 'Ethplane — how it works' };
+export const metadata = {
+  title: 'Ethplane — docs',
+  /* The architecture page and the docs are one page now. Old links still land somewhere. */
+  other: { refresh: '0; url=/docs' },
+};
 
 export default function DeckPage() {
   return (
-    <main className="ep">
-      <Masthead current="deck" />
-      <Architecture />
+    <main style={{ padding: 24, fontFamily: 'var(--ep-font-sans)' }}>
+      <p>
+        This page moved. <a href="/docs" style={{ color: 'var(--ep-primary)' }}>Continue to the docs</a>.
+      </p>
     </main>
   );
 }

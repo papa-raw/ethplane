@@ -47,7 +47,10 @@ describe('NodePage', () => {
     expect(screen.getByTestId('funding-card')).toHaveTextContent('c8io5x5g08igo85ljedozu2k');
     expect(screen.getByTestId('funding-card')).toHaveTextContent('policy violation');
     expect(screen.getByTestId('sessions')).toHaveTextContent('No session has been started on this node yet');
-    expect(screen.getByTestId('attribution')).toHaveTextContent('No payouts yet');
+    // The attribution section is gone: the page is header, summary, criterion, activity, then
+    // escrow and ENS, and nothing else (Pat, 2026-09-09, on the worknode page's organisation).
+    expect(screen.queryByTestId('attribution')).toBeNull();
+    expect(screen.getByTestId('node-summary')).toBeInTheDocument();
   });
 
   it('offers the Register control only while the node is unregistered', () => {

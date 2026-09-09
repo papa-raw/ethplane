@@ -1,15 +1,22 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { Diagram } from '@/components/site/Architecture';
 import { CONTRACTS, ETH_REGISTRY, EXPLORER, PRIVY, READ_ON, REPO, SPLIT, UNIVERSAL_RESOLVER, VERDICTS, WORKNODES } from '@/lib/sepolia';
 
 const INK = 'var(--ep-on-surface)';
 const MUTED = 'var(--ep-secondary)';
 const LINE = 'var(--ep-border)';
 const BLUE = 'var(--ep-primary)';
+const WHY = {
+  unbuilt: 'could not be built or run',
+  unchanged: 'cycles unchanged from the baseline',
+  oversize: 'cycles 1,350 below the baseline; proof 307 bytes over the bound, and proof size has no allowance',
+} as const;
 const mono = { fontFamily: 'var(--ep-font-mono)', fontSize: 'var(--ep-size-sm)' } as const;
 
 const SECTIONS = [
   { id: 'what', title: 'What this is' },
+  { id: 'architecture', title: 'Architecture' },
   { id: 'how', title: 'How it works' },
   { id: 'sepolia', title: 'Live on Sepolia' },
   { id: 'ens', title: 'ENS' },
@@ -72,12 +79,8 @@ export function Docs() {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 32 }} className="ep-docs-grid">
-        <nav
-          aria-label="Sections"
-          className="ep-docs-nav"
-          style={{ position: 'sticky', top: 16, alignSelf: 'start', fontSize: 'var(--ep-size-sm)' }}
-        >
+      <div className="ep-docs-grid">
+        <nav aria-label="Sections" className="ep-docs-nav" style={{ fontSize: 'var(--ep-size-sm)' }}>
           {SECTIONS.map((s) => (
             <a
               key={s.id}
@@ -108,6 +111,16 @@ export function Docs() {
               recorded onchain and the verifier accepted none of them, which is the honest state of
               the plane today.
             </Row>
+          </section>
+
+          <section>
+            <H id="architecture">Architecture</H>
+            <Row>
+              What holds a worknode, who works it, who judges it, and who pays.
+            </Row>
+            <div style={{ borderTop: `1px solid ${LINE}`, borderBottom: `1px solid ${LINE}`, padding: '20px 0', margin: '4px 0 8px' }}>
+              <Diagram />
+            </div>
           </section>
 
           <section>
@@ -158,8 +171,10 @@ export function Docs() {
               </table>
             </div>
             <Row>
-              The seven measurements, decoded from the <span style={mono}>MeasurementRecorded</span>{' '}
-              logs. All seven carry <span style={mono}>accepted=false</span>.
+              A submission is an artifact a worker sent. The verifier rebuilds it at the pinned
+              commit, runs it, and records a verdict on chain. A verdict passes only if cycles come in
+              below the baseline and proving time, verify time and proof size do not regress. Seven
+              submissions have been measured.
             </Row>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 'var(--ep-size-sm)' }}>
@@ -167,8 +182,10 @@ export function Docs() {
                   <tr style={{ color: MUTED, textAlign: 'left' }}>
                     <th style={{ padding: '6px 10px 6px 0' }}>block</th>
                     <th style={{ padding: '6px 10px' }}>worknode</th>
-                    <th style={{ padding: '6px 10px', textAlign: 'right' }}>cycles</th>
-                    <th style={{ padding: '6px 10px', textAlign: 'right' }}>proof B</th>
+                    <th style={{ padding: '6px 10px', textAlign: 'right' }}>cycles measured</th>
+                    <th style={{ padding: '6px 10px', textAlign: 'right' }}>proof size</th>
+                    <th style={{ padding: '6px 10px' }}>verdict</th>
+                    <th style={{ padding: '6px 10px' }}>why</th>
                     <th style={{ padding: '6px 0 6px 10px' }}>tx</th>
                   </tr>
                 </thead>
@@ -177,8 +194,10 @@ export function Docs() {
                     <tr key={v.tx} style={{ borderTop: `1px solid ${LINE}` }}>
                       <td style={{ padding: '6px 10px 6px 0', ...mono }}>{v.block}</td>
                       <td style={{ padding: '6px 10px' }}>{v.node === 1 ? 'cl-pq-leanxmss' : 'dl-leanvm'}</td>
-                      <td style={{ padding: '6px 10px', textAlign: 'right', ...mono }}>{v.cycles.toLocaleString('en-US')}</td>
-                      <td style={{ padding: '6px 10px', textAlign: 'right', ...mono }}>{v.proof.toLocaleString('en-US')}</td>
+                      <td style={{ padding: '6px 10px', textAlign: 'right', ...mono }}>{v.cycles === 0 ? '—' : v.cycles.toLocaleString('en-US')}</td>
+                      <td style={{ padding: '6px 10px', textAlign: 'right', ...mono }}>{v.proof === 0 ? '—' : `${v.proof.toLocaleString('en-US')} B`}</td>
+                      <td style={{ padding: '6px 10px' }}>FAIL</td>
+                      <td style={{ padding: '6px 10px', color: MUTED }}>{WHY[v.node === 1 ? (v.cycles === 0 ? 'unbuilt' : 'unchanged') : 'oversize']}</td>
                       <td style={{ padding: '6px 0 6px 10px' }}>
                         <a href={`${EXPLORER}/tx/${v.tx}`} style={{ color: BLUE, ...mono }}>{v.tx.slice(0, 10)}…</a>
                       </td>
@@ -187,6 +206,10 @@ export function Docs() {
                 </tbody>
               </table>
             </div>
+            <Row>
+              No submission has passed yet. The three node-2 submissions show a real cycles cut that
+              cost proof size; the criterion holds both.
+            </Row>
           </section>
 
           <section>

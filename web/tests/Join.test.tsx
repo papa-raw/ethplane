@@ -32,7 +32,7 @@ describe('Join', () => {
   it('takes a name and shows it back', async () => {
     privy.authenticated = true;
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true, json: async () => ({ guestName: 'judge-7', wallet: '0xWALLET', returning: false }),
+      ok: true, text: async () => JSON.stringify({ guestName: 'judge-7', wallet: '0xWALLET', returning: false }),
     }));
     render(<Join />);
     fireEvent.click(screen.getByText('Take my name'));
@@ -42,7 +42,7 @@ describe('Join', () => {
   it('shows the API error rather than pretending the claim worked', async () => {
     privy.authenticated = true;
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: false, status: 503, json: async () => ({ error: 'join is not configured' }),
+      ok: false, status: 503, text: async () => JSON.stringify({ error: 'join is not configured' }),
     }));
     render(<Join />);
     fireEvent.click(screen.getByText('Take my name'));

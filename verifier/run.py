@@ -127,9 +127,53 @@ def build_isolation_reason() -> str:
 
 
 def cargo_prefix() -> list:
-    """Run cargo as BUILD_USER when one is configured, otherwise as this user."""
+    """Run cargo as BUILD_USER when one is configured, otherwise as this user.
+
+    sudo clears the environment, and BUILD_USER cannot read the verifier's toolchain (that is the
+    point of it), so the build's CARGO_HOME and RUSTUP_HOME are named explicitly and passed through
+    `env`. verifier/host-setup-build-user.sh creates them and prints the two values."""
     user = build_user()
-    return ["sudo", "-n", "-u", user] if user else []
+    if not user:
+        return []
+    prefix = ["sudo", "-n", "-u", user]
+    cargo_home = os.environ.get("BUILD_CARGO_HOME", "").strip()
+    rustup_home = os.environ.get("BUILD_RUSTUP_HOME", "").strip()
+    if not cargo_home and not rustup_home:
+        return prefix
+    pairs = []
+    if cargo_home:
+        pairs.append(f"CARGO_HOME={cargo_home}")
+        pairs.append(f"PATH={os.path.join(cargo_home, 'bin')}:/usr/local/bin:/usr/bin:/bin")
+    if rustup_home:
+        pairs.append(f"RUSTUP_HOME={rustup_home}")
+    return prefix + ["env"] + pairs
+
+
+def build_group() -> str:
+    """The group both users are in. Defaults to the build user's own name, which is what the setup
+    script creates."""
+    return os.environ.get("BUILD_GROUP", build_user()).strip()
+
+
+def share_with_build_user(path: str) -> Tuple[bool, str]:
+    """Let BUILD_USER's cargo write inside a directory this user owns.
+
+    A worktree is created by the verifier user under a temp directory that is 0700 by default, so
+    the build user cannot even traverse it, and `cargo build` would fail with a permission error
+    that reads as `build` — a verdict against a submission for something it did not do. setgid plus
+    group-write is the smallest thing that works: cargo creates target/ inside, and the group is
+    carried down to whatever it creates.
+
+    Failing to share is `host-config`, never a verdict about the submission."""
+    if not build_user():
+        return True, ""
+    group = build_group()
+    try:
+        shutil.chown(path, group=group)
+        os.chmod(path, 0o2770)
+    except (LookupError, PermissionError, OSError):
+        return False, "host-config"
+    return True, ""
 
 
 def cargo_flags() -> list:
@@ -380,8 +424,17 @@ def run_baseline(reference: str) -> int:
                                     f"argument or set LEANVM_REF"}, indent=2))
         return 1
     with tempfile.TemporaryDirectory() as temp_dir:
+        ok, reason = share_with_build_user(temp_dir)
+        if not ok:
+            print(json.dumps({"error": reason, "detail": "BUILD_USER is set but the worktree "
+                                                         "cannot be shared with it"}, indent=2))
+            return 1
         worktree = os.path.join(temp_dir, "reference")
         ok, reason = make_worktree(reference, worktree)
+        if not ok:
+            print(json.dumps({"error": reason}, indent=2))
+            return 1
+        ok, reason = share_with_build_user(worktree)
         if not ok:
             print(json.dumps({"error": reason}, indent=2))
             return 1
@@ -628,6 +681,10 @@ def main() -> None:
 
     reference = args.reference_leanvm
     with tempfile.TemporaryDirectory() as temp_dir:
+        ok, reason = share_with_build_user(temp_dir)
+        if not ok:
+            emit(verdict(reason=reason))
+            return
         payload = os.path.join(temp_dir, "payload")
         os.makedirs(payload)
         ok, reason = extract_tarball(args.artifact_tarball, payload)
@@ -654,6 +711,10 @@ def main() -> None:
                     emit(verdict(reason=reason))
                     return
                 created.append(wt)
+                ok, reason = share_with_build_user(wt)
+                if not ok:
+                    emit(verdict(reason=reason))
+                    return
 
             # R3. A reference build that fails aborts the verification. The version this replaces
             # left reference_hash = None and the stale-binary comparison below guarded on it, so the

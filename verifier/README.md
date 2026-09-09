@@ -95,6 +95,38 @@ unspoken. The parser returns ints, `verdict()` coerces whatever reaches it, and 
 again at the argument list — three places, because losing this loses the verdict rather than a
 digit.
 
+## A build user, for a surface that admits Rust
+
+Node 2 (`dl-leanvm`) admits `crates/lean_compiler/`, so this host compiles Rust a submitter wrote —
+and `cargo build`, like the reference harness's `cargo test`, runs `build.rs` and procedural macros
+at compile time as the invoking user. On hawk that user holds the verifier key. `--offline --locked`
+stops dependency fetching; it does not stop code execution. So on that surface run.py compiles as
+`BUILD_USER` through `sudo -n`, checks with the system that the user cannot actually read
+`$VERIFIER_KEY_FILE`, and shares each worktree with it (setgid, group write) so cargo can create
+`target/` in a directory the verifier user owns. A worktree that cannot be shared is `host-config`:
+the host's problem, never a verdict against the submission.
+
+`sudo verifier/host-setup-build-user.sh` makes that user on Ubuntu, idempotently: the shared group,
+the `lean-build` system account with no login shell, the sudoers drop-in, and `CARGO_HOME` /
+`RUSTUP_HOME` copies at `/var/cache/lean-cargo` and `/var/lib/lean-rustup` — copied from the
+verifier's rather than installed fresh, so both users compile with the *same* rustc (the
+stale-binary sha256 comparison and the cycle counts depend on that) and the registry is already warm
+with exactly the crates the lockfile pins, which is what `--offline` needs. It finishes by proving
+both halves: that `lean-build` cannot read the key, and that it can build the reference worktree
+offline. The environment it prints for node 2's watcher:
+
+```bash
+export EDITABLE="crates/rec_aggregation/guests/,crates/lean_compiler/"
+export BUILD_USER=lean-build
+export BUILD_CARGO_HOME=/var/cache/lean-cargo
+export BUILD_RUSTUP_HOME=/var/lib/lean-rustup
+```
+
+`BUILD_GROUP` defaults to the build user's name. With `BUILD_USER` set, `ALLOW_UNSANDBOXED_BUILD`
+should be removed from that watcher's environment — run.py checks the isolation itself and refuses
+if it ever stops holding. Node 1's watcher sets none of these: guests only, no Rust from a
+submitter, nothing to isolate. Test the path with `verifier/tests/build-user-test.sh`.
+
 ## Not as root
 
 `watch.py` refuses to run as root, and `run.py` answers `host-config` instead of measuring. git

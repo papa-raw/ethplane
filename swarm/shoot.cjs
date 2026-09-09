@@ -33,7 +33,7 @@ async function shoot(pg, url, file) {
       const liveNode = "0x662b44f5cf418a3e3d4126a187d0154034afbdc8d2536b9076c68f2a4440c37e";
       const nodeDir = path.join(outDir, "node"); const nodeFiles = fs.existsSync(nodeDir) ? fs.readdirSync(nodeDir).filter(f => f.endsWith(".html")) : [];
       const nodeId = nodeFiles.includes(liveNode + ".html") ? liveNode : (nodeFiles[0] || "").replace(/\.html$/, "");
-      const pages = { home: "/", docs: "/docs", deck: "/deck", ...(nodeId ? { node: "/node/" + nodeId } : {}) };
+      const pages = { home: "/", docs: "/docs", deck: "/deck", join: "/join", ...(nodeId ? { node: "/node/" + nodeId } : {}) };
       const hashes = {};
       for (const [name, url] of Object.entries(pages)) { hashes[name] = await shoot(pg, "http://127.0.0.1:4499" + url, path.join(shots, name + ".png")); console.log("shot", name, url); }
       const dup = Object.entries(hashes).find(([n, h], i, arr) => arr.findIndex(([m, g]) => g === h) !== i);

@@ -68,9 +68,12 @@ export function stateOf(n: NodeRow): string {
 }
 
 /**
- * The state column exactly as the API returns it, with no derivation on top. The map highlights a
- * node on this and nothing else (BRIEF §2 refusal 8): a chip is live because the API returned that
- * node_id as `open`, never because its label looked interesting.
+ * The state column exactly as the API returns it, with no derivation on top. The node list reads
+ * this directly; the map reads `stateOf`, which returns the column unchanged whenever it is
+ * specific, so both highlight the same chips. What refusal 8 actually requires is that the
+ * identity be the API's `node_id` and never a label match, and both paths satisfy that. The
+ * coupling is worth knowing before changing `stateOf`'s precedence: if a derived state could ever
+ * win over `open`, the map's highlight would go with it while the list's would not.
  */
 export function apiState(n: NodeRow): string {
   const s = (n.state ?? '').trim().toLowerCase();

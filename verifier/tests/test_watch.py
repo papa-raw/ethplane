@@ -122,10 +122,23 @@ class TestFetch(WatchTestCase):
             os.unlink(path)
 
 
+BASELINE = {"cycles": 1542812, "provingMicros": 7158000, "proofSizeBytes": 302182,
+            "verifyMicros": 554333, "spreadBps": 2367, "originalMetric": 1542812}
+
+
 class TestRunVerifier(WatchTestCase):
+    """These are about what run.py is told and what comes back; the baseline itself has its own
+    class, so it is stubbed here."""
+
+    def setUp(self):
+        super().setUp()
+        p = patch.object(watch, "node_baseline", return_value=dict(BASELINE))
+        p.start(); self.addCleanup(p.stop)
+
     def test_the_verdict_is_the_verifiers_stdout(self):
         with patch.object(watch.subprocess, "run",
-                          return_value=MagicMock(returncode=0, stdout=json.dumps(VERDICT), stderr="")):
+                          return_value=MagicMock(returncode=0, stdout=json.dumps(VERDICT), stderr="")), \
+             redirect_stdout(io.StringIO()):
             self.assertEqual(watch.run_verifier("/tmp/a.tar.gz")["cycles"], 1542812)
 
     def test_the_pinned_commit_reaches_run_py_under_the_name_it_reads(self):
@@ -135,16 +148,88 @@ class TestRunVerifier(WatchTestCase):
             seen.update(kw.get("env", {}))
             return MagicMock(returncode=0, stdout=json.dumps(VERDICT), stderr="")
 
-        with patch.object(watch.subprocess, "run", side_effect=fake):
+        with patch.object(watch.subprocess, "run", side_effect=fake), redirect_stdout(io.StringIO()):
             watch.run_verifier("/tmp/a.tar.gz")
         self.assertEqual(seen["LEANVM_COMMIT"], "a210ef1b")
         self.assertEqual(seen["LEANVM_REF"], "/home/ubuntu/leanVM")
 
     def test_a_crashed_verifier_is_an_outage_here_not_a_verdict_about_the_submission(self):
         with patch.object(watch.subprocess, "run",
-                          return_value=MagicMock(returncode=1, stdout="", stderr="boom")):
+                          return_value=MagicMock(returncode=1, stdout="", stderr="boom")), \
+             redirect_stdout(io.StringIO()):
             with self.assertRaises(RuntimeError):
                 watch.run_verifier("/tmp/a.tar.gz")
+
+
+class TestNodeBaseline(WatchTestCase):
+    """A verdict measured against another node's baseline is not a verdict about this submission.
+
+    On 2026-09-09 watch.py ran run.py with the tarball alone, so node 2 was judged against node 1's
+    constants — 1,433,000 µs and spreadBps 190, a 1.46 s bound — while its own recorded baseline is
+    7,158,000 µs and 2367, a bound of 8.85 s. Artifact 0x1336adaf… came back FAIL
+    regression-provingMicros at 1.709 s, which under its node's real baseline is no regression at
+    all. The measurement was right; the yardstick was another node's."""
+
+    # The node-2 BaselineRecorded log, as cast prints it: cycles, provingMicros, proofBytes,
+    # verifyMicros, spreadBps, one 32-byte word each.
+    NODE2_LOG = ("data: 0x" + "".join(f"{v:064x}" for v in (1542812, 7158000, 302182, 554333, 2367)))
+
+    def cast_logs(self, stdout):
+        return MagicMock(returncode=0, stdout=stdout, stderr="")
+
+    def test_the_baseline_comes_from_this_node_s_own_log(self):
+        with patch.object(watch.subprocess, "run", return_value=self.cast_logs(f"blockNumber: 11668042\n{self.NODE2_LOG}\n")):
+            b = watch.node_baseline(watch.get_env_vars())
+        self.assertEqual(b, {"cycles": 1542812, "provingMicros": 7158000, "proofSizeBytes": 302182,
+                             "verifyMicros": 554333, "spreadBps": 2367, "originalMetric": 1542812})
+
+    def test_the_bound_that_baseline_produces_admits_the_measurement_that_was_failed(self):
+        b = {"provingMicros": 7158000, "spreadBps": 2367}
+        allowed = b["provingMicros"] * (10000 + b["spreadBps"]) // 10000
+        self.assertGreater(allowed, 1_709_000, "1.709 s must pass under node 2's own baseline")
+        node1 = 1433000 * (10000 + 190) // 10000
+        self.assertLess(node1, 1_709_000, "and it is exactly what failed under node 1's")
+
+    def test_a_baseline_json_overrides_the_chain_for_a_host_with_no_rpc(self):
+        import tempfile as tf
+        with tf.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+            json.dump({"cycles": 1, "provingMicros": 2, "proofSizeBytes": 3, "verifyMicros": 4, "spreadBps": 5}, f)
+        os.environ["BASELINE_JSON"] = f.name
+        try:
+            with patch.object(watch.subprocess, "run", side_effect=AssertionError("must not ask the chain")):
+                self.assertEqual(watch.node_baseline(watch.get_env_vars())["provingMicros"], 2)
+        finally:
+            del os.environ["BASELINE_JSON"]; os.unlink(f.name)
+
+    def test_no_baseline_on_chain_raises_rather_than_judging_on_a_default(self):
+        with patch.object(watch.subprocess, "run", return_value=self.cast_logs("")):
+            with self.assertRaises(RuntimeError) as e:
+                watch.node_baseline(watch.get_env_vars())
+        self.assertIn("nothing to judge against", str(e.exception))
+
+    def test_an_unreachable_rpc_raises_too(self):
+        with patch.object(watch.subprocess, "run", return_value=MagicMock(returncode=1, stdout="", stderr="connection refused")):
+            with self.assertRaises(RuntimeError):
+                watch.node_baseline(watch.get_env_vars())
+
+    def test_run_py_is_given_the_baseline_file_as_its_third_argument(self):
+        seen = {}
+
+        def fake(cmd, **kw):
+            if cmd[0] == "cast":
+                return self.cast_logs(f"{self.NODE2_LOG}\n")
+            seen["cmd"] = cmd
+            payload = dict(VERDICT)
+            return MagicMock(returncode=0, stdout=json.dumps(payload), stderr="")
+
+        with patch.object(watch.subprocess, "run", side_effect=fake), redirect_stdout(io.StringIO()):
+            watch.run_verifier("/tmp/a.tar.gz")
+        # python3 run.py <tarball> <reference> <baseline.json>
+        self.assertEqual(len(seen["cmd"]), 5, seen["cmd"])
+        self.assertTrue(seen["cmd"][2].endswith(".tar.gz"))
+        self.assertEqual(seen["cmd"][3], "/home/ubuntu/leanVM")
+        self.assertTrue(seen["cmd"][4].endswith(".json"))
+        self.assertFalse(os.path.exists(seen["cmd"][4]), "the baseline file is removed afterwards")
 
 
 class TestMeasurementCall(WatchTestCase):

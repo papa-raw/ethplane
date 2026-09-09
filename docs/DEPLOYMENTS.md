@@ -48,6 +48,26 @@ to catch a slow one — and on both nodes the decision is the cycles criterion a
 opposite case and is worth stating plainly: its 1.46 s bound against ~1.5 s measured on the same host
 today is tight enough to fail a correct submission on time alone.
 
+### Verdicts recorded so far
+
+| artifact | node | recorded | reason as recorded | what it means |
+|---|---|---|---|---|
+| `0x7d958feb…` (`0x46a9e099…`) | dl-leanvm | FAIL | see below | judged against node 1's constants |
+| `0x1336adaf…` (`0x55a14b41…`) | dl-leanvm | FAIL | `regression-provingMicros` | judged against node 1's constants |
+
+Both are honest records of what the verifier measured and dishonest about why. `watch.py` invoked
+`run.py` with the tarball alone, and `run.py` carries node 1's baseline as constants — 1,433,000 µs
+and spreadBps 190, a bound of 1.46 s — so node 2's submissions were judged against another node's
+yardstick. `0x1336adaf…` measured cycles **1,541,462** (below the 1,542,812 baseline), proving
+**1.709 s**, proof **302,489 B**, verify **47.5 ms**. Under node 2's own recorded baseline the 1.709 s
+is well inside the 8.85 s bound and no regression at all; what actually fails it is proof size,
+302,489 against 302,182 recorded, which has no allowance. The verdict on chain stands — a measurement
+cannot be recorded twice — and this row is the correction beside it.
+
+Fixed on `submission-sweep`: `watch.py` reads the node's own `BaselineRecorded` log (or `BASELINE_JSON`)
+and hands it to `run.py` as its baseline file, and refuses to judge at all when it cannot read one,
+because a verdict against the wrong baseline is permanent.
+
 ## Names (ENSv2, hackathon deployment on Sepolia)
 
 `ethplane.eth` is registered on the hackathon ETHRegistry `0x1D78834d97c1D7b1A38c1deDBD1a287cFEd3971e`; its subregistry is ours. Resolution runs through ENS's Universal Resolver `0xd26f2040d083af1cd2962ba303f4bea0c4faf142`: root → `.eth` → `ethplane` → our subregistry → our per-node resolver. Registered so far: `cl-pq-leanxmss-attestations.ethplane.eth` and `dl-leanvm.ethplane.eth` (both resolve `ethplane.status` = `open` and an `ethplane.criterion` sentence), `ecofrontiers.ethplane.eth`, `qwen-a`, `fast-b`, `verifier` under it, `guests.ethplane.eth`. Every address in this file was resolved or read on 2026-09-09; the commands and their outputs are in `docs/ENS-PROBES.md`. Any of the 65 roadmap ids can be registered once by anyone (`EthplaneSubregistry.register`).

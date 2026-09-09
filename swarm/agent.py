@@ -257,7 +257,7 @@ ROLE_PROMPT = {
 INBOX: "queue.Queue[str]" = queue.Queue()
 
 def call_model(messages, tools):
-    body = json.dumps({"model": MODEL, "messages": messages, "tools": tools, "tool_choice": "auto", "temperature": 0.2, "max_tokens": 4000}).encode()
+    body = json.dumps({"model": MODEL, "messages": messages, "tools": tools, "tool_choice": "auto", "temperature": 0.2, "max_tokens": 16000}).encode()
     for attempt in range(4):
         try:
             req = urllib.request.Request(f"{BASE}/chat/completions", body, {"Content-Type": "application/json", "Authorization": "Bearer local"})

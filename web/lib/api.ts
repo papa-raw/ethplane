@@ -53,10 +53,18 @@ export const STATE_STYLE: Record<string, { label: string; dot: string; ring: str
   closed:   { label: 'closed',   dot: 'bg-zinc-600',   ring: 'ring-zinc-400' },
 };
 
+/**
+ * The state a reader is shown. The state column wins wherever it is specific, so a node the API
+ * calls `open` stays open even while a session runs on it; where the column is only a base state,
+ * the live columns are more current than the indexer and fill it in. Derivation is by node_id from
+ * the API's own row — never a name match (BRIEF §2 refusal 8).
+ */
 export function stateOf(n: NodeRow): string {
+  const s = apiState(n);
+  if (s === 'open' || s === 'passed' || s === 'closed') return s;
   if ((n.active_lease_count ?? 0) > 0) return 'claimed';
   if (n.head) return 'passed';
-  return n.state ?? 'seeded';
+  return s;
 }
 
 /**

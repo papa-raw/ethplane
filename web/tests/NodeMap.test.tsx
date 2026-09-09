@@ -25,10 +25,11 @@ describe('NodeMap', () => {
         node({ node_id: '0x3' }),
       ]} />
     );
-    const legend = screen.getByTestId('map-legend');
-    expect(legend).toHaveTextContent('in session');
-    expect(legend).toHaveTextContent('passed');
-    expect(legend).toHaveTextContent('seeded');
+    // The page carries one legend and it lives in the map above, so each row states its own status.
+    const rows = screen.getAllByTestId('map-node');
+    expect(rows[0]).toHaveTextContent('in session');
+    expect(rows[1]).toHaveTextContent('passed');
+    expect(rows[2]).toHaveTextContent('seeded');
   });
 
   it('links every node to its page', () => {

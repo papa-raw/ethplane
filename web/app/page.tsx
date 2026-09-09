@@ -19,8 +19,8 @@ export default function Home() {
         </h1>
         <p style={{ fontSize: 'var(--ep-size-md)', lineHeight: 1.5, color: 'var(--ep-secondary)', margin: 0 }}>
           {nodes.length} nodes from the strawmap. Each has a name under ethplane.eth, an acceptance
-          criterion a machine can check, and an escrow that pays on a verdict. A session can be
-          started on any node.
+          criterion a machine can check, a session anyone can start, and an escrow that pays on a
+          verdict.
         </p>
       </section>
 

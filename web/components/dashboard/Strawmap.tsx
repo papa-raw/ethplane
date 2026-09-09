@@ -1,7 +1,7 @@
 'use client';
 import { useMemo } from 'react';
 import { usePolling } from '@/lib/usePolling';
-import { NodeRow, apiState, STATE_INK } from '@/lib/api';
+import { NodeRow, stateOf, STATE_INK } from '@/lib/api';
 import { layout, type StrawNode } from '@/lib/layout';
 
 /**
@@ -74,10 +74,10 @@ export function Strawmap({ nodes, chrome = true }: { nodes: StrawNode[]; chrome?
   const poll = usePolling<NodeRow[]>('/api/nodes');
   const rows = poll.data;
 
-  /** node_id -> the state column, exactly as the API returned it. Never a name match. */
+  /** node_id -> the state shown, from that node's own API row. Never a name match. */
   const live = useMemo(() => {
     const m = new Map<string, string>();
-    for (const r of rows ?? []) m.set(r.node_id.toLowerCase(), apiState(r));
+    for (const r of rows ?? []) m.set(r.node_id.toLowerCase(), stateOf(r));
     return m;
   }, [rows]);
 

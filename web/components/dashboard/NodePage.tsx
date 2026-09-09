@@ -103,7 +103,16 @@ function Detail({ d, slug }: { d: NodeDetail; slug: string | null }) {
         </p>
         <dl className="grid max-w-[92ch] grid-cols-[10rem_1fr] gap-y-2" style={SMALL}>
           <dt style={{ color: 'var(--ep-secondary)' }}>criterion hash</dt>
-          <dd className="m-0 break-all" style={MONO}>{d.node.criterion_hash || '—'}</dd>
+          <dd className="m-0 break-all">
+            <span style={MONO}>{d.node.criterion_hash || '—'}</span>
+            {d.node.criterion_hash ? (
+              <span className="block" style={{ color: 'var(--ep-secondary)' }}>
+                hashed from <span style={MONO}>docs/CRITERION-pq-leanxmss@a2e71ccb.md</span>, the
+                frozen copy. The living file at <span style={MONO}>docs/CRITERION-pq-leanxmss.md</span>{' '}
+                has moved on and does not hash to this value.
+              </span>
+            ) : null}
+          </dd>
           <dt style={{ color: 'var(--ep-secondary)' }}>head</dt>
           <dd className="m-0 break-all" style={MONO}>{d.node.head || 'no verified submission'}</dd>
           <dt style={{ color: 'var(--ep-secondary)' }}>layer and track</dt>
@@ -143,13 +152,18 @@ function Escrow({ node }: { node: NodeRow }) {
           cumulative progress.
         </p>
         <p className="m-0">
-          Treasury wallet policy <span style={MONO}>{PRIVY_POLICY}</span> allows exactly three things:
+          Treasury wallet policy <span style={MONO}>{PRIVY_POLICY}</span> allows three operations and
+          nothing else:
         </p>
         <ul className="m-0 list-disc space-y-1 pl-5">
-          <li>defineNode on the Ethplane contract, and nothing else on it</li>
+          <li>approve PLANE, and only to the Ethplane contract</li>
           <li>fundNode, capped at 100,000e18 per call</li>
-          <li>the same two for signing as well as sending, because policy rules are per RPC method</li>
+          <li>defineNode, only where the split gives the verifier at least 10 percent</li>
         </ul>
+        <p className="m-0">
+          Each one is two rules, one for sending and one for signing, because a policy rule matches a
+          single RPC method. Six rules in total.
+        </p>
         <p className="m-0">
           Anything else is refused by Privy before it is signed:{' '}
           <span style={MONO}>RPC request denied due to policy violation</span>.

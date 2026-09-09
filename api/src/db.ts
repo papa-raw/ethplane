@@ -288,6 +288,44 @@ function enforceEventUniqueness(): void {
 }
 
 /**
+ * The two descriptive fields a live node has that the chain does not carry: the ENS name a judge can
+ * resolve and the criterion as a sentence. The chain has only the criterion HASH, and the strawmap
+ * file has the roadmap's own generic line — so a node that is defined, funded, open and taking
+ * submissions still read on the map as a spec-only item with `criterion: null` and `ens_name: null`
+ * (both live nodes did, 2026-09-09). Both values here are quoted from each node's own on-chain
+ * `ethplane.criterion` text record, resolved through the Universal Resolver, so this file describes
+ * the chain rather than competing with it.
+ *
+ * It touches those two columns and the label; state, bounty and head remain the indexer's.
+ */
+export function seedLiveNodeMetadata(): number {
+  const candidates = [
+    process.env.LIVE_NODES_JSON,
+    path.join(process.cwd(), '..', 'research', 'live-nodes.json'),
+    path.join(process.cwd(), 'research', 'live-nodes.json'),
+  ].filter(Boolean) as string[];
+  const file = candidates.find((c) => fs.existsSync(c));
+  if (!file) return 0;
+  const parsed = JSON.parse(fs.readFileSync(file, 'utf-8'));
+  const nodes: Array<Record<string, string>> = parsed.nodes ?? parsed;
+  const up = db.prepare(
+    `INSERT INTO nodes(node_id, ens_name, criterion, criterion_type, state, bounty)
+     VALUES(?,?,?,?,'seeded','0')
+     ON CONFLICT(node_id) DO UPDATE SET
+       ens_name = excluded.ens_name, criterion = excluded.criterion,
+       criterion_type = excluded.criterion_type`
+  );
+  const tx = db.transaction((rows: Array<Record<string, string>>) => {
+    for (const n of rows) {
+      const id = n.node_id ?? keccak256(toBytes(n.id));
+      up.run(id, n.ens_name ?? null, n.criterion ?? null, n.criterion_type ?? 'metric');
+    }
+  });
+  tx(nodes);
+  return nodes.length;
+}
+
+/**
  * Seed the node metadata the chain does not carry. A node id on chain is keccak256(bytes(id)) of a
  * strawmap slug; the labels, layers and tracks live in research/strawmap-nodes.json. Idempotent:
  * it fills the descriptive columns and never touches state, bounty or head, which are the chain's.

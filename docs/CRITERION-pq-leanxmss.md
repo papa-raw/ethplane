@@ -20,6 +20,17 @@ submission) unless `BUILD_USER` is set to such a user, or the risk is accepted d
 `ALLOW_UNSANDBOXED_BUILD=1`. Node 1 is unchanged: guests only, no Rust from a submitter, nothing to
 isolate.
 
+**Node 2's recorded band, and which criterion decides.** `recordBaseline` is once-only, and node 2's
+was recorded while both swarms were working the host: cycles 1,542,812, provingMicros **7,158,000**
+(7.16 s), spreadBps **2367** — decoded from the `BaselineRecorded` log at block 11668042, not from a
+note. The non-regression bound that follows is 8.85 s against roughly 1.43 s on a quiet host, so the
+time bound on that node is lenient. That is the safe direction: a lenient bound cannot wrongly reject
+a good submission, only fail to catch a slow one. The decision on both nodes is the cycles criterion
+— strictly below 1,542,812, thresholdBps 0, measured by the verifier's own `measure` and re-measured
+by the critic. Node 1 is the opposite case and is stated in `docs/DEPLOYMENTS.md`: its bound of 1.46 s
+against ~1.5 s measured on the same host today is tight enough to fail a correct submission on time
+alone.
+
 **Statement.** The verifier builds the submission and runs it on inputs it generates itself with the reference build: fresh keys, messages and 900 signatures, plus negative vectors (a flipped signature, a wrong message, a wrong key). The proof must verify with the reference `python-verifier/verifier.py` on the positive inputs and the run must fail on every negative vector. The Python verifier binds the bytecode hash into the transcript and fixes the proof-system parameters, so a proof of a weaker statement does not verify.
 
 **Review floor.** A cycle reduction above 20 % is recorded as REVIEW rather than PASS and released only after a human reads the diff.

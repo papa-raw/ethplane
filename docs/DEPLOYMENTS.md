@@ -9,6 +9,8 @@ Chain id 11155111. Source of truth: `contracts/deployments/sepolia.json` and `se
 | EthplaneSubregistry (our ENSv2 registry under `ethplane.eth`) | `0x58CB4caaDb0ebEdf7E1c96CeA6578Afb2f99d05b` |
 | EthplaneResolver for `cl-pq-leanxmss-attestations.ethplane.eth` | `0xA11a923dA99Bb3aaE3643758DA8D408173199Bec` |
 | EthplaneResolver for `dl-leanvm.ethplane.eth` | `0xaFE89fc8d99950B7F4c61BAE2602A80BC31De872` |
+| Ethplane maintainer / registrant / reviewer | `0x3D70eA482c25e203bb650a86d6FDbe291E59b6b8` |
+| Verifier (records measurements, writes head and status) | `0x0A6Ad2a627F8736E0f34849a0B5B80a109F81759` |
 | EthplaneResolver for operator, lineage and guest names | `0x47572265f1795F26A3e657DA154577904aAA57Ed` |
 
 ## Nodes
@@ -22,9 +24,33 @@ The surface is per node and it is the verifier's `EDITABLE`, not a constant: one
 with its own value. Node 2 admits Rust, which is why its watcher also needs `BUILD_USER` — see
 `verifier/README.md`, "Whole numbers only" and the criterion's Editable paragraph.
 
+Every field in this table and the two below was read from the chain on 2026-09-09, not carried from a
+plan: `nodeParties`, `nodeMetrics` and `nodeMoney` give registrant `0x3D70eA48…`, verifier
+`0x0A6Ad2a6…`, reviewer `0x3D70eA48…`, originalMetric 1,542,812, no head yet, bounty 10,000 PLANE and
+open true for both nodes.
+
+### The recorded baselines, and which criterion decides
+
+`recordBaseline` is once-only, so both of these are final. They are quoted here because the second one
+looks wrong until you know how it was measured.
+
+| node | cycles | provingMicros | spreadBps | the bound that follows | block |
+|---|---:|---:|---:|---:|---:|
+| `cl-pq-leanxmss-attestations` | 1,542,812 | 1,433,000 (1.43 s) | 190 | 1,460,227 µs ≈ 1.46 s | 11662947 |
+| `dl-leanvm` | 1,542,812 | 7,158,000 (7.16 s) | 2367 | 8,852,298 µs ≈ 8.85 s | 11668042 |
+
+Decoded from the `BaselineRecorded` logs, not from a note. Node 2's was recorded while both swarms
+were working the host, so its proving time is five times node 1's and its spread is 23.67 % rather
+than 1.9 %: the time bound it produces, 8.85 s against roughly 1.43 s on a quiet host, is lenient.
+That is the safe direction — a lenient time bound cannot wrongly reject a good submission, only fail
+to catch a slow one — and on both nodes the decision is the cycles criterion anyway: strictly below
+1,542,812, thresholdBps 0, measured by the verifier and re-measured by the critic. Node 1 is the
+opposite case and is worth stating plainly: its 1.46 s bound against ~1.5 s measured on the same host
+today is tight enough to fail a correct submission on time alone.
+
 ## Names (ENSv2, hackathon deployment on Sepolia)
 
-`ethplane.eth` is registered on the hackathon ETHRegistry `0x1D78834d97c1D7b1A38c1deDBD1a287cFEd3971e`; its subregistry is ours. Resolution runs through ENS's Universal Resolver `0xd26f2040d083af1cd2962ba303f4bea0c4faf142`: root → `.eth` → `ethplane` → our subregistry → our per-node resolver. Registered so far: `cl-pq-leanxmss-attestations.ethplane.eth` (record `ethplane.status` = `open`), `ecofrontiers.ethplane.eth`, `qwen-a`, `fast-b`, `verifier` under it, `guests.ethplane.eth`. Any of the 65 roadmap ids can be registered once by anyone (`EthplaneSubregistry.register`).
+`ethplane.eth` is registered on the hackathon ETHRegistry `0x1D78834d97c1D7b1A38c1deDBD1a287cFEd3971e`; its subregistry is ours. Resolution runs through ENS's Universal Resolver `0xd26f2040d083af1cd2962ba303f4bea0c4faf142`: root → `.eth` → `ethplane` → our subregistry → our per-node resolver. Registered so far: `cl-pq-leanxmss-attestations.ethplane.eth` and `dl-leanvm.ethplane.eth` (both resolve `ethplane.status` = `open` and an `ethplane.criterion` sentence), `ecofrontiers.ethplane.eth`, `qwen-a`, `fast-b`, `verifier` under it, `guests.ethplane.eth`. Every address in this file was resolved or read on 2026-09-09; the commands and their outputs are in `docs/ENS-PROBES.md`. Any of the 65 roadmap ids can be registered once by anyone (`EthplaneSubregistry.register`).
 
 Why our own subregistry and resolvers: the hackathon deployment's registry and resolver implementations expose no initializer, so proxies from its factory hold no roles and cannot register names or write records; and the deployed resolver scopes record roles per key rather than per name. Probes and transaction hashes are in `research/` and the repository history. Everything above the name (root, `.eth`, the Universal Resolver, hierarchical registries) is ENSv2's.
 

@@ -418,7 +418,7 @@
   "track": "cryptography",
   "fork_target": "L",
   "tag": "none",
-  "state": "open (PoC node)",
+  "state": "open (live node 1, Sepolia)",
   "produces": "a diff to the leanVM prover hot path that aggregates N XMSS signatures faster at fixed parameters without increasing proof size or verify time",
   "criterion_type": "metric",
   "criterion": "python-verifier/verifier.py accepts the proof on the verifier's fresh inputs; wall time beats the current best by more than the published noise-floor threshold; proof size and verify time do not regress",
@@ -429,7 +429,15 @@
   "hard_dependencies": [],
   "priority": 3,
   "open_questions": "Linux/server timing unknown until P10 (all published numbers are M4 Max); CLI parser file not yet located; hot-path crate confirmed by profiling on Day 1",
-  "routing_mode": "sequential (C2): propose, build, run, submit by one lineage per lease; no split, the experiment reads back on itself (stop rule)"
+  "routing_mode": "sequential (C2): propose, build, run, submit by one lineage per lease; no split, the experiment reads back on itself (stop rule)",
+  "live": {
+   "node_id": "0x8e67c816b1f39fa072094b67f4f74937bd1920a7a9d79e4b98e785ae9aa29d58",
+   "ens_name": "cl-pq-leanxmss-attestations.ethplane.eth",
+   "resolver": "0xA11a923dA99Bb3aaE3643758DA8D408173199Bec",
+   "escrow": "10000 PLANE",
+   "editable": "crates/rec_aggregation/guests/",
+   "recorded_baseline_block": 11662947
+  }
  },
  {
   "id": "cl-vdf-randomness",
@@ -688,20 +696,26 @@
   "track": "types",
   "fork_target": "I",
   "tag": "none",
-  "state": "specification only",
-  "produces": "a design document, prototype, or research writeup addressing 'leanVM'",
-  "criterion_type": "reviewed checklist",
-  "criterion": "a majority of the assigned reviewer panel scores the submission as meeting the node's checklist for 'leanVM'",
-  "judgement_data": "no public test corpus by design -- judgement is a reviewer panel's checklist score, not test data",
-  "judgement_exists": "no",
-  "compute_class": "reviewer time",
-  "estimate_per_experiment": "1-2 reviewer-hours (one reviewer)",
+  "state": "open (live node 2, Sepolia)",
+  "produces": "a diff to leanVM's guest program or its compiler that lowers the VM cycle count of the pinned aggregate benchmark without weakening the proof",
+  "criterion_type": "metric",
+  "criterion": "cycles strictly below 1,542,812 on the pinned command at leanVM a210ef1b, measured by the verifier itself and re-measured before it is recorded; proving time, proof size and verify time not worse than the recorded baseline (7,158,000 us, spreadBps 2367)",
+  "judgement_data": "the pinned command in leanEthereum/leanVM at a210ef1b plus the reference python-verifier; the verifier owns the reference checkout and the corrupted-index probes",
+  "judgement_exists": "yes",
+  "compute_class": "GPU-hours on the verifier's host",
+  "estimate_per_experiment": "about 25 s a measurement, three-run baselines, 900-probe sweep only when a submission releases the target gain",
   "hard_dependencies": [],
   "priority": 4,
-  "open_questions": [
-   "name and recruit the reviewer panel for 'leanVM' (two reviewers if headliner, per SS13.1) before this node opens for claims"
-  ],
-  "routing_mode": "orchestrated (C4): specialists draft sections, one integrator consolidates, reviewer recruited from another node"
+  "open_questions": [],
+  "routing_mode": "hub-spoke (C2): a swarm's builder edits, the critic re-measures, the verifier records on chain",
+  "live": {
+   "node_id": "0x662b44f5cf418a3e3d4126a187d0154034afbdc8d2536b9076c68f2a4440c37e",
+   "ens_name": "dl-leanvm.ethplane.eth",
+   "resolver": "0xaFE89fc8d99950B7F4c61BAE2602A80BC31De872",
+   "escrow": "10000 PLANE",
+   "editable": "crates/rec_aggregation/guests/, crates/lean_compiler/",
+   "recorded_baseline_block": 11668042
+  }
  },
  {
   "id": "dl-remove-blob-transaction-type",
@@ -1296,7 +1310,7 @@
    "EIP-8141"
   ],
   "ef_fork": "H",
-  "ef_note": "Locked-in EL headliner; ships with EIP-8250 and EIP-8272. Image (2026-08-04) placed it at G/CFI; the 2026-09-07 tier list makes it the Hegotá headliner."
+  "ef_note": "Locked-in EL headliner; ships with EIP-8250 and EIP-8272. Image (2026-08-04) placed it at G/CFI; the 2026-09-07 tier list makes it the Hegot\u00e1 headliner."
  },
  {
   "id": "el-ephemeral-keys",
@@ -1413,7 +1427,7 @@
    "EIP-8272"
   ],
   "ef_fork": "H",
-  "ef_note": "Frames core; both A. Image placed at G; tier list: Hegotá."
+  "ef_note": "Frames core; both A. Image placed at G; tier list: Hegot\u00e1."
  },
  {
   "id": "el-zkzk-frames",

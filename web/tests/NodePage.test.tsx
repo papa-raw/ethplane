@@ -44,8 +44,8 @@ describe('NodePage', () => {
     vi.mocked(usePolling).mockReturnValue({ data: detail() as never, error: null, loading: false });
     render(<NodePage nodeId="0x8e67" slug="cl-pq" label="PQ aggregation" />);
     expect(screen.getByTestId('funding-card')).toHaveTextContent('10,000 PLANE');
-    expect(screen.getByTestId('funding-card')).toHaveTextContent('c8io5x5g08igo85ljedozu2k');
-    expect(screen.getByTestId('funding-card')).toHaveTextContent('policy violation');
+    expect(screen.getByTestId('funding-card')).toHaveTextContent('68%');
+    expect(screen.getByTestId('funding-card')).toHaveTextContent('Privy policy');
     expect(screen.getByTestId('sessions')).toHaveTextContent('No session has been started on this node yet');
     // The attribution section is gone: the page is header, summary, criterion, activity, then
     // escrow and ENS, and nothing else (Pat, 2026-09-09, on the worknode page's organisation).

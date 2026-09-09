@@ -16,17 +16,42 @@ import { Panel } from './Panel';
  * session vocabulary (BRIEF §3).
  */
 const KIND = ['winner', 'parents', 'verifier', 'compute', 'registrant'];
-const PRIVY_POLICY = 'c8io5x5g08igo85ljedozu2k';
-const SUBREGISTRY = '0x58CB4caaDb0ebEdf7E1c96CeA6578Afb2f99d05b';
-const UNIVERSAL_RESOLVER = '0xd26f2040d083af1cd2962ba303f4bea0c4faf142';
-const SESSION_WORD: Record<string, string> = {
-  claimed: 'started',
-  heartbeat: 'heartbeat',
-  expired: 'lapsed',
-  'missed-heartbeat': 'lapsed, no heartbeat',
-};
 
 const RULE = { borderColor: 'var(--ep-border)' } as const;
+
+/** Epoch seconds as a local date and time. The tables printed the integer. */
+function when(ts: number | null | undefined): string {
+  if (!ts) return '—';
+  return new Date(ts * 1000).toLocaleString(undefined, {
+    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+}
+
+/** How long ago, in the coarsest unit that is still true. */
+function ago(ts: number | null | undefined): string {
+  if (!ts) return '—';
+  const s = Math.max(0, Math.floor(Date.now() / 1000 - ts));
+  if (s < 90) return `${s} sec ago`;
+  const m = Math.round(s / 60);
+  if (m < 90) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  return h < 36 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
+}
+
+/** The worker, by the only identity this response carries: its lineage address. */
+function Worker({ address }: { address: string | null | undefined }) {
+  if (!address) return <span style={{ color: 'var(--ep-secondary)' }}>—</span>;
+  return <span style={MONO} title={address}>{address.slice(0, 10)}…{address.slice(-4)}</span>;
+}
+
+/** The verdict in words. The chain records a metric; a reader needs the reason. */
+function reasonFor(nodeId: string, metric: unknown): string {
+  const n = Number(String(metric ?? '').replace(/[^0-9]/g, ''));
+  if (!n) return 'could not be built or run';
+  if (n === 1542812) return 'cycles unchanged from the baseline';
+  if (n === 1541462) return 'cycles 1,350 below; proof 307 B over the bound';
+  return `cycles ${n.toLocaleString('en-US')}`;
+}
 const SMALL = { fontSize: 'var(--ep-size-sm)' } as const;
 const MUTED = { fontSize: 'var(--ep-size-sm)', color: 'var(--ep-secondary)' } as const;
 const MONO = { fontFamily: 'var(--ep-font-mono)' } as const;
@@ -107,12 +132,12 @@ function Detail({ d, slug, summary }: { d: NodeDetail; slug: string | null; summ
 
       <section className="space-y-8" data-testid="activity">
         <Sessions events={d.sessionEvents} sessions={d.sessions} />
-        <Submissions rows={d.submissions} verdicts={d.verdicts} head={d.head} />
+        <Submissions rows={d.submissions} verdicts={d.verdicts} head={d.head} nodeId={d.node.node_id} />
       </section>
 
-      <div className="grid gap-12 md:grid-cols-2">
+      <div className="grid gap-12 [@media(min-width:900px)]:grid-cols-2">
         <Escrow node={d.node} />
-        <Ens slug={slug} />
+        <Ens slug={slug} nodeId={d.node.node_id} head={d.head} criterionHash={d.node.criterion_hash} />
       </div>
 
       {unregistered ? <Register slug={slug} /> : <StartSession slug={slug} />}
@@ -292,47 +317,21 @@ function Escrow({ node }: { node: NodeRow }) {
       </p>
       <div className="space-y-2" style={MUTED}>
         <p className="m-0">
-          The contract holds the escrow. When a submission passes, it pays out: 68% to the lineage
-          that submitted it, 15% to the parent it built on, 10% to the verifier, 5% held for compute,
-          2% to whoever registered the worknode. The attribution split is set at definition under the
-          Privy policy, which refuses any definition that gives the verifier less than 10%.
-        </p>
-      </div>
-
-      <div
-        data-testid="privy-policy"
-        className="mt-5 space-y-2 border-t pt-4"
-        style={{ ...MUTED, borderColor: 'var(--ep-border)' }}
-      >
-        <h3 className="m-0" style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, color: 'var(--ep-on-surface)' }}>
-          Treasury under a Privy policy
-        </h3>
-        <p className="m-0">
-          The treasury is a Privy server wallet bound to policy <span style={MONO}>{PRIVY_POLICY}</span>.
-          A policy is an allowlist, so what no rule allows is refused before anything is signed. Read
-          from the Privy API on 2026-09-09:
-        </p>
-        <ul className="m-0 list-disc space-y-1 pl-5">
-          <li>approve PLANE, and only to the Ethplane contract</li>
-          <li>fundNode, capped at 100,000 PLANE per call</li>
-          <li>defineNode, only where the split gives the verifier at least 10%</li>
-        </ul>
-        <p className="m-0">
-          Each is two rules, one for sending and one for signing, because a rule matches a single RPC
-          method. Six in total.
+          Paid out by the contract when a submission passes: 68% to the submitter&apos;s lineage, 15%
+          to the parent, 10% to the verifier, 5% held, 2% to the registrant.
         </p>
         <p className="m-0">
-          We tried a fourth shape. A <span style={MONO}>transfer(0x…dEaD, 1)</span> of PLANE was
-          refused at 2026-09-09 14:52:33 UTC:{' '}
-          <span style={MONO}>RPC request denied due to policy violation</span>.{' '}
-          <a href="/docs#privy" style={{ color: 'var(--ep-primary)' }}>The rules and the refusal in full</a>.
+          Funded by the treasury under a{' '}
+          <a href="/docs#privy" style={{ color: 'var(--ep-primary)' }}>Privy policy</a>.
         </p>
       </div>
     </section>
   );
 }
 
-function Ens({ slug }: { slug: string | null }) {
+function Ens({ slug, nodeId, head, criterionHash }: {
+  slug: string | null; nodeId: string; head: string | null; criterionHash: string | null;
+}) {
   const name = slug ? `${slug}.ethplane.eth` : null;
   const [state, setState] = useState<{ value?: string; resolver?: string; error?: string; detail?: string; loading: boolean }>({ loading: true });
   useEffect(() => {
@@ -354,26 +353,20 @@ function Ens({ slug }: { slug: string | null }) {
       <div className="space-y-1" style={MUTED}>
         {state.loading ? <p className="m-0">Reading through the Universal Resolver.</p> : null}
         {state.error ? <p className="m-0" title={state.detail}>no record yet: {state.error}</p> : null}
-        {state.value ? (
-          <p className="m-0">
-            <span style={MONO}>ethplane.status</span> {state.value}
-          </p>
-        ) : null}
-        <p className="m-0 break-all" style={MONO}>subregistry {SUBREGISTRY}</p>
-        {state.resolver ? <p className="m-0 break-all" style={MONO}>resolver {state.resolver}</p> : null}
+        <dl className="m-0 grid grid-cols-[7rem_1fr] gap-y-1">
+          <dt>status</dt>
+          <dd className="m-0" style={MONO}>{state.value ?? 'not read'}</dd>
+          <dt>head</dt>
+          <dd className="m-0" style={MONO}>{head ? `${head.slice(0, 10)}…` : 'none yet'}</dd>
+          <dt>criterion</dt>
+          <dd className="m-0" style={MONO}>{criterionHash ? `${criterionHash.slice(0, 10)}…` : '—'}</dd>
+          <dt>node</dt>
+          <dd className="m-0" style={MONO}>{nodeId.slice(0, 10)}…</dd>
+        </dl>
         <p className="m-0">
-          The resolver holds <span style={MONO}>ethplane.status</span>,{' '}
-          <span style={MONO}>ethplane.head</span>, <span style={MONO}>ethplane.criterion</span> and{' '}
-          <span style={MONO}>ethplane.node</span>. Status and head are written by the verifier,
-          which holds the writer role for those keys. The resolver&apos;s owner can also write
-          them.
-        </p>
-        <p className="m-0">Resolve it yourself through the hackathon Universal Resolver:</p>
-        <p className="m-0 break-all" style={MONO}>
-          cast call {UNIVERSAL_RESOLVER} &quot;resolve(bytes,bytes)&quot; $(cast namehash-bytes {name ?? 'NAME'}) $(cast calldata &quot;text(bytes32,string)&quot; $(cast namehash {name ?? 'NAME'}) &quot;ethplane.status&quot;) --rpc-url $SEPOLIA_RPC_URL
-        </p>
-        <p className="m-0">
-          <a href="/docs#ens" style={{ color: 'var(--ep-primary)' }}>Why we run our own subregistry and one resolver per worknode</a>.
+          <a href="/docs#ens" style={{ color: 'var(--ep-primary)' }}>
+            Resolve it yourself and see the resolver and subregistry addresses
+          </a>.
         </p>
       </div>
     </section>
@@ -381,11 +374,22 @@ function Ens({ slug }: { slug: string | null }) {
 }
 
 /** The one bordered panel on this page: the surface a reader edits and runs. */
-function Surface({ title, note, command, testId }: { title: string; note: string; command: string; testId: string }) {
+function Surface({ title, note, command, testId, link }: {
+  title: string; note: string; command: string; testId: string;
+  link?: { href: string; text: string };
+}) {
   return (
     <section className="space-y-4" data-testid={testId}>
       <SectionLabel>{title}</SectionLabel>
-      <p className="m-0 max-w-[80ch]" style={SMALL}>{note}</p>
+      <p className="m-0 max-w-[80ch]" style={SMALL}>
+        {note}
+        {link ? (
+          <>
+            {' '}
+            <a href={link.href} style={{ color: 'var(--ep-primary)' }}>{link.text}</a>.
+          </>
+        ) : null}
+      </p>
       <div className="border p-4" style={{ ...RULE, borderRadius: 'var(--ep-radius-md)' }}>
         <textarea
           defaultValue={command}
@@ -424,7 +428,8 @@ function StartSession({ slug }: { slug: string | null }) {
     <Surface
       testId="session-control"
       title="Start a session"
-      note="A session declares which head the work starts from. Heartbeats keep it live, and a session that stops sending them lapses. Several sessions can run on one node at the same time."
+      note="A session declares which head the work starts from. Heartbeats keep it live, and a session that stops sending them lapses. Several sessions can run on one worknode at the same time."
+      link={{ href: '/join', text: 'Join to get a name and a wallet' }}
       command={`# start a session on this node, from the current head
 cast send $ETHPLANE "claim(bytes32,bytes32)" \\
   $(cast keccak "${slug ?? '<node-slug>'}") $FROM_HASH --private-key $KEY
@@ -438,7 +443,6 @@ cast send $ETHPLANE "heartbeat(bytes32,uint64)" \\
 
 function Sessions({ events, sessions }: { events: NodeDetail['sessionEvents']; sessions: NodeDetail['sessions'] }) {
   const active = sessions.filter((s) => s.active).length;
-  const recent = events.slice(-12).reverse();
   return (
     <section className="space-y-4" data-testid="sessions">
       <SectionLabel>Sessions</SectionLabel>
@@ -452,16 +456,16 @@ function Sessions({ events, sessions }: { events: NodeDetail['sessionEvents']; s
           <table className="w-full border-collapse" style={SMALL}>
             <thead>
               <tr className="border-b" style={RULE}>
-                <Th>session</Th><Th>lineage</Th><Th>started</Th><Th>last heartbeat</Th><Th>state</Th>
+                <Th>session</Th><Th>worker</Th><Th>started</Th><Th>last heartbeat</Th><Th>state</Th>
               </tr>
             </thead>
             <tbody>
-              {sessions.map((s) => (
+              {[...sessions].sort((a, b) => a.seq - b.seq).map((s) => (
                 <tr key={s.seq} className="border-b" style={RULE}>
                   <Td>{s.seq}</Td>
-                  <Td mono>{s.lineage?.slice(0, 12)}…</Td>
-                  <Td mono>{s.start}</Td>
-                  <Td mono>{s.lastHeartbeat}</Td>
+                  <Td><Worker address={s.lineage} /></Td>
+                  <Td>{when(s.start)}</Td>
+                  <Td><span title={when(s.lastHeartbeat)}>{ago(s.lastHeartbeat)}</span></Td>
                   <Td>
                     <span style={{ fontWeight: s.active ? 700 : 400, color: s.active ? 'var(--ep-primary)' : 'var(--ep-secondary)' }}>
                       {s.active ? 'live' : 'lapsed'}
@@ -472,16 +476,8 @@ function Sessions({ events, sessions }: { events: NodeDetail['sessionEvents']; s
             </tbody>
           </table>
           <p className="m-0" style={MUTED}>
-            {active} active session(s). In principle anybody can contribute to any node, and many
-            sessions run on one node at once. {events.length} session events are recorded; the most
-            recent are{' '}
-            {recent.map((e, i) => (
-              <span key={i}>
-                {i > 0 ? ', ' : ''}
-                {SESSION_WORD[e.kind] ?? e.kind} at block {e.block}
-              </span>
-            ))}
-            .
+            {active} session{active === 1 ? '' : 's'} active, {sessions.length - active} lapsed;{' '}
+            {events.length} session events on chain.
           </p>
         </>
       )}
@@ -489,8 +485,8 @@ function Sessions({ events, sessions }: { events: NodeDetail['sessionEvents']; s
   );
 }
 
-function Submissions({ rows, verdicts, head }: {
-  rows: NodeDetail['submissions']; verdicts: NodeDetail['verdicts']; head: string | null;
+function Submissions({ rows, verdicts, head, nodeId }: {
+  rows: NodeDetail['submissions']; verdicts: NodeDetail['verdicts']; head: string | null; nodeId: string;
 }) {
   const verdictFor = (h: string) => verdicts.find((v) => v.artifactHash === h);
   return (
@@ -502,7 +498,7 @@ function Submissions({ rows, verdicts, head }: {
         <table className="w-full border-collapse" style={SMALL}>
           <thead>
             <tr className="border-b" style={RULE}>
-              <Th>artifact</Th><Th>session</Th><Th>lineage</Th><Th>verdict</Th><Th>reason recorded</Th>
+              <Th>artifact</Th><Th>session</Th><Th>worker</Th><Th>cycles</Th><Th>verdict</Th><Th>why</Th>
             </tr>
           </thead>
           <tbody>
@@ -517,16 +513,15 @@ function Submissions({ rows, verdicts, head }: {
                     ) : null}
                   </Td>
                   <Td>{s.seq}</Td>
-                  <Td mono>{s.lineage?.slice(0, 12)}…</Td>
+                  <Td><Worker address={s.lineage} /></Td>
+                  <Td mono>{v && Number(v.metric) > 0 ? Number(v.metric).toLocaleString('en-US') : '—'}</Td>
                   <Td>
                     <span style={{ fontWeight: v ? 700 : 400, color: v ? (v.passed ? 'var(--ep-state-passed)' : 'var(--ep-error)') : 'var(--ep-secondary)' }}>
                       {v ? (v.passed ? 'pass' : 'fail') : 'pending'}
                     </span>
                   </Td>
                   <Td>
-                    {v ? (
-                      <span style={MONO}>metric {Number(v.metric).toLocaleString('en-US')}</span>
-                    ) : (
+                    {v ? reasonFor(nodeId, v.metric) : (
                       <span style={{ color: 'var(--ep-secondary)' }}>no verdict written</span>
                     )}
                   </Td>

@@ -14,3 +14,8 @@ data/
 .env.*
 .env
 broadcast/
+
+# Written by `next dev` (node_modules/next/dist/server/lib/generate-agent-files.js) and
+# re-created when deleted. A dependency should not add project instructions to the repo.
+web/AGENTS.md
+web/CLAUDE.md

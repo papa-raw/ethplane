@@ -12,6 +12,9 @@ ETHGlobal requires that submissions document which code, files or assets were ge
 | swarm/agent.py, console.sh, view.py, shoot.cjs and the start scripts | the Claude orchestrator session, replacing goose on day 3; swarm/client.py: Claude builder, resume subcommand by Qwen swarm B. |
 | docs/FILM.md, docs/SUBMISSION.md, docs/DECK.md | the Claude orchestrator session from the record, voice-checked, for Pat to record. |
 | docs/JUDGES.md, ENS-PROBES.md, REHEARSAL.md, DEPLOYMENTS.md, CRITERION | Claude builder, reviewed by the Claude critic. |
+| docs/SPEC.md | Claude builder day 1 (as-built sections after each review round); Qwen swarm for the first draft. |
+| docs/JOIN.md, docs/ROLES.md | Qwen builder day 1; Claude builder for the session vocabulary and the join flow as shipped. |
+| scripts/ | check-submission.sh and rehearsal.sh: Claude builder. |
 | docs/planning/ | the redacted private PRD, specs and swarm boards. |
 | research/ | Claude researcher and builder sessions. |
 | Direction and every decision | Pat. |

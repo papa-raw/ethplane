@@ -32,7 +32,7 @@ cd api && pnpm install && pnpm build && ETHPLANE_ADDRESS=… PLANE_ADDRESS=… S
 # web (static export)
 cd web && pnpm install && pnpm build             # → web/out
 # verifier tests (Python 3.12; run.py itself needs only the standard library)
-pip install -r verifier/requirements-dev.txt && python3.12 -m pytest verifier/tests swarm/tests -q
+python3.12 -m venv .venv && .venv/bin/pip install -r verifier/requirements-dev.txt && .venv/bin/python -m pytest verifier/tests swarm/tests -q
 # verifier against a real artifact (optional: needs a leanVM checkout at the pinned commit)
 LEANVM_REF=/path/to/leanVM python3.12 verifier/run.py <artifact.tar> --self-test
 # swarm (three local-model role sessions in tmux; see swarm/README.md)

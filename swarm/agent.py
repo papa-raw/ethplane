@@ -79,15 +79,28 @@ class Spinner:
     def __exit__(self, *a): self.stop.set(); self.th.join()
 SESSION = f"{ROLE}-{os.environ.get('SWARM_NAME', PREFIX.rstrip('-'))}"
 ZONE = 4  # rows pinned at the bottom: rule+chip, prompt, blank, footer
+class Transcript:
+    """stdout wrapper: keeps the transcript text (not spinner or zone writes) so a resize can redraw it."""
+    def __init__(self, raw): self.raw = raw; self.buf = ""
+    def write(self, t):
+        if t and not t.startswith(("\r", "\0337", "\033[?", "\033[1;", "\033[r")): self.buf = (self.buf + t)[-40000:]
+        return self.raw.write(t)
+    def flush(self): return self.raw.flush()
+    def fileno(self): return self.raw.fileno()
+    def isatty(self): return self.raw.isatty()
+sys.stdout = Transcript(sys.stdout)
 def draw_zone(typed=""):
     """Fixed prompting zone at the bottom of the pane; the transcript scrolls in the region above it."""
-    w, h = width(), height(); chip = f" {SESSION} "; left = f"  ▸▸ swarm tools on · {ROLE} · {MODEL.split('/')[-1][:24]}"; right = "/rc "
-    rule = "─" * max(1, w - len(chip) - 1)
+    w, h = width() - 1, height(); chip = f" {SESSION} "; left = f"  ▸▸ swarm tools on · {ROLE} · {MODEL.split('/')[-1][:24]}"; right = "/rc"
+    rule = "─" * max(1, w - len(chip))
     sys.stdout.write("\0337" + f"\033[{h - 3};1H\033[K{D}{rule}{X}\033[48;5;24m\033[38;5;153m{chip}\033[0m"
                      + f"\033[{h - 2};1H\033[K{B}›{X} {typed[-(w - 5):]}\033[7m \033[0m" + f"\033[{h - 1};1H\033[K"
                      + f"\033[{h};1H\033[K{D}{left}{' ' * max(1, w - len(left) - len(right))}{right}{X}" + "\0338"); sys.stdout.flush()
-def set_region():
-    h = height(); sys.stdout.write(f"\033[?25l\033[1;{h - ZONE}r\033[{h - ZONE};1H"); sys.stdout.flush(); draw_zone(TYPED["s"])
+def set_region(redraw=False):
+    h = height(); sys.stdout.write(f"\033[?25l\033[r\033[2J\033[1;{h - ZONE}r\033[{h - ZONE};1H")
+    if redraw:
+        tail = sys.stdout.buf.split("\n")[-(h - ZONE):]; sys.stdout.raw.write("\n".join(tail))
+    sys.stdout.flush(); draw_zone(TYPED["s"])
 def prompt_line(): draw_zone()
 def footer(t0):
     dur = int(time.time() - t0); done = datetime.datetime.now().strftime("%-I:%M %p")
@@ -316,7 +329,7 @@ def main():
     elif brief.exists(): system += "\n\nNODE BRIEF:\n" + brief.read_text()[:6000]
     messages = [{"role": "system", "content": system}]
     board_append(f"{ROLE} READY (agent.py, {MODEL.split('/')[-1]})")
-    set_region(); signal.signal(signal.SIGWINCH, lambda *_: set_region())
+    set_region(); signal.signal(signal.SIGWINCH, lambda *_: set_region(redraw=True))
     threading.Thread(target=stdin_reader, daemon=True).start()
     first = a.init or (pathlib.Path(a.init_file).read_text().strip() if a.init_file else None)
     if first:

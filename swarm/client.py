@@ -406,11 +406,25 @@ def status_subcommand(dry_run: bool = False):
     return detail
 
 
+def resume_subcommand(dry_run: bool = False):
+    """Resume a session by attempting to heartbeat, and if that fails, forfeit and reclaim."""
+    try:
+        heartbeat_subcommand(dry_run)
+        print("session alive")
+        return
+    except Exception as e:
+        print(f"heartbeat failed: {e}; forfeiting and reclaiming")
+        # Get the lineage address for forfeit using the wallet
+        addr = lineage_address()
+        forfeit_subcommand(addr, dry_run)
+        claim_subcommand(None, dry_run)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Swarm-to-chain client")
     parser.add_argument("--dry-run", action="store_true", help="Print commands instead of running them")
     parser.add_argument("--loop", action="store_true", help="heartbeat: keep sending until the session ends")
-    parser.add_argument("command", choices=["register", "accept", "claim", "heartbeat", "submit", "forfeit", "status"])
+    parser.add_argument("command", choices=["register", "accept", "claim", "heartbeat", "submit", "forfeit", "status", "resume"])
     parser.add_argument("args", nargs="*")
     args = parser.parse_args()
 
@@ -429,6 +443,8 @@ def main() -> int:
             submit_subcommand(args.args, args.dry_run)
         elif args.command == "status":
             status_subcommand(args.dry_run)
+        elif args.command == "resume":
+            resume_subcommand(args.dry_run)
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1

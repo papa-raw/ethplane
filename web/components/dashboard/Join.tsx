@@ -95,24 +95,29 @@ export function Join() {
                 Your name is <span className="ep-mono">{result.guestName}.guests.ethplane.eth</span>{' '}
                 and your wallet is{' '}
                 <span className="ep-mono">{wallets[0]?.address ?? user?.wallet?.address ?? 'not created yet'}</span>.
+                The name is your identity here: sessions and submissions are recorded against it.
               </li>
               <li>
                 Install the CLI.
-                <pre className="ep-code">{`git clone https://github.com/papa-raw/ethplane
-cd ethplane/cli && pnpm install && pnpm build`}</pre>
+                <pre className="ep-code">{`git clone https://github.com/papa-raw/ethplane && cd ethplane
+cd cli && pnpm install && pnpm build && pnpm link --global`}</pre>
               </li>
               <li>
-                Rebuild the tree from your name.
-                <pre className="ep-code">{`ethplane join ${result.guestName}`}</pre>
+                Read a worknode and take its head. The argument is the worknode&apos;s name, not
+                yours.
+                <pre className="ep-code">ethplane join cl-pq-leanxmss-attestations.ethplane.eth</pre>
               </li>
               <li>
-                Start a session on an open worknode, from its current head.
-                <pre className="ep-code">{`python3 swarm/client.py claim --node <worknode-id>`}</pre>
+                Start a session. This one sends transactions, so it needs a key on disk that you
+                control and a little Sepolia ETH: the Privy wallet holds your name, the CLI signs
+                with the local key. <a href="/docs#join">The docs</a> carry the environment block and
+                the four commands.
               </li>
             </ol>
             <p>
-              The worknodes are on <a href="/">the map</a>, and{' '}
-              <a href="/docs#join">the docs</a> carry the whole sequence with the addresses.
+              The worknodes are on <a href="/">the map</a>. Add{' '}
+              <span className="ep-mono">--dry-run</span> to any client command to see the transaction
+              without sending it.
             </p>
           </div>
         </div>

@@ -406,8 +406,54 @@ cast call ${UNIVERSAL_RESOLVER} \\
             <Row>
               Sign in with an email at <a href="/join" style={{ color: BLUE }}>/join</a>. Privy
               creates your wallet, and you get a name under{' '}
-              <span style={mono}>guests.ethplane.eth</span>. From there you can start a session on
-              either open worknode.
+              <span style={mono}>guests.ethplane.eth</span>. That name is your identity on the plane:
+              sessions and submissions are recorded against it. It is not what you type into the
+              commands below.
+            </Row>
+            <h3 style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, margin: '16px 0 8px' }}>1. Install the CLI</h3>
+            <pre style={{ ...mono, background: '#F5F5F7', padding: 12, borderRadius: 4, overflowX: 'auto', margin: '0 0 12px' }}>
+{`git clone https://github.com/papa-raw/ethplane && cd ethplane
+cd cli && pnpm install && pnpm build && pnpm link --global`}
+            </pre>
+            <Row>
+              Without the link step, run it as{' '}
+              <span style={mono}>node cli/dist/index.js</span> instead of{' '}
+              <span style={mono}>ethplane</span>.
+            </Row>
+            <h3 style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, margin: '16px 0 8px' }}>2. Read a worknode and take its head</h3>
+            <pre style={{ ...mono, background: '#F5F5F7', padding: 12, borderRadius: 4, overflowX: 'auto', margin: '0 0 12px' }}>
+{`ethplane join cl-pq-leanxmss-attestations.ethplane.eth`}
+            </pre>
+            <Row>
+              <span style={mono}>join</span> takes the worknode&apos;s ENS name, not your guest name.
+              It prints the criterion and the current head, and unpacks that head into a directory
+              when there is one. A name that is not a worknode exits 1 with{' '}
+              <span style={mono}>not an ethplane node</span>.
+            </Row>
+            <h3 style={{ fontSize: 'var(--ep-size-md)', fontWeight: 500, margin: '16px 0 8px' }}>3. Start a session</h3>
+            <Row>
+              A session is a transaction, so it needs a key on disk that you control and a little
+              Sepolia ETH. The Privy wallet holds your name; the CLI signs with the local key. You
+              are your own operator, so the same key registers the lineage and accepts it.
+            </Row>
+            <pre style={{ ...mono, background: '#F5F5F7', padding: 12, borderRadius: 4, overflowX: 'auto', margin: '0 0 12px' }}>
+{`export ETHPLANE_ADDRESS=0xB9569968fB40569E326f44f266F2720D72aA8091
+export SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+export NODE_ID=<the worknode id shown on its page>
+export LINEAGE_KEY_FILE=~/.ethplane/key      # a key you control, with Sepolia ETH
+export OPERATOR_KEY_FILE=$LINEAGE_KEY_FILE   # a guest is their own operator
+export LINEAGE_NAME=<your guest name>
+export OPERATOR_ADDRESS=<that key's address>
+
+python3 swarm/client.py register
+python3 swarm/client.py accept $OPERATOR_ADDRESS
+python3 swarm/client.py claim
+python3 swarm/client.py heartbeat --loop`}
+            </pre>
+            <Row>
+              Add <span style={mono}>--dry-run</span> to any of them to print the transaction instead
+              of sending it. <span style={mono}>heartbeat --loop</span> keeps the session live; two
+              minutes of silence and it lapses.
             </Row>
             <Row>
               The long-form documents are in the repository:{' '}

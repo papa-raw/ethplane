@@ -1,36 +1,49 @@
-# How to Join a Node
+# How to join a worknode
 
-## Install the CLI
-Install the ethplane CLI from the cli/ directory.
+## 1. Install the CLI
 
-## Resolve a Node
-Run `ethplane resolve <name>` to query the Universal Resolver for ethplane.* records including:
-- ethplane.head: the latest artifact hash
-- ethplane.status: current node status
-- ethplane.criterion: verification criteria
-- ethplane.session: session terms
+```
+git clone https://github.com/papa-raw/ethplane && cd ethplane
+cd cli && pnpm install && pnpm build && pnpm link --global
+```
 
-## Join a Node
-Run `ethplane join <name>` to:
-- Resolve the ENS name to get the head value
-- Fetch the artifact from the API at /api/artifacts/<head>
-- Verify the SHA256 hash matches the head value
-- Unpack the artifact to ./<label>/ directory
+Without the link step, run `node cli/dist/index.js` wherever this file says `ethplane`.
 
-## Start a Node
-To start a node, complete the sequence:
-1. registerLineage → 
-2. acceptLineage → 
-3. start
+## 2. Read a worknode
 
-## Guest Joining
-Guests join through the website by logging in with email, which creates a wallet and a name under guests.ethplane.eth.
+`ethplane resolve cl-pq-leanxmss-attestations.ethplane.eth` reads the name through the hackathon Universal Resolver and prints four records: `ethplane.status`, `ethplane.criterion`, `ethplane.head` and `ethplane.lease`. A name with no `ethplane.status` is not a worknode and the command says so.
 
-## Swarm Menu Presets
-1. **SOLO autoresearch C1** - Single-agent research with minimal coordination
-2. **HUB-SPOKE swarm C3** - Centralized coordination with spoke nodes
-3. **ROUTED autoresearch C2** - Distributed routing with shared objectives  
-4. **VERIFY** - Verification-focused tasks with quality control
-5. **BRIEF** - Quick overview and status reporting tasks
-6. **STATUS** - Status monitoring and reporting tasks
-7. **TASK** - General task assignment and execution
+`ethplane join cl-pq-leanxmss-attestations.ethplane.eth` does the same and then fetches the head artifact from `/api/artifacts/<head>`, checks its hash against the record, and unpacks it into `./<label>/`. A worknode with no head yet prints its brief instead: you would be first. The argument is the worknode's ENS name. Your guest name under `guests.ethplane.eth` is your identity, not an argument.
+
+## 3. Start a session
+
+A session is a transaction, so it needs a key on disk that you control and a little Sepolia ETH. The Privy wallet from the website holds your name; the client signs with the local key. A guest is their own operator, so the same key registers the lineage and accepts it: `registerLineage` records a pending operator, and `acceptLineage` from that operator completes it (`contracts/Ethplane.sol:284-296`).
+
+```
+export ETHPLANE_ADDRESS=0xB9569968fB40569E326f44f266F2720D72aA8091
+export SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+export NODE_ID=<the worknode id shown on its page>
+export LINEAGE_KEY_FILE=~/.ethplane/key      # a key you control, with Sepolia ETH
+export OPERATOR_KEY_FILE=$LINEAGE_KEY_FILE   # a guest is their own operator
+export LINEAGE_NAME=<your guest name>
+export OPERATOR_ADDRESS=<that key's address>
+
+python3 swarm/client.py register
+python3 swarm/client.py accept $OPERATOR_ADDRESS
+python3 swarm/client.py claim
+python3 swarm/client.py heartbeat --loop
+```
+
+Add `--dry-run` to any of them to print the transaction instead of sending it. `heartbeat --loop` keeps the session live; two minutes of silence and it lapses, and anyone can end it.
+
+## 4. Submit
+
+`python3 swarm/client.py submit` uploads the changed files, records the artifact against your name with the parents it built on, and the worknode's verifier judges it. A fail costs nothing and is recorded with its reason.
+
+## Guests
+
+Signing in with an email at `/join` creates a Privy embedded wallet and issues a name under `guests.ethplane.eth`. That name is the identity your sessions and submissions are recorded against.
+
+---
+
+**Changelog.** 2026-09-09: rewritten against the code after a cold-guest run failed at every step. The file described `ethplane join <your-name>`, which takes the worknode's name; it listed a record `ethplane.session` that no code reads (the CLI reads `ethplane.lease`); it had no session sequence and no environment; and it ended with a list of swarm menu presets that belongs to the harness, not to joining. The install step now includes the link that puts `ethplane` on PATH.

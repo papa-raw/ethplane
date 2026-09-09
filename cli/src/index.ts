@@ -42,8 +42,18 @@ program
     const label = name.split('.')[0];
     const head = records['ethplane.head'];
 
-    // No head is not a failure: it is an open node with nothing built on it yet, and the useful
-    // answer is the brief and where to read more — not an error code.
+    // A name with no ethplane.status record is not a worknode. readText turns every resolver error
+    // into an empty string, so without this check a typo and a guest name printed the same "you
+    // would be first" brief as a real open worknode, and a guest could not tell them apart.
+    if (!records['ethplane.status']) {
+      console.error(`not an ethplane node: ${name}`);
+      console.error('  join takes a worknode name, for example cl-pq-leanxmss-attestations.ethplane.eth');
+      process.exitCode = 1;
+      return;
+    }
+
+    // No head is not a failure: it is an open worknode with nothing built on it yet, and the useful
+    // answer is the brief and where to read more, not an error code.
     if (!head) {
       console.log(`\n${name} has no verified submission yet — you would be first.\n`);
       console.log(table([

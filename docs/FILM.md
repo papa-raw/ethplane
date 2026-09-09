@@ -10,25 +10,25 @@ Two to four minutes, real time, my voice, shot on the live product. No slides. E
 
 **0:20, a node.** Screen: the dl-leanvm node page. ENS name, status open, 10,000 PLANE in escrow, the criterion, the baseline.
 
-> Here is one. leanVM aggregates 900 post-quantum signatures into one proof. The criterion: fewer VM cycles than the reference, 1,542,812. The escrow: 10,000 PLANE, put there by a treasury wallet that Privy will only let sign three things. Fund a node, approve the escrow, define a node whose split gives the verifier at least ten percent. Anything else is refused at signing.
+> Here is one. leanVM aggregates 900 post-quantum signatures into one proof. The criterion: fewer VM cycles than the reference, 1,542,812. The escrow: 10,000 PLANE, put there by a treasury wallet under a Privy policy. The policy allows three shapes of transaction: approve the escrow, fund a node, define a node whose split gives the verifier at least ten percent. We tried a fourth, a plain transfer. Refused at signing.
 
 **0:50, the swarm.** Screen: the Coharness window, four panes. An orchestrator. A builder. A critic. The View console. Qwen3-Coder 30B on one rented GPU box, no cloud model in the loop.
 
-> The work is done by a swarm of local models. An orchestrator hands off, a builder edits the compiler, a critic re-measures every number the builder posts. They cannot mark their own work done; measure is a tool, and the tool posts the number. Nobody here holds a key.
+> The work is done by a swarm of local models. An orchestrator hands off, a builder edits the compiler, a critic re-measures every number the builder posts. They cannot mark their own work done; measure is a tool, and the tool posts the number. No model can read a key. A separate user signs.
 
 **1:15, a session.** Screen: the View console, sessions table, a heartbeat every sixty seconds; then the board line MEASURED cycles=1,541,462 BELOW baseline.
 
-> A session is a declaration, not a permission: working on this node, from this head. Heartbeats keep it live; stop for two minutes and anyone can end it. Many sessions run on one node at once. This afternoon the builder found four lines in the compiler's common-subexpression pass. 1,541,462 cycles. Below the line.
+> A session is a declaration, not a permission: working on this node, from this head. Heartbeats keep it live; stop for two minutes and anyone can end it. Many sessions run on one node at once. This afternoon the builder posted four changed lines in the compiler's common-subexpression pass and a measurement: 1,541,462 cycles. Below the line, by its own instrument. The judge's number is the one that counts.
 
 **1:45, the judge.** Screen: the verifier's log, live: fetch the artifact, rebuild it at the pinned commit as a user that cannot read the key, run it, three differential probes, then the onchain record.
 
-> The verifier is a separate user with its own key. It rebuilds the submission from the reference commit, runs the benchmark itself, and corrupts one signature at a time to prove every one was actually checked. Then it writes the verdict onchain. Its account of what happened is the only one the contract believes.
+> The verifier is a separate user with its own key. It rebuilds the submission from the reference commit and runs the benchmark itself. It corrupts signatures one at a time to test that they were checked: three probes on any pass, all nine hundred before a payout that reaches the target. Then it writes the verdict onchain. The contract believes no other account.
 
 **2:15, the verdict.** One of two, whichever the chain shows on the day of the cut.
 
-> *If PASS:* Pass. The contract releases the split: 68 percent to the lineage that won, 15 to the parent it built on, 10 to the verifier, 5 to the host, 2 to whoever registered the node. Nobody clicked.
+> *If PASS:* Pass. The contract releases the split: 68 percent to the lineage that won, 15 to the parent it built on, 10 to the verifier, 2 to whoever registered the node. The 5 percent host share stays in escrow in this version. Nobody clicked.
 >
-> *If FAIL:* Fail. The reference build measured the same cycles the swarm claimed, and the timing bound did not hold. No payout. That is the product working: an honest rejection, recorded, with the numbers.
+> *If FAIL:* Fail. The verifier's own run did not clear the bar, and it wrote the reason onchain. [Read the recorded reason here, as written: cycles, or the proving-time bound, and why.] No payout. An honest rejection, recorded with the numbers, is the product working.
 
 **2:40, the names.** Screen: cast resolving dl-leanvm.ethplane.eth through the hackathon Universal Resolver: addr, ethplane.status, ethplane.head; then the same setText from a fresh key reverting.
 
@@ -40,7 +40,7 @@ Two to four minutes, real time, my voice, shot on the live product. No slides. E
 
 **3:15, close.** Screen: back to the map.
 
-> A plane where swarms pull roadmap work, build on each other, and get paid only for what a verifier can measure. Two nodes are live on Sepolia. The code is public. Come start a session.
+> A plane where swarms pull roadmap work and get paid only for what a verifier can measure. Two nodes are live on Sepolia. The code is public. Come start a session.
 
 ## Two endings, one rule
 
@@ -61,6 +61,8 @@ The verdict beat is filmed after the verifier records it, never before. FILM.md 
 | Names resolve through the Universal Resolver 0xd26f2040… | docs/ENS-PROBES.md |
 | Writer refusal from a lineage key | EthplaneResolver.sol onlyServed / writer; rehearsal tx 0x0622b6fe… |
 | Join with email, embedded wallet, guest name | api join route, Privy verifyAuthToken; a guest name under guests.ethplane.eth |
+| Two nodes live on Sepolia | defineNode for cl-pq-leanxmss-attestations (2026-09-08) and dl-leanvm (defineNode + setNodeVerifier 2026-09-09, resolver 0xaFE89fc8…); GET /api/nodes shows both open with 10,000 PLANE |
+| Policy tested on the refused shape | transfer refused; approve and fundNode signed under the policy (2026-09-08, 2026-09-09); defineNode rule present in the policy, not exercised on film |
 
 ## Rehearsed facts (2026-09-08 evening, Sepolia)
 - **EAC refusal shot:** a freshly generated lineage key calling `setText(node, "ethplane.head", …)` on the node resolver `0xA11a923dA99Bb3aaE3643758DA8D408173199Bec` reverts (custom error selector `0x73e36525`); the same call estimated from the verifier key `0x0A6Ad2a627F8736E0f34849a0B5B80a109F81759` succeeds (54,439 gas). The verifier holds `setWriter` grants for `ethplane.head` and `ethplane.status` only.
@@ -87,4 +89,5 @@ The verdict beat is filmed after the verifier records it, never before. FILM.md 
 
 Both verdicts are FAIL with reason `worktree`: the watcher was run as root against the verifier user's checkout and git refused the worktree, so the verifier recorded a host failure rather than a measurement. Re-run as the `verifier` user, the same artifact builds and measures (the reason becomes `regression-provingMicros` on a loaded host). Lesson kept for the film: the verifier runs as its own user, on a quiet host, and a FAIL is final per artifact, so a fresh submission is needed for a fresh verdict.
 ## Changelog
+- 2026-09-09 16:4x: critic's film pass applied: probes stated as three-then-nine-hundred, host share stays in escrow, measurement attributed to the builder's instrument, FAIL ending reads the recorded reason, key sentence made true, two proof rows added.
 - 2026-09-09 16:2x: script rewritten in place (the day-2 shot table replaced): eight beats, two verdict endings, proof table; rehearsal tables kept below.

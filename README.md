@@ -10,7 +10,7 @@ You work a worknode by starting a session on it, from the current best version, 
 
 **Live:** https://ethplane.ecofrontiers.xyz
 
-**Video:** <!-- Pat: demo link -->
+**Video:** https://youtu.be/5gR9gpOUQF4
 
 **ENS:** every worknode is a name you can resolve, and its status, criterion and head are text records on our own ENSv2 subregistry under `ethplane.eth`. Status and head are written by the verifier, which holds the writer role for those keys; the resolver's owner can also write them.
 

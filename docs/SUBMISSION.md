@@ -8,17 +8,25 @@ Ethplane
 
 # One-line description (≤ 120 characters)
 
-The Ethereum roadmap as a plane of paid work: swarms work nodes, a verifier judges, escrow pays on the verdict.
+The Ethereum roadmap as work nodes: a swarm submits, a verifier reviews, escrow pays on verdict.
 
 # Description (≤ 250 words)
 
-Ethplane takes the Ethereum Foundation's strawmap, 65 roadmap nodes, and turns each into a name under ethplane.eth with a criterion a machine can check and an escrow that pays only on a verdict.
+Ethplane takes the Ethereum Foundation's strawmap and turns each node into an ENS name under ethplane.eth, with a criterion a machine can check and an escrow that pays only on a verdict.
 
-A worker, human or a swarm of local models, starts a session on a node: a declaration of working, from this head, kept alive by heartbeats. Many sessions run on one node at once. A submission is an artifact plus the parents it built on. The node's verifier rebuilds it from the pinned reference commit as a user that cannot read the verifier key, runs the benchmark itself, corrupts signatures one at a time to test they were checked, and writes the verdict onchain. On a pass the contract releases the split: 68 percent to the winning lineage, 15 to the parent, 10 to the verifier, 2 to the registrant, 5 held for the host.
+**How it works**
 
-Two nodes are live on Sepolia with 10,000 PLANE each in escrow. Node 1, cl-pq-leanxmss-attestations: aggregate 900 post-quantum signatures in fewer VM cycles than 1,542,812. Node 2, dl-leanvm: the same criterion with the compiler open to the swarm.
+- A worker, a human or a model swarm, opens work sessions on a roadmap worknode. Many sessions run on one worknode at once.
+- Every actor, worker, lineage, verifier and guest, is a name under ethplane.eth. A submission is an artifact plus the parents it built on.
+- The worknode's verifier rebuilds the submission from the pinned reference commit, runs the benchmark itself, and writes the verdict onchain. No model signs the verdict.
+- If a submission passes, the contract releases a split payment: 68 percent to the winning lineage, 15 to the parent, 10 to the verifier, 2 to the registrant, 5 held for the host. The treasury that funds nodes signs under a Privy policy that allows only three transaction shapes.
 
-What happened today: two swarms of Qwen3-Coder 30B on one rented GPU box worked both nodes. On node 2 the swarm cut cycles to 1,541,462 with a four-line compiler change, three times. All three grew the proof past the 302,182-byte bound. The verifier said no three times and wrote why. Honest scope: no payout yet. The framework is the product.
+Two nodes are live on Sepolia with 10,000 PLANE each in escrow:
+
+- Node 1, cl-pq-leanxmss-attestations: aggregate 900 post-quantum signatures in fewer VM cycles than 1,542,812.
+- Node 2, dl-leanvm: the same criterion with the compiler open to the swarm.
+
+What happened today: two swarms of Qwen3-Coder 30B worked both nodes and cut cycles below the baseline three times, and every one grew the proof past the 302,182-byte bound. The verifier said no three times and wrote why onchain. No payout yet. The framework is the product.
 
 # How it is made (≤ 300 words)
 
@@ -62,3 +70,6 @@ The policy engine did exactly what we needed: an allowlist on the treasury walle
 # Honest limitations (≤ 100 words)
 
 No payout has happened: every verdict so far is a FAIL, recorded with its reason. Node 1 admits only the guest program, which never moved cycles in sixteen measurements. Node 2's baseline was measured under load, so its time bound is lenient and its proof-size bound is strict. The compute share is held, not paid, in this version. The swarm runs on one box we operate; guests bring their own compute. The contract records the lineage key and does not check that the key owns the name it registers. Sepolia only.
+
+# Changelog
+- 2026-09-10: one-line and Description rewritten for the form; split payment attributed to the contract (not the Privy policy), the deterministic verifier no longer called AI-as-a-judge, the honest FAIL result restored.

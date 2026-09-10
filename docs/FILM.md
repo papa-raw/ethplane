@@ -18,11 +18,11 @@ Two to four minutes, real time, my voice, shot on the live product. No slides. E
 
 **1:15, a session.** Screen: the View console, sessions table, a heartbeat every sixty seconds; then the board line MEASURED cycles=1,541,462 BELOW baseline.
 
-> A session is a declaration, not a permission: working on this node, from this head. Heartbeats keep it live; stop for two minutes and anyone can end it. Many sessions run on one node at once. This afternoon the builder posted four changed lines in the compiler's common-subexpression pass and a measurement: 1,541,462 cycles. Below the line, by its own instrument. The judge's number is the one that counts.
+> A session just means a worker has claimed this node and is building on it. It stays open as long as it keeps sending a heartbeat; go quiet for two minutes and anyone can take it over. Several workers can run on the same node at once. This afternoon the builder changed four lines in the compiler and measured 1,541,462 cycles, under the baseline. But that is the builder's own number. The only number that counts is the verifier's.
 
 **1:45, the judge.** Screen: the verifier's log, live: fetch the artifact, rebuild it at the pinned commit as a user that cannot read the key, run it, three differential probes, then the onchain record.
 
-> The verifier is a separate user with its own key. It rebuilds the submission from the reference commit and runs the benchmark itself. It corrupts signatures one at a time to test that they were checked: three probes on any pass, all nine hundred before a payout that reaches the target. Then it writes the verdict onchain. The contract believes no other account.
+> The verifier runs as its own user, with its own key, so no worker can reach it. It rebuilds the submission from scratch at the pinned commit and runs the benchmark itself. It never trusts the number the worker reported. It also tampers with the signatures to check they were really being verified. Then it writes the verdict on chain, and the contract accepts one from no other account.
 
 **2:15, the verdict.** One of two, whichever the chain shows on the day of the cut.
 
@@ -92,3 +92,4 @@ Both verdicts are FAIL with reason `worktree`: the watcher was run as root again
 - 2026-09-09 17:0x: FAIL ending written from the record: three node-2 submissions, cycles below, proof over the bound.
 - 2026-09-09 16:4x: critic's film pass applied: probes stated as three-then-nine-hundred, host share stays in escrow, measurement attributed to the builder's instrument, FAIL ending reads the recorded reason, key sentence made true, two proof rows added.
 - 2026-09-09 16:2x: script rewritten in place (the day-2 shot table replaced): eight beats, two verdict endings, proof table; rehearsal tables kept below.
+- 2026-09-10: the session (1:15) and judge (1:45) beats rewritten in plainer spoken language for recording.

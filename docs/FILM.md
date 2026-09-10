@@ -30,6 +30,10 @@ Two to four minutes, real time, my voice, shot on the live product. No slides. E
 >
 > *If FAIL:* Fail. Three submissions on this node today. All three cut cycles to 1,541,462, below the baseline. All three grew the proof past 302,182 bytes, and the criterion holds proof size to the baseline with no allowance. The verifier said no three times and wrote why onchain. No payout. That is the product working: the swarm tried, the judge held the line, and the record shows both.
 
+**2:30, lineage.** Screen: the node's submissions, then the terminal claiming a new session from a previous one's artifact.
+
+> Kill a worker mid-task and its work does not die with it. Every submission records the artifacts it built on, so the next worker starts a fresh session from where the last one stopped. This afternoon one lineage submitted, we killed it, and a second lineage picked up its artifact and carried on, all on chain. The worker is disposable. The record of the work is not.
+
 **2:40, the names.** Screen: cast resolving dl-leanvm.ethplane.eth through the hackathon Universal Resolver: addr, ethplane.status, ethplane.head; then the same setText from a fresh key reverting.
 
 > Every worknode is an ENS name on the v2 registry. Status and head live in its records, written by the verifier under a writer role; the name's owner can write them too. A lineage key that tries gets a revert.
@@ -93,3 +97,4 @@ Both verdicts are FAIL with reason `worktree`: the watcher was run as root again
 - 2026-09-09 16:4x: critic's film pass applied: probes stated as three-then-nine-hundred, host share stays in escrow, measurement attributed to the builder's instrument, FAIL ending reads the recorded reason, key sentence made true, two proof rows added.
 - 2026-09-09 16:2x: script rewritten in place (the day-2 shot table replaced): eight beats, two verdict endings, proof table; rehearsal tables kept below.
 - 2026-09-10: the session (1:15) and judge (1:45) beats rewritten in plainer spoken language for recording.
+- 2026-09-10: added a lineage beat (2:30) — a new session claims from a previous session's artifact; the worker is disposable, the record is not.

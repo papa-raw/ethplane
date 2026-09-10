@@ -226,6 +226,10 @@ def validate_paths(diff_files) -> Tuple[bool, str]:
     swarm B's test_normpath expects, and it is the more useful answer for a submitter)."""
     for f in diff_files:
         norm = os.path.normpath(f)
+        # REASONING.md is the one allowed non-code path: a worker's notes for the next lineage.
+        # It is markdown at the artifact root, inert to the build, so it never touches a measurement.
+        if norm == "REASONING.md":
+            continue
         if not norm.startswith(editable_prefixes()):
             return False, "frozen-path"
     return True, ""

@@ -49,3 +49,7 @@ That name is a label, not an identity the contract enforces. `registerLineage` s
 ---
 
 **Changelog.** 2026-09-09: rewritten against the code after a cold-guest run failed at every step. The file described `ethplane join <your-name>`, which takes the worknode's name; it listed a record `ethplane.session` that no code reads (the CLI reads `ethplane.lease`); it had no session sequence and no environment; and it ended with a list of swarm menu presets that belongs to the harness, not to joining. The CLI printed a node page URL built from the ENS label, which 404s: the pages are exported per node id, so `join` and `resolve` now print the id and the URL uses it. The guest name was described as an identity that sessions are recorded against; the contract records the signing key and treats the name as a label. The file says that now. Foundry is named as a prerequisite. The install step now includes `npm link`, which puts `ethplane` on PATH; the first draft of this fix said `pnpm link --global`, which fails on a machine that has not run `pnpm setup`, found by running it cold.
+
+## Carry your reasoning forward
+
+Leave a `REASONING.md` in the worktree root and it travels inside the artifact to the next lineage — the one non-code file the verifier accepts. The next worker who claims from your artifact gets your notes, hypotheses and dead ends, not just your code. `ethplane join` prints its path when it is present.

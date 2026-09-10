@@ -328,6 +328,10 @@ def build_artifact(env: dict, dest_dir: str):
         raise RuntimeError(
             "nothing to submit: no changes under " + ", ".join(editable_paths(env))
         )
+    # REASONING.md at the worktree root rides along so the next lineage inherits the worker's
+    # reasoning, not only the code. It is the one non-editable path the verifier accepts.
+    if os.path.exists(os.path.join(env["WORKTREE"], "REASONING.md")) and "REASONING.md" not in files:
+        files = files + ["REASONING.md"]
     tarball_path = os.path.join(dest_dir, "artifact.tar.gz")
     with tarfile.open(tarball_path, "w:gz") as tar:
         for rel in files:

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import path from 'path';
+import fs from 'fs';
 import { makeClient, readNode, nodeIdFor, NODE_KEYS, DEFAULT_RPC } from './ens';
 import { fetchArtifact, unpack, DEFAULT_API } from './artifacts';
 
@@ -73,6 +74,8 @@ program
     console.log(`  ${buf.length} bytes, hash verified`);
     const manifest = unpack(buf, dir);
     console.log(`  unpacked into ${dir}`);
+    const reasoning = path.join(dir, 'REASONING.md');
+    if (fs.existsSync(reasoning)) console.log(`  reasoning   ${reasoning}  (the previous lineage's notes)`);
     const contributors = (manifest?.contributors as string[] | undefined) ?? [];
     if (contributors.length) {
       console.log('\n  built on work by:');

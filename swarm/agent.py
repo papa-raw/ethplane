@@ -112,6 +112,9 @@ def stamp(): return datetime.datetime.now().strftime("%H:%M")
 def board_append(line):
     with BOARD.open("a") as f: f.write(f"{stamp()} {line}\n")
 def send_to(role, text):
+    # 2026-09-09: one message is one turn. A multi-line report used to arrive as one user turn per line
+    # (each Enter is a message to the receiver), which multiplied turns and outgrew the context window.
+    text = " · ".join(l.strip() for l in str(text).splitlines() if l.strip())[:1500]
     subprocess.run(["tmux", "send-keys", "-t", f"{PREFIX}{role}", "-l", text], check=False)
     time.sleep(0.4); subprocess.run(["tmux", "send-keys", "-t", f"{PREFIX}{role}", "Enter"], check=False)
 def run_shell(cmd, timeout=900):
@@ -266,7 +269,7 @@ TOOLS = {
     "report": (t_report, spec("report", "Report a result to the orchestrator (one to three lines, with the measured number or command output).", {"text": S("the report")}, ["text"])),
     "read_board": (t_read_board, spec("read_board", "Read the last N lines of the shared board.", {"lines": I("default 20")}, [])),
     "board_plan": (t_plan, spec("board_plan", "Write the PLAN: what the builder makes, what the critic checks, done-when.", {"builder": S("builder's job"), "critic": S("critic's check"), "done_when": S("completion criterion with a number or a path")}, ["builder", "critic", "done_when"])),
-    "handoff": (t_handoff, spec("handoff", "Hand work to builder, critic or designer: lands on the board and in that pane.", {"role": S("builder | critic | designer"), "task": S("one sentence"), "files": S("paths"), "done_when": S("verifiable criterion")}, ["role", "task", "files", "done_when"])),
+    "handoff": (t_handoff, spec("handoff", "Hand work to builder or critic: lands on the board and in that pane.", {"role": S("builder | critic"), "task": S("one sentence"), "files": S("paths"), "done_when": S("verifiable criterion")}, ["role", "task", "files", "done_when"])),
     "skill": (t_skill, spec("skill", "List the skills available to this role (no name) or load one by name: design, design-research, design-tokens, frontend-design, interface-design, visual-qa, baseline-ui, write, humanizer, pptx and more. Load the relevant skill before starting a page or a document and follow it.", {"name": S("skill name, or empty to list")}, [])),
     "resources": (t_resources, spec("resources", "Search the estate's synced design and writing references (component kits, briefs, style guides) by a word in the path; then read_file the hit.", {"query": S("a word from the file or folder name")}, [])),
     "screenshot": (t_screenshot, spec("screenshot", "Render an .html file (a design variant) or 'site' (the built export in web/out, API proxied to the live host) to PNG in shots/, which the human sees on the Shelf. The only way to show a design.", {"target": S("path to an .html file, or the word site"), "name": S("file or folder name for the PNG(s)")}, ["target"])),
@@ -305,24 +308,63 @@ ROLE_PROMPT = {
 INBOX: "queue.Queue[str]" = queue.Queue()
 
 def call_model(messages, tools):
-    body = json.dumps({"model": MODEL, "messages": messages, "tools": tools, "tool_choice": "auto", "temperature": 0.2, "max_tokens": 16000}).encode()
     for attempt in range(4):
+        body = json.dumps({"model": MODEL, "messages": messages, "tools": tools, "tool_choice": "auto", "temperature": 0.2, "max_tokens": 16000}).encode()
         try:
             req = urllib.request.Request(f"{BASE}/chat/completions", body, {"Content-Type": "application/json", "Authorization": "Bearer local"})
             with urllib.request.urlopen(req, timeout=600) as r:
                 d = json.load(r); u = d.get("usage", {}) or {}; TOK["n"] += int(u.get("total_tokens", 0) or 0); TOK["task"] += int(u.get("completion_tokens", 0) or 0); return d["choices"][0]["message"]
+        except urllib.error.HTTPError as e:
+            detail = ""
+            try: detail = e.read().decode("utf-8", "replace")[:300]
+            except Exception: pass
+            err = f"HTTP {e.code}: {detail or e.reason}"
+            # 2026-09-09: a 400 for context length is not "unreachable"; the transcript outgrew the window
+            # (128,132 input tokens against 131,072). Drop old turns and retry at once instead of sleeping.
+            if e.code == 400 and ("context length" in detail or "too large" in detail):
+                trim(messages, budget=BUDGET // 2); continue
+            time.sleep(3 * (attempt + 1))
         except Exception as e:
             err = e; time.sleep(3 * (attempt + 1))
     raise RuntimeError(f"model unreachable: {err}")
 
-def trim(messages):
-    """Keep the context bounded: elide old tool results once the transcript passes ~240k characters."""
-    total = sum(len(json.dumps(m)) for m in messages)
-    for m in messages[1:]:
-        if total < 240_000: break
+BUDGET = int(os.environ.get("CONTEXT_BUDGET_CHARS", "160000"))
+def trim(messages, budget=None):
+    """Keep the in-memory context under budget. First elide old tool results; if still over, keep the
+    system message plus a tail that starts at a user turn (so no dangling tool/assistant leads it) and
+    drop the rest behind one marker. 2026-09-10: the previous rewrite could delete only the marker and
+    re-insert it, making no progress while over budget — an infinite spin at 90% CPU. This version
+    builds the kept tail once and cannot loop."""
+    budget = budget or BUDGET
+    sizes = [len(json.dumps(m)) for m in messages]
+    total = sum(sizes)
+    for i in range(1, len(messages)):
+        if total < budget:
+            return
+        m = messages[i]
         if m.get("role") == "tool" and len(m.get("content", "")) > 200:
-            total -= len(m["content"]) - 60; m["content"] = m["content"][:60] + " …[elided]"
-
+            new = m["content"][:60] + " …[elided]"
+            total -= sizes[i] - len(json.dumps({**m, "content": new}))
+            m["content"] = new
+    if total < budget:
+        return
+    keep_from = len(messages)
+    running = len(json.dumps(messages[0]))
+    for i in range(len(messages) - 1, 0, -1):
+        c = len(json.dumps(messages[i]))
+        if running + c > budget:
+            break
+        running += c
+        keep_from = i
+    while keep_from < len(messages) and messages[keep_from].get("role") != "user":
+        keep_from += 1
+    dropped = keep_from - 1
+    if dropped <= 0:
+        return
+    tail = messages[keep_from:]
+    del messages[1:]
+    messages.append({"role": "user", "content": f"[earlier turns elided: {dropped} messages; the board file is the record]"})
+    messages.extend(tail)
 def log(entry):
     LOG.parent.mkdir(parents=True, exist_ok=True)
     with LOG.open("a") as f: f.write(json.dumps({"ts": datetime.datetime.now().isoformat(timespec="seconds"), **entry}) + "\n")
